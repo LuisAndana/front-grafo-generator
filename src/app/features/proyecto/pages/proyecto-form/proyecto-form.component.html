@@ -1,0 +1,49 @@
+
+<div class="container">
+  <h2>Registro del Proyecto (Incepción)</h2>
+
+  <form [formGroup]="proyectoForm" (ngSubmit)="guardar()">
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre del Proyecto</mat-label>
+      <input matInput formControlName="nombre">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Cliente</mat-label>
+      <input matInput formControlName="cliente">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Organización</mat-label>
+      <input matInput formControlName="organizacion">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descripción del Problema</mat-label>
+      <textarea matInput rows="3" formControlName="descripcionProblema"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Objetivo General</mat-label>
+      <textarea matInput rows="3" formControlName="objetivo"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha de Inicio</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="fechaInicio">
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Analista Responsable</mat-label>
+      <input matInput formControlName="analista">
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" type="submit">
+      Guardar Proyecto
+    </button>
+
+  </form>
+</div>
