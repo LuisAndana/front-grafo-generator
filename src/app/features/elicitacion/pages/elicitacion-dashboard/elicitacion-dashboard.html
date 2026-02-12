@@ -1,4 +1,3 @@
-<p>elicitacion-dashboard works!</p>
 <div class="elicitacion-container">
 
   <h2 class="titulo">
@@ -18,20 +17,21 @@
 
       <mat-form-field appearance="outline" class="full">
         <mat-label>Pregunta</mat-label>
-        <input matInput placeholder="¿Cuál es el objetivo principal?">
+        <input matInput [(ngModel)]="entrevista.pregunta">
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full">
         <mat-label>Respuesta</mat-label>
-        <textarea matInput rows="3"></textarea>
+        <textarea matInput rows="3" [(ngModel)]="entrevista.respuesta"></textarea>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full">
         <mat-label>Observaciones</mat-label>
-        <textarea matInput rows="2"></textarea>
+        <textarea matInput rows="2" [(ngModel)]="entrevista.observaciones"></textarea>
       </mat-form-field>
 
-      <button mat-stroked-button color="primary">
+      <button mat-stroked-button color="primary"
+              (click)="agregarEntrevista()">
         + Agregar entrevista
       </button>
     </mat-card>
@@ -46,20 +46,21 @@
 
       <mat-form-field appearance="outline" class="full">
         <mat-label>Nombre del proceso</mat-label>
-        <input matInput placeholder="Ej: Gestión de inventarios">
+        <input matInput [(ngModel)]="proceso.nombre">
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full">
         <mat-label>Descripción</mat-label>
-        <textarea matInput rows="3"></textarea>
+        <textarea matInput rows="3" [(ngModel)]="proceso.descripcion"></textarea>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full">
         <mat-label>Problemas detectados</mat-label>
-        <textarea matInput rows="2"></textarea>
+        <textarea matInput rows="2" [(ngModel)]="proceso.problemas"></textarea>
       </mat-form-field>
 
-      <button mat-stroked-button color="accent">
+      <button mat-stroked-button color="primary"
+              (click)="agregarProceso()">
         + Agregar proceso
       </button>
     </mat-card>
@@ -75,10 +76,21 @@
     </h3>
 
     <div class="checkbox-grid">
-      <mat-checkbox>Gestión de usuarios</mat-checkbox>
-      <mat-checkbox>Reportes</mat-checkbox>
-      <mat-checkbox>Inventarios</mat-checkbox>
-      <mat-checkbox>Ventas</mat-checkbox>
+      <mat-checkbox [(ngModel)]="necesidadesBase.usuarios">
+        Gestión de usuarios
+      </mat-checkbox>
+
+      <mat-checkbox [(ngModel)]="necesidadesBase.reportes">
+        Reportes
+      </mat-checkbox>
+
+      <mat-checkbox [(ngModel)]="necesidadesBase.inventarios">
+        Inventarios
+      </mat-checkbox>
+
+      <mat-checkbox [(ngModel)]="necesidadesBase.ventas">
+        Ventas
+      </mat-checkbox>
     </div>
 
     <mat-divider></mat-divider>
@@ -86,17 +98,29 @@
     <div class="nueva-necesidad">
       <mat-form-field appearance="outline">
         <mat-label>Nueva necesidad</mat-label>
-        <input matInput>
+        <input matInput [(ngModel)]="nuevaNecesidad">
       </mat-form-field>
 
-      <button mat-mini-fab color="primary">
+      <button mat-mini-fab color="primary"
+              (click)="agregarNecesidad()">
         <mat-icon>add</mat-icon>
       </button>
+    </div>
+
+    <!-- Lista dinámica -->
+    <div *ngIf="listaNecesidades.length > 0" class="lista-extra">
+      <div *ngFor="let n of listaNecesidades; let i = index">
+        {{ n }}
+        <button mat-icon-button color="warn"
+                (click)="eliminarNecesidad(i)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
     </div>
   </mat-card>
 
 
-  <!-- RESUMEN -->
+  <!-- RESUMEN DINÁMICO -->
   <mat-card class="card resumen">
     <h3>
       <mat-icon>bar_chart</mat-icon>
@@ -105,17 +129,17 @@
 
     <div class="resumen-box">
       <div class="resumen-item">
-        <strong>3</strong>
+        <strong>{{ entrevistas.length }}</strong>
         <span>Entrevistas</span>
       </div>
 
       <div class="resumen-item">
-        <strong>2</strong>
+        <strong>{{ procesos.length }}</strong>
         <span>Procesos</span>
       </div>
 
       <div class="resumen-item">
-        <strong>5</strong>
+        <strong>{{ totalNecesidades }}</strong>
         <span>Necesidades</span>
       </div>
     </div>
