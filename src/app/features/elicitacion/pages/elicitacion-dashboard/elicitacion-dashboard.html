@@ -1,1 +1,124 @@
 <p>elicitacion-dashboard works!</p>
+<div class="elicitacion-container">
+
+  <h2 class="titulo">
+    <mat-icon>assignment</mat-icon>
+    Elicitación de Información
+  </h2>
+
+  <!-- GRID SUPERIOR -->
+  <div class="top-grid">
+
+    <!-- ENTREVISTAS -->
+    <mat-card class="card">
+      <h3>
+        <mat-icon>groups</mat-icon>
+        Entrevistas
+      </h3>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Pregunta</mat-label>
+        <input matInput placeholder="¿Cuál es el objetivo principal?">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Respuesta</mat-label>
+        <textarea matInput rows="3"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Observaciones</mat-label>
+        <textarea matInput rows="2"></textarea>
+      </mat-form-field>
+
+      <button mat-stroked-button color="primary">
+        + Agregar entrevista
+      </button>
+    </mat-card>
+
+
+    <!-- PROCESOS ACTUALES -->
+    <mat-card class="card">
+      <h3>
+        <mat-icon>sync_alt</mat-icon>
+        Procesos actuales
+      </h3>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nombre del proceso</mat-label>
+        <input matInput placeholder="Ej: Gestión de inventarios">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Descripción</mat-label>
+        <textarea matInput rows="3"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Problemas detectados</mat-label>
+        <textarea matInput rows="2"></textarea>
+      </mat-form-field>
+
+      <button mat-stroked-button color="accent">
+        + Agregar proceso
+      </button>
+    </mat-card>
+
+  </div>
+
+
+  <!-- NECESIDADES -->
+  <mat-card class="card necesidades">
+    <h3>
+      <mat-icon>check_circle</mat-icon>
+      Necesidades del Cliente
+    </h3>
+
+    <div class="checkbox-grid">
+      <mat-checkbox>Gestión de usuarios</mat-checkbox>
+      <mat-checkbox>Reportes</mat-checkbox>
+      <mat-checkbox>Inventarios</mat-checkbox>
+      <mat-checkbox>Ventas</mat-checkbox>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="nueva-necesidad">
+      <mat-form-field appearance="outline">
+        <mat-label>Nueva necesidad</mat-label>
+        <input matInput>
+      </mat-form-field>
+
+      <button mat-mini-fab color="primary">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+  </mat-card>
+
+
+  <!-- RESUMEN -->
+  <mat-card class="card resumen">
+    <h3>
+      <mat-icon>bar_chart</mat-icon>
+      Resumen de Elicitación
+    </h3>
+
+    <div class="resumen-box">
+      <div class="resumen-item">
+        <strong>3</strong>
+        <span>Entrevistas</span>
+      </div>
+
+      <div class="resumen-item">
+        <strong>2</strong>
+        <span>Procesos</span>
+      </div>
+
+      <div class="resumen-item">
+        <strong>5</strong>
+        <span>Necesidades</span>
+      </div>
+    </div>
+  </mat-card>
+
+</div>
