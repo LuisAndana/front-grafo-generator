@@ -1,0 +1,1 @@
+# front-grafo-generator
