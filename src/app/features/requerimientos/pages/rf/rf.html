@@ -1,1 +1,90 @@
-<p>rf works!</p>
+<div class="container">
+
+  <h2><mat-icon>list_alt</mat-icon> Requerimientos Funcionales</h2>
+
+  <mat-card class="form-card">
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descripción</mat-label>
+      <input matInput [(ngModel)]="descripcion">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Actor</mat-label>
+      <input matInput [(ngModel)]="actor">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Prioridad</mat-label>
+      <mat-select [(ngModel)]="prioridad">
+        <mat-option value="Alta">Alta</mat-option>
+        <mat-option value="Media">Media</mat-option>
+        <mat-option value="Baja">Baja</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select [(ngModel)]="estado">
+        <mat-option value="Borrador">Borrador</mat-option>
+        <mat-option value="En progreso">En progreso</mat-option>
+        <mat-option value="Completado">Completado</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" (click)="agregar()">
+      <mat-icon>add</mat-icon> Agregar RF
+    </button>
+
+  </mat-card>
+
+
+  <!-- TABLA -->
+  <mat-card>
+
+    <table mat-table [dataSource]="requerimientos" class="mat-elevation-z2">
+
+      <ng-container matColumnDef="codigo">
+        <th mat-header-cell *matHeaderCellDef>Código</th>
+        <td mat-cell *matCellDef="let r">{{r.codigo}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="descripcion">
+        <th mat-header-cell *matHeaderCellDef>Descripción</th>
+        <td mat-cell *matCellDef="let r">{{r.descripcion}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actor">
+        <th mat-header-cell *matHeaderCellDef>Actor</th>
+        <td mat-cell *matCellDef="let r">{{r.actor}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="prioridad">
+        <th mat-header-cell *matHeaderCellDef>Prioridad</th>
+        <td mat-cell *matCellDef="let r">
+          <mat-chip>{{r.prioridad}}</mat-chip>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let r">{{r.estado}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let r; let i = index">
+          <button mat-icon-button color="warn" (click)="eliminar(i)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
+
+    </table>
+
+  </mat-card>
+
+</div>
