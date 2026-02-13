@@ -1,1 +1,110 @@
-<p>stakeholder-form works!</p>
+<div class="form-container">
+  <h2 class="form-title">Captura de Stakeholders</h2>
+  <p class="form-subtitle">Identificación de partes interesadas</p>
+
+  <!-- Mensaje de éxito - AHORA USA CLASE DEL SISTEMA -->
+  <div class="alert alert-success" *ngIf="showSuccess">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
+    </svg>
+    <span>Stakeholder guardado exitosamente</span>
+  </div>
+
+  <form #stakeholderForm="ngForm" (ngSubmit)="onSubmit()">
+    
+    <!-- Nombre - USA CLASES DEL SISTEMA -->
+    <div class="form-group">
+      <input 
+        type="text" 
+        id="nombre"
+        name="nombre"
+        [(ngModel)]="stakeholder.nombre"
+        class="form-input"
+        placeholder="Nombre*"
+        required
+      />
+    </div>
+
+    <!-- Rol - USA CLASES DEL SISTEMA -->
+    <div class="form-group">
+      <input 
+        type="text" 
+        id="rol"
+        name="rol"
+        [(ngModel)]="stakeholder.rol"
+        class="form-input"
+        placeholder="Rol (Dueño, gerente, cliente, etc.)*"
+        required
+      />
+    </div>
+
+    <!-- Tipo - USA CLASES DEL SISTEMA -->
+    <div class="form-group">
+      <select 
+        id="tipo"
+        name="tipo"
+        [(ngModel)]="stakeholder.tipo"
+        class="form-select"
+        required
+      >
+        <option value="" disabled selected>Tipo*</option>
+        <option value="Stakeholder">Stakeholder</option>
+        <option value="Usuario">Usuario</option>
+      </select>
+    </div>
+
+    <!-- Área - USA CLASES DEL SISTEMA -->
+    <div class="form-group">
+      <input 
+        type="text" 
+        id="area"
+        name="area"
+        [(ngModel)]="stakeholder.area"
+        class="form-input"
+        placeholder="Área*"
+        required
+      />
+    </div>
+
+    <!-- Nivel de Influencia - USA CLASES DEL SISTEMA -->
+    <div class="form-group">
+      <select 
+        id="nivelInfluencia"
+        name="nivelInfluencia"
+        [(ngModel)]="stakeholder.nivelInfluencia"
+        class="form-select"
+        required
+      >
+        <option value="" disabled selected>Nivel de Influencia*</option>
+        <option value="Alto">Alto</option>
+        <option value="Medio">Medio</option>
+        <option value="Bajo">Bajo</option>
+      </select>
+    </div>
+
+    <!-- Interés en el Sistema - USA CLASES DEL SISTEMA -->
+    <div class="form-group">
+      <textarea 
+        id="interesSistema"
+        name="interesSistema"
+        [(ngModel)]="stakeholder.interesSistema"
+        class="form-textarea"
+        placeholder="Interés en el Sistema*"
+        rows="4"
+        required
+      ></textarea>
+    </div>
+
+    <!-- Botón - USA CLASES DEL SISTEMA -->
+    <div class="text-center">
+      <button 
+        type="submit" 
+        class="btn btn-primary btn-full"
+        [disabled]="!stakeholderForm.valid"
+      >
+        Guardar Stakeholder
+      </button>
+    </div>
+
+  </form>
+</div>
