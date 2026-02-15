@@ -36,12 +36,13 @@ export const routes: Routes = [
       import('./features/requerimientos/requerimientos-module')
         .then(m => m.RequerimientosRoutingModule)
   },
-  {
-    path: 'negociacion',
-    loadChildren: () =>
-      import('./features/negociacion/negociacion-module')
-        .then(m => m.NegociacionModule)
-  },
+ {
+  path: 'negociacion',
+  loadChildren: () =>
+    import('./features/negociacion/negociacion-module').then(
+      (m) => m.NegociacionRoutingModule
+    ),
+},
   {
     path: 'srs',
     loadChildren: () =>

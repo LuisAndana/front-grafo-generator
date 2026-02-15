@@ -1,1 +1,100 @@
-<p>usuarios-form works!</p>
+<div class="form-container">
+  <h2 class="form-title">Registro de Usuarios del Sistema</h2>
+  <p class="form-subtitle">Definir quién utilizará el sistema y qué acciones realizará</p>
+
+  <!-- Mensaje de éxito -->
+  <div class="alert alert-success" *ngIf="showSuccess">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
+    </svg>
+    <span>Usuario registrado exitosamente</span>
+  </div>
+
+  <form #usuarioForm="ngForm" (ngSubmit)="onSubmit()">
+    
+    <!-- Nombre -->
+    <div class="form-group">
+      <label class="form-label" for="nombre">Nombre*</label>
+      <input 
+        type="text" 
+        id="nombre"
+        name="nombre"
+        [(ngModel)]="usuario.nombre"
+        class="form-input"
+        placeholder="Nombre completo del usuario"
+        required
+      />
+      <span class="form-helper">Nombre de la persona o actor del sistema</span>
+    </div>
+
+    <!-- Rol del Sistema -->
+    <div class="form-group">
+      <label class="form-label" for="rolSistema">Rol del Sistema*</label>
+      <select 
+        id="rolSistema"
+        name="rolSistema"
+        [(ngModel)]="usuario.rolSistema"
+        class="form-select"
+        required
+      >
+        <option value="" disabled selected>Selecciona un rol</option>
+        <option *ngFor="let rol of rolesComunes" [value]="rol">
+          {{ rol }}
+        </option>
+      </select>
+      <span class="form-helper">Rol que desempeñará en el sistema</span>
+    </div>
+
+    <!-- Descripción de Funciones -->
+    <div class="form-group">
+      <label class="form-label" for="descripcionFunciones">Descripción de Funciones*</label>
+      <textarea 
+        id="descripcionFunciones"
+        name="descripcionFunciones"
+        [(ngModel)]="usuario.descripcionFunciones"
+        class="form-textarea"
+        placeholder="Describe las funciones principales que realizará este usuario..."
+        rows="4"
+        required
+      ></textarea>
+      <span class="form-helper">Detalla las tareas y responsabilidades del usuario</span>
+    </div>
+
+    <!-- Permisos Esperados -->
+    <div class="form-group">
+      <label class="form-label" for="permisosEsperados">Permisos Esperados*</label>
+      <textarea 
+        id="permisosEsperados"
+        name="permisosEsperados"
+        [(ngModel)]="usuario.permisosEsperados"
+        class="form-textarea"
+        placeholder="Ejemplo: Crear, Leer, Actualizar registros de ventas; Ver reportes..."
+        rows="4"
+        required
+      ></textarea>
+      <span class="form-helper">Especifica los permisos y accesos que necesita</span>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="alert alert-info mb-lg">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
+      </svg>
+      <div>
+        <strong>Nota:</strong> Esta información servirá para crear casos de uso y definir accesos dentro del CRUD generado.
+      </div>
+    </div>
+
+    <!-- Botón -->
+    <div class="text-center">
+      <button 
+        type="submit" 
+        class="btn btn-primary btn-full"
+        [disabled]="!usuarioForm.valid"
+      >
+        Registrar Usuario
+      </button>
+    </div>
+
+  </form>
+</div>
