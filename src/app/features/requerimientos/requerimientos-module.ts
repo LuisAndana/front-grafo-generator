@@ -1,14 +1,26 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { RouterModule, Routes } from '@angular/router';
+import { Rf } from './pages/rf/rf';
+import { Rnf } from './pages/rnf/rnf';
 
-import { RequerimientosRoutingModule } from './requerimientos-routing-module';
-
+const routes: Routes = [
+  {
+    path: '',
+    redirectTo: 'rf',
+    pathMatch: 'full'
+  },
+  {
+    path: 'rf',
+    component: Rf
+  },
+  {
+    path: 'rnf',
+    component: Rnf
+  }
+];
 
 @NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    RequerimientosRoutingModule
-  ]
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
 })
-export class RequerimientosModule { }
+export class RequerimientosRoutingModule {}

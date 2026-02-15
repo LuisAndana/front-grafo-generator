@@ -28,13 +28,13 @@ export const routes: Routes = [
     path: 'elicitacion',
     loadChildren: () =>
       import('./features/elicitacion/elicitacion-module')
-        .then(m => m.ElicitacionModule)
+        .then(m => m.ElicitacionRoutingModule)
   },
   {
     path: 'requerimientos',
     loadChildren: () =>
       import('./features/requerimientos/requerimientos-module')
-        .then(m => m.RequerimientosModule)
+        .then(m => m.RequerimientosRoutingModule)
   },
  {
   path: 'negociacion',

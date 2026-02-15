@@ -1,0 +1,143 @@
+/* Contenedor principal */
+.container {
+  padding: 40px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Título */
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 25px;
+  font-weight: 600;
+  color: #2c2c2c;
+}
+
+/* ===== RESUMEN ===== */
+.resumen {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+
+.resumen .box {
+  background: linear-gradient(135deg, #f5f7fa, #e4e7eb);
+  padding: 15px 25px;
+  border-radius: 14px;
+  font-weight: 600;
+  min-width: 160px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: 0.2s;
+}
+
+.resumen .box:hover {
+  transform: translateY(-3px);
+}
+
+/* ===== TARJETAS ===== */
+mat-card {
+  border-radius: 18px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+  padding: 25px !important;
+  background-color: #ffffff;
+}
+
+/* ===== FORMULARIO ===== */
+.form-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* Inputs más elegantes */
+mat-form-field {
+  width: 100%;
+}
+
+/* ===== BOTONES ===== */
+.botones {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+button {
+  height: 50px;
+  border-radius: 25px !important;
+  font-weight: 500;
+  padding: 0 20px;
+  transition: 0.2s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+/* Botón principal */
+button[color="primary"] {
+  background: linear-gradient(135deg, #7b1fa2, #9c27b0);
+  color: white;
+}
+
+/* Botón secundario */
+button[color="warn"] {
+  border-radius: 25px;
+}
+
+/* ===== TABLA ===== */
+table {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+th {
+  font-weight: 600;
+  background-color: #f4f6f8;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+td, th {
+  padding: 14px !important;
+}
+
+/* Hover elegante */
+table tr:hover {
+  background-color: #f9f9fb;
+  transition: 0.2s;
+}
+
+/* Chips */
+mat-chip {
+  font-weight: 500;
+  border-radius: 10px;
+  padding: 5px 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-card {
+    grid-template-columns: 1fr;
+  }
+
+  .resumen {
+    flex-direction: column;
+  }
+
+  .botones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  button {
+    width: 100%;
+  }
+}
