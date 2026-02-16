@@ -1,12 +1,13 @@
+// src/app/features/srs/pages/srs-generator/srs-generator.component.ts
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SrsGeneratorService, SRSDocument } from './services/srs-generator.service';
+import { SrsGeneratorService, SRSDocument } from '../../services/srs-generator.service';
 
 @Component({
   selector: 'app-srs-generator',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  standalone: false,
   templateUrl: './srs-generator.component.html',
   styleUrls: ['./srs-generator.component.css']
 })
@@ -24,67 +25,11 @@ export class SrsGeneratorComponent implements OnInit {
   };
 
   activeTab: string = 'introduction';
-  showForm = false;
 
   constructor(private srsService: SrsGeneratorService) {}
 
   ngOnInit(): void {
-    this.initializeSampleData();
-  }
-
-  initializeSampleData(): void {
-    this.srsData = {
-      projectName: 'Mi Proyecto',
-      introduction: 'Este documento especifica los requerimientos del sistema...',
-      stakeholders: [
-        {
-          name: 'Gerente de Proyecto',
-          role: 'Supervisor',
-          responsibility: 'Supervisar el progreso del proyecto'
-        }
-      ],
-      users: [
-        {
-          userId: 'U001',
-          userType: 'Administrador',
-          description: 'Usuario con acceso total al sistema'
-        }
-      ],
-      functionalRequirements: [
-        {
-          rfId: 'RF-001',
-          description: 'El sistema debe permitir crear nuevos proyectos',
-          priority: 'Alta'
-        }
-      ],
-      nonFunctionalRequirements: [
-        {
-          rnfId: 'RNF-001',
-          category: 'Rendimiento',
-          description: 'El sistema debe cargar en menos de 3 segundos'
-        }
-      ],
-      useCases: [
-        {
-          useCase: 'Crear Proyecto',
-          actors: ['Administrador', 'Usuario'],
-          description: 'El usuario puede crear un nuevo proyecto',
-          steps: [
-            'Ingresar al menú principal',
-            'Seleccionar "Crear Proyecto"',
-            'Completar formulario',
-            'Guardar cambios'
-          ]
-        }
-      ],
-      constraints: [
-        {
-          constraintId: 'C-001',
-          type: 'Técnica',
-          description: 'Debe ser compatible con navegadores modernos'
-        }
-      ]
-    };
+    // No inicializa datos de ejemplo
   }
 
   addStakeholder(): void {
@@ -146,6 +91,22 @@ export class SrsGeneratorComponent implements OnInit {
 
   removeUseCase(index: number): void {
     this.srsData.useCases.splice(index, 1);
+  }
+
+  addStep(useCaseIndex: number): void {
+    this.srsData.useCases[useCaseIndex].steps.push('');
+  }
+
+  removeStep(useCaseIndex: number, stepIndex: number): void {
+    this.srsData.useCases[useCaseIndex].steps.splice(stepIndex, 1);
+  }
+
+  updateActors(useCaseIndex: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.srsData.useCases[useCaseIndex].actors = input.value
+      .split(',')
+      .map(actor => actor.trim())
+      .filter(actor => actor.length > 0);
   }
 
   addConstraint(): void {

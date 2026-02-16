@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SrsGeneratorComponent } from './srs-generator';
+import { SrsGeneratorComponent } from './srs-generator.component';
 
 describe('SrsGenerator', () => {
   let component: SrsGeneratorComponent;
