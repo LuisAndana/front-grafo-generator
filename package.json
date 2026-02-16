@@ -39,7 +39,8 @@
     "jspdf": "^4.1.0",
     "pdfkit": "^0.17.2",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@angular/build": "^20.3.6",

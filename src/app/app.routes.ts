@@ -30,6 +30,21 @@ export const routes: Routes = [
       import('./features/elicitacion/elicitacion-module')
         .then(m => m.ElicitacionRoutingModule)
   },
+
+  {
+  path: 'encuesta',
+  loadComponent: () =>
+    import('./features/elicitacion/encuesta/pages/encuesta/encuesta.component')
+      .then(m => m.EncuestaComponent)
+},
+
+{
+    path: 'historial',
+    loadComponent: () =>
+      import('./features/historial/pages/historial/historial.component')
+        .then(m => m.HistorialComponent)
+  },
+
   {
     path: 'requerimientos',
     loadChildren: () =>

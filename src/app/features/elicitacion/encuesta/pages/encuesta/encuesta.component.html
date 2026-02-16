@@ -1,0 +1,91 @@
+<div class="container encuesta-page">
+
+  <!-- Header -->
+  <div class="encuesta-header">
+    <div>
+      <h2>Encuesta</h2>
+      <p class="subtitle">
+        Recolección estructurada de información del cliente
+      </p>
+    </div>
+  </div>
+
+  <!-- Card principal -->
+  <div class="encuesta-card">
+
+    <!-- Información general -->
+    <div class="section">
+      <h4>Información General</h4>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text"
+                 [(ngModel)]="encuesta.titulo"
+                 placeholder="Ej. Encuesta de necesidades del sistema" />
+        </div>
+
+        <div class="form-group">
+          <label>Perfil del encuestado</label>
+          <input type="text"
+                 [(ngModel)]="encuesta.perfil"
+                 placeholder="Ej. Gerente de ventas" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Objetivo</label>
+        <textarea rows="3"
+                  [(ngModel)]="encuesta.objetivo"
+                  placeholder="Describa el propósito de la encuesta..."></textarea>
+      </div>
+    </div>
+
+    <!-- Preguntas -->
+    <div class="section">
+      <div class="section-header">
+        <h4>Preguntas</h4>
+        <button class="btn-primary btn-sm"
+                type="button"
+                (click)="agregarPregunta()">
+          + Agregar
+        </button>
+      </div>
+
+      <div *ngIf="encuesta.preguntas.length === 0"
+           class="empty-state">
+        No hay preguntas agregadas.
+      </div>
+
+      <div *ngFor="let pregunta of encuesta.preguntas; let i = index"
+           class="pregunta-card">
+
+        <span class="pregunta-index">
+          {{ i + 1 }}
+        </span>
+
+        <input type="text"
+               [(ngModel)]="pregunta.texto"
+               placeholder="Escriba la pregunta aquí..." />
+
+        <button type="button"
+                class="delete-btn"
+                (click)="eliminarPregunta(i)">
+          ✕
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="actions">
+      <button class="btn-primary"
+              type="button"
+              (click)="guardar()">
+        Guardar Encuesta
+      </button>
+    </div>
+
+  </div>
+
+</div>
