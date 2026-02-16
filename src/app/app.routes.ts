@@ -3,9 +3,16 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'proyecto',
+    redirectTo: 'bienvenida',
     pathMatch: 'full'
   },
+  {
+    path: 'bienvenida',
+    loadComponent: () =>
+      import('./features/bienvenida/bienvenida.component')
+        .then(m => m.BienvenidaComponent)
+  },
+
   {
     path: 'proyecto',
     loadChildren: () =>
@@ -57,6 +64,21 @@ export const routes: Routes = [
       import('./features/requerimientos/requerimientos-module')
         .then(m => m.RequerimientosRoutingModule)
   },
+
+  {
+  path: 'observacion',
+  loadComponent: () =>
+    import('./features/observacion/pages/observacion-form/observacion-form')
+      .then(m => m.ObservacionFormComponent)
+  },
+
+  {
+  path: 'seguimiento-transaccional',
+  loadComponent: () =>
+    import('./features/seguimiento-trans/pages/seguimiento-trans-form/seguimiento-trans-form')
+      .then(m => m.SeguimientoTransFormComponent)
+  },
+
   {
     path: 'negociacion',
     loadChildren: () =>

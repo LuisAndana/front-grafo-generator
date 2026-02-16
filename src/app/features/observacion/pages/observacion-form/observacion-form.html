@@ -1,0 +1,369 @@
+<div class="form-container">
+  <h2 class="form-title">Registro de Observación</h2>
+
+  <!-- Mensaje de éxito -->
+  <div class="alert alert-success" *ngIf="showSuccess">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
+    </svg>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <!-- Información -->
+  <div class="alert alert-info mb-lg">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
+    </svg>
+    <div>
+      <strong>Seguimiento Transaccional:</strong> Observa y documenta el flujo del proceso de trabajo que realiza un usuario durante una sesión o actividad.
+    </div>
+  </div>
+
+  <!-- Botón para mostrar formulario -->
+  <div class="mb-lg flex justify-between items-center">
+    <h3 class="text-xl font-semibold">Observaciones Registradas</h3>
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="showAddForm = !showAddForm"
+    >
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Nueva Observación
+    </button>
+  </div>
+
+  <!-- Formulario de nueva observación -->
+  <div class="card mb-lg" *ngIf="showAddForm">
+    <div class="card-body">
+      <h4 class="card-title">Registrar Nueva Observación</h4>
+
+      <!-- Información de registro -->
+      <div class="registro-header">
+        <div class="registro-grid">
+          <div class="registro-field">
+            <label class="field-label">Fecha*</label>
+            <input 
+              type="date" 
+              [(ngModel)]="nuevaObservacion.fecha"
+              class="form-input"
+            />
+          </div>
+
+          <div class="registro-field">
+            <label class="field-label">Lugar*</label>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevaObservacion.lugar"
+              class="form-input"
+              placeholder="Especifique el lugar donde hizo la observación"
+            />
+          </div>
+        </div>
+
+        <div class="registro-field">
+          <label class="field-label">Perfil del usuario observado*</label>
+          <textarea 
+            [(ngModel)]="nuevaObservacion.perfilUsuario"
+            class="form-textarea"
+            placeholder="Descripción del perfil, rol o característica del usuario"
+            rows="2"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Aspectos observados -->
+      <div class="observacion-section">
+        <h5 class="section-title">Aspectos Observados</h5>
+        <div class="aspectos-grid">
+          <label class="aspecto-item" [class.checked]="nuevaObservacion.aspectos.interaccionInterfaz">
+            <input 
+              type="checkbox"
+              [(ngModel)]="nuevaObservacion.aspectos.interaccionInterfaz"
+              class="checkbox"
+            />
+            <span class="aspecto-label">Interacción con la interfaz</span>
+          </label>
+
+          <label class="aspecto-item" [class.checked]="nuevaObservacion.aspectos.tiempoRespuesta">
+            <input 
+              type="checkbox"
+              [(ngModel)]="nuevaObservacion.aspectos.tiempoRespuesta"
+              class="checkbox"
+            />
+            <span class="aspecto-label">Tiempo de respuesta del sistema</span>
+          </label>
+
+          <label class="aspecto-item" [class.checked]="nuevaObservacion.aspectos.erroresDificultades">
+            <input 
+              type="checkbox"
+              [(ngModel)]="nuevaObservacion.aspectos.erroresDificultades"
+              class="checkbox"
+            />
+            <span class="aspecto-label">Errores o dificultades encontradas</span>
+          </label>
+
+          <label class="aspecto-item" [class.checked]="nuevaObservacion.aspectos.patronesNavegacion">
+            <input 
+              type="checkbox"
+              [(ngModel)]="nuevaObservacion.aspectos.patronesNavegacion"
+              class="checkbox"
+            />
+            <span class="aspecto-label">Patrones de navegación</span>
+          </label>
+
+          <label class="aspecto-item" [class.checked]="nuevaObservacion.aspectos.usoFuncionalidades">
+            <input 
+              type="checkbox"
+              [(ngModel)]="nuevaObservacion.aspectos.usoFuncionalidades"
+              class="checkbox"
+            />
+            <span class="aspecto-label">Uso de funcionalidades específicas</span>
+          </label>
+
+          <label class="aspecto-item" [class.checked]="nuevaObservacion.aspectos.reaccionesUsuario">
+            <input 
+              type="checkbox"
+              [(ngModel)]="nuevaObservacion.aspectos.reaccionesUsuario"
+              class="checkbox"
+            />
+            <span class="aspecto-label">Reacciones del usuario</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Flujo del proceso observado -->
+      <div class="observacion-section">
+        <h5 class="section-title">Flujo del Proceso Observado</h5>
+        <div class="flujo-container">
+          <p class="mb-md" style="font-size: var(--font-size-sm); color: var(--neutral-600);">
+            Objetivo: Observar y documentar el flujo del trabajo que realiza un usuario durante una sesión o actividad
+          </p>
+          <div class="flujo-steps">
+            <div class="flujo-step">
+              <div class="step-number">1</div>
+              <div class="step-text">Inicio de la actividad</div>
+            </div>
+            <div class="step-arrow">↓</div>
+            <div class="flujo-step">
+              <div class="step-number">2</div>
+              <div class="step-text">Captura de información</div>
+            </div>
+            <div class="step-arrow">↓</div>
+            <div class="flujo-step">
+              <div class="step-number">3</div>
+              <div class="step-text">Validación de datos</div>
+            </div>
+            <div class="step-arrow">↓</div>
+            <div class="flujo-step">
+              <div class="step-number">4</div>
+              <div class="step-text">Ejecución del proceso</div>
+            </div>
+            <div class="step-arrow">↓</div>
+            <div class="flujo-step">
+              <div class="step-number">5</div>
+              <div class="step-text">Registro del resultado</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos generales -->
+      <div class="observacion-section">
+        <h5 class="section-title">Datos Generales</h5>
+        <div class="datos-grid">
+          <div class="dato-item">
+            <span class="dato-label">Usuario observado</span>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevaObservacion.datosGenerales.usuarioObservado"
+              class="form-input"
+              placeholder="Nombre/Rol"
+              style="max-width: 200px; padding: 0.25rem 0.5rem;"
+            />
+          </div>
+
+          <div class="dato-item">
+            <span class="dato-label">Área/Rol</span>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevaObservacion.datosGenerales.area"
+              class="form-input"
+              placeholder="Área"
+              style="max-width: 200px; padding: 0.25rem 0.5rem;"
+            />
+          </div>
+
+          <div class="dato-item">
+            <span class="dato-label">Fecha</span>
+            <input 
+              type="date" 
+              [(ngModel)]="nuevaObservacion.datosGenerales.fecha"
+              class="form-input"
+              style="max-width: 200px; padding: 0.25rem 0.5rem;"
+            />
+          </div>
+
+          <div class="dato-item">
+            <span class="dato-label">Lugar/Sistema</span>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevaObservacion.datosGenerales.lugarSistema"
+              class="form-input"
+              placeholder="Ubicación"
+              style="max-width: 200px; padding: 0.25rem 0.5rem;"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Conclusiones y notas -->
+      <div class="observacion-section">
+        <h5 class="section-title">Conclusiones y Notas de Observación</h5>
+        <textarea 
+          [(ngModel)]="nuevaObservacion.conclusiones"
+          class="form-textarea"
+          placeholder="Escriba aquí sus conclusiones, hallazgos importantes, comportamientos destacados y cualquier información relevante observada durante la sesión..."
+          rows="6"
+        ></textarea>
+      </div>
+
+      <!-- Botones de acción del formulario -->
+      <div class="flex gap-sm mt-lg">
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          (click)="agregarObservacion()"
+          [disabled]="!isNuevaObservacionValid()"
+        >
+          Guardar Observación
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-ghost"
+          (click)="showAddForm = false; resetNuevaObservacion()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de observaciones -->
+  <div class="observaciones-list" *ngIf="observaciones.length > 0">
+    <div class="observacion-card" *ngFor="let obs of observaciones">
+      <div class="observacion-header">
+        <div class="observacion-fecha">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="display: inline; margin-right: 4px;">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          {{ obs.fecha | date:'dd/MM/yyyy' }}
+        </div>
+        <div class="observacion-lugar">{{ obs.lugar }}</div>
+      </div>
+
+      <div class="observacion-perfil">
+        <strong>Perfil:</strong> {{ obs.perfilUsuario }}
+      </div>
+
+      <div class="observacion-aspectos">
+        <span class="aspecto-badge" *ngIf="obs.aspectos.interaccionInterfaz">
+          Interacción con interfaz
+        </span>
+        <span class="aspecto-badge" *ngIf="obs.aspectos.tiempoRespuesta">
+          Tiempo de respuesta
+        </span>
+        <span class="aspecto-badge" *ngIf="obs.aspectos.erroresDificultades">
+          Errores encontrados
+        </span>
+        <span class="aspecto-badge" *ngIf="obs.aspectos.patronesNavegacion">
+          Patrones de navegación
+        </span>
+        <span class="aspecto-badge" *ngIf="obs.aspectos.usoFuncionalidades">
+          Uso de funcionalidades
+        </span>
+        <span class="aspecto-badge" *ngIf="obs.aspectos.reaccionesUsuario">
+          Reacciones del usuario
+        </span>
+      </div>
+
+      <div class="observacion-conclusiones">
+        <strong>Conclusiones:</strong><br>
+        {{ obs.conclusiones }}
+      </div>
+
+      <div style="font-size: var(--font-size-xs); color: var(--neutral-500); margin-bottom: var(--spacing-sm);">
+        <strong>Datos:</strong> 
+        {{ obs.datosGenerales.usuarioObservado }} | 
+        {{ obs.datosGenerales.area }} | 
+        {{ obs.datosGenerales.lugarSistema }}
+      </div>
+
+      <div class="observacion-actions">
+        <button 
+          type="button"
+          class="btn-icon btn-edit"
+          (click)="editarObservacion(obs)"
+          title="Editar"
+        >
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 010 3l-9.5 9.5L5 16l1-4 9.5-9.5a2.121 2.121 0 013 0z"/>
+          </svg>
+        </button>
+        <button 
+          type="button"
+          class="btn-icon btn-danger"
+          (click)="eliminarObservacion(obs.id!)"
+          title="Eliminar"
+        >
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h14M8 6V4h4v2m-5 0v7m4-7v7M5 6l1 11h8l1-11"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="empty-state" *ngIf="observaciones.length === 0">
+    <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1">
+      <path d="M12 12l40 40M12 52l40-40"/>
+      <rect x="8" y="8" width="48" height="48" rx="4"/>
+      <circle cx="32" cy="32" r="8"/>
+    </svg>
+    <h3>No hay observaciones registradas</h3>
+    <p>Comienza registrando tu primera observación de campo</p>
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="showAddForm = true"
+    >
+      Registrar Primera Observación
+    </button>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="actions-bar" *ngIf="observaciones.length > 0">
+    <button 
+      type="button" 
+      class="btn btn-outline"
+      (click)="exportarJSON()"
+    >
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+      </svg>
+      Exportar JSON
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="guardarCambios()"
+    >
+      Guardar Cambios
+    </button>
+  </div>
+
+</div>

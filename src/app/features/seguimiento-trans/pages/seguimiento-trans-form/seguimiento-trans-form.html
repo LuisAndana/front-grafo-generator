@@ -1,0 +1,327 @@
+<div class="form-container">
+  <h2 class="form-title">Seguimiento Transaccional</h2>
+  <p class="form-subtitle">Observar y documentar el flujo del trabajo que realiza un usuario durante una sesión o actividad</p>
+
+  <!-- Mensaje de éxito -->
+  <div class="alert alert-success" *ngIf="showSuccess">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
+    </svg>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <!-- Información -->
+  <div class="alert alert-info mb-lg">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
+    </svg>
+    <div>
+      <strong>Objetivo:</strong> Registrar y analizar cada paso del proceso que realiza un usuario, 
+      documentando observaciones, tiempos y comportamientos en cada etapa del flujo de trabajo.
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="stats-grid">
+    <div class="stat-card stat-primary">
+      <div class="stat-number">{{ seguimientos.length }}</div>
+      <div class="stat-label">Total Seguimientos</div>
+    </div>
+    <div class="stat-card stat-success">
+      <div class="stat-number">{{ getTotalPasos() }}</div>
+      <div class="stat-label">Pasos Registrados</div>
+    </div>
+    <div class="stat-card stat-warning">
+      <div class="stat-number">{{ getSeguimientosRecientes() }}</div>
+      <div class="stat-label">Últimos 7 Días</div>
+    </div>
+  </div>
+
+  <!-- Botón para agregar seguimiento -->
+  <div class="mb-lg flex justify-between items-center">
+    <h3 class="text-xl font-semibold">Seguimientos Registrados</h3>
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="showAddForm = !showAddForm"
+    >
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Nuevo Seguimiento
+    </button>
+  </div>
+
+  <!-- Formulario de nuevo seguimiento -->
+  <div class="card mb-lg" *ngIf="showAddForm">
+    <div class="card-body">
+      <h4 class="card-title">Registrar Nuevo Seguimiento Transaccional</h4>
+
+      <!-- Datos generales del seguimiento -->
+      <div class="seguimiento-section">
+        <h5 class="section-title">Datos Generales</h5>
+        <div class="datos-grid">
+          <div class="dato-field">
+            <label class="form-label">Usuario Observado*</label>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevoSeguimiento.usuarioObservado"
+              class="form-input"
+              placeholder="Nombre del usuario"
+            />
+          </div>
+
+          <div class="dato-field">
+            <label class="form-label">Área/Rol*</label>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevoSeguimiento.areaRol"
+              class="form-input"
+              placeholder="Departamento o rol"
+            />
+          </div>
+
+          <div class="dato-field">
+            <label class="form-label">Fecha*</label>
+            <input 
+              type="date" 
+              [(ngModel)]="nuevoSeguimiento.fecha"
+              class="form-input"
+            />
+          </div>
+
+          <div class="dato-field">
+            <label class="form-label">Lugar/Sistema*</label>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevoSeguimiento.lugarSistema"
+              class="form-input"
+              placeholder="Ubicación o sistema usado"
+            />
+          </div>
+        </div>
+
+        <div class="dato-field mt-md">
+          <label class="form-label">Objetivo del Proceso*</label>
+          <textarea 
+            [(ngModel)]="nuevoSeguimiento.objetivoProceso"
+            class="form-textarea"
+            placeholder="Describe el objetivo principal del proceso observado..."
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Pasos del proceso -->
+      <div class="seguimiento-section">
+        <div class="flex justify-between items-center mb-md">
+          <h5 class="section-title mb-0">Flujo del Proceso</h5>
+          <button 
+            type="button" 
+            class="btn btn-sm btn-outline"
+            (click)="agregarPaso()"
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Agregar Paso
+          </button>
+        </div>
+
+        <div class="timeline-container">
+          <div class="timeline-item" *ngFor="let paso of nuevoSeguimiento.pasos; let i = index">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <div class="paso-header">
+                <span class="paso-numero">Paso {{ i + 1 }}</span>
+                <button 
+                  type="button"
+                  class="btn-icon btn-danger"
+                  (click)="eliminarPaso(i)"
+                  *ngIf="nuevoSeguimiento.pasos.length > 1"
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Descripción del Paso*</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="paso.descripcion"
+                  class="form-input"
+                  placeholder="¿Qué hace el usuario en este paso?"
+                />
+              </div>
+
+              <div class="paso-observaciones">
+                <label class="form-label">Observaciones del Paso</label>
+                <textarea 
+                  [(ngModel)]="paso.observaciones"
+                  class="form-textarea"
+                  placeholder="Notas, comportamientos observados, tiempo estimado, dificultades encontradas..."
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conclusiones generales -->
+      <div class="seguimiento-section">
+        <h5 class="section-title">Conclusiones Generales</h5>
+        <textarea 
+          [(ngModel)]="nuevoSeguimiento.conclusiones"
+          class="form-textarea"
+          placeholder="Resumen del proceso, hallazgos importantes, sugerencias de mejora, puntos críticos identificados..."
+          rows="5"
+        ></textarea>
+      </div>
+
+      <!-- Botones de acción del formulario -->
+      <div class="flex gap-sm mt-lg">
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          (click)="guardarSeguimiento()"
+          [disabled]="!isNuevoSeguimientoValid()"
+        >
+          Guardar Seguimiento
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-ghost"
+          (click)="cancelarFormulario()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de seguimientos -->
+  <div class="seguimientos-list" *ngIf="seguimientos.length > 0">
+    <div class="seguimiento-card" *ngFor="let seg of seguimientos">
+      <div class="seguimiento-header">
+        <div class="seguimiento-info">
+          <h4 class="seguimiento-titulo">{{ seg.objetivoProceso }}</h4>
+          <div class="seguimiento-meta">
+            <div class="meta-item">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span>{{ seg.usuarioObservado }}</span>
+            </div>
+            <div class="meta-item">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <path d="M16 2v4M8 2v4M3 10h18"/>
+              </svg>
+              <span>{{ seg.fecha | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="meta-item">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>{{ seg.lugarSistema }}</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="badge badge-primary">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2h2v20h-2zM18 8h2v14h-2zM6 14h2v8H6z"/>
+            </svg>
+            {{ seg.pasos.length }} pasos
+          </span>
+        </div>
+      </div>
+
+      <div class="seguimiento-pasos">
+        <div class="paso-summary" *ngFor="let paso of seg.pasos; let i = index">
+          <div class="paso-summary-header">Paso {{ i + 1 }}: {{ paso.descripcion }}</div>
+          <div class="paso-summary-text" *ngIf="paso.observaciones">
+            {{ paso.observaciones }}
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="seg.conclusiones" style="margin-top: var(--spacing-md); padding: var(--spacing-md); background: var(--neutral-50); border-radius: var(--border-radius-md); border-left: 3px solid var(--success-color);">
+        <strong style="font-size: var(--font-size-sm); color: var(--neutral-700);">Conclusiones:</strong>
+        <p style="font-size: var(--font-size-sm); color: var(--neutral-600); margin-top: var(--spacing-xs); line-height: 1.5;">
+          {{ seg.conclusiones }}
+        </p>
+      </div>
+
+      <div class="seguimiento-actions">
+        <button 
+          type="button"
+          class="btn-icon btn-edit"
+          (click)="editarSeguimiento(seg)"
+          title="Editar"
+        >
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 010 3l-9.5 9.5L5 16l1-4 9.5-9.5a2.121 2.121 0 013 0z"/>
+          </svg>
+          Editar
+        </button>
+        <button 
+          type="button"
+          class="btn-icon btn-danger"
+          (click)="eliminarSeguimiento(seg.id!)"
+          title="Eliminar"
+        >
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h14M8 6V4h4v2m-5 0v7m4-7v7M5 6l1 11h8l1-11"/>
+          </svg>
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="empty-state" *ngIf="seguimientos.length === 0">
+    <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1">
+      <circle cx="32" cy="32" r="24"/>
+      <path d="M32 20v16M32 44h.01"/>
+    </svg>
+    <h3>No hay seguimientos registrados</h3>
+    <p>Comienza registrando tu primer seguimiento transaccional</p>
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="showAddForm = true"
+    >
+      Registrar Primer Seguimiento
+    </button>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="actions-bar" *ngIf="seguimientos.length > 0">
+    <button 
+      type="button" 
+      class="btn btn-outline"
+      (click)="exportarJSON()"
+    >
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+      </svg>
+      Exportar JSON
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="guardarCambios()"
+    >
+      Guardar Cambios
+    </button>
+  </div>
+
+</div>

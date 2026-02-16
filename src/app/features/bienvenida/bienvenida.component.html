@@ -1,0 +1,293 @@
+<div class="bienvenida-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="logo-container">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" class="logo-icon">
+          <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+          <path d="M16 24h16M24 16v16" stroke="currentColor" stroke-width="2"/>
+          <circle cx="24" cy="24" r="3" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">SRS Manager</span>
+      </div>
+      
+      <h1 class="hero-title">Gestión Profesional de Requerimientos de Software</h1>
+      <p class="hero-subtitle">
+        Plataforma empresarial para documentar, analizar y gestionar requerimientos de software siguiendo estándares IEEE
+      </p>
+
+      <div class="hero-actions">
+        <button class="btn btn-primary btn-lg" (click)="openLoginModal()">
+          Iniciar Sesión
+        </button>
+        <button class="btn btn-outline btn-lg" (click)="openRegisterModal()">
+          Crear Cuenta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="features-section">
+    <div class="features-header">
+      <h2 class="features-title">Solución Integral para Ingeniería de Requerimientos</h2>
+      <p class="features-description">
+        Herramientas profesionales para cada etapa del proceso de especificación de requerimientos
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Gestión de Stakeholders</h3>
+        <p class="feature-description">
+          Identifique, documente y administre a todos los interesados del proyecto con herramientas especializadas
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <path d="M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            <path d="M9 12h6m-6 4h6"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Técnicas de Elicitación</h3>
+        <p class="feature-description">
+          Aplique entrevistas, encuestas, observaciones y focus groups para capturar requerimientos efectivamente
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Documentación SRS IEEE 830</h3>
+        <p class="feature-description">
+          Genere documentos de especificación de requerimientos profesionales siguiendo el estándar IEEE 830
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <path d="M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Validación y Priorización</h3>
+        <p class="feature-description">
+          Valide, negocie y priorice requerimientos de manera estructurada y colaborativa con su equipo
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trust Section -->
+  <div class="trust-section">
+    <div class="trust-content">
+      <div class="trust-badge">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+        </svg>
+        Estándar IEEE 830
+      </div>
+      <h2 class="trust-title">Confiable y Profesional</h2>
+      <p class="trust-text">
+        Utilizado por equipos de desarrollo para gestionar requerimientos de forma estructurada, 
+        asegurando trazabilidad, calidad y conformidad con estándares de la industria.
+      </p>
+    </div>
+  </div>
+
+  <!-- Modal de Login -->
+  <div class="modal-overlay" *ngIf="showLoginModal" (click)="onBackdropClick($event)">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Iniciar Sesión</h2>
+        <button class="modal-close" (click)="closeModals()">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Error de login -->
+        <div class="alert alert-error" *ngIf="loginError">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
+          </svg>
+          <span>{{ loginError }}</span>
+        </div>
+
+        <form (ngSubmit)="onLogin()">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Correo Electrónico</label>
+            <input 
+              type="email" 
+              id="login-email"
+              [(ngModel)]="loginData.email"
+              name="email"
+              class="form-input"
+              placeholder="usuario@empresa.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="login-password">Contraseña</label>
+            <input 
+              type="password" 
+              id="login-password"
+              [(ngModel)]="loginData.password"
+              name="password"
+              class="form-input"
+              placeholder="Ingrese su contraseña"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" class="checkbox">
+              <span>Mantener sesión iniciada</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            Iniciar Sesión
+          </button>
+        </form>
+
+        <div class="modal-footer">
+          <p class="text-center">
+            ¿No tiene una cuenta? 
+            <button class="btn-link" (click)="switchToRegister()">Registrarse</button>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Registro -->
+  <div class="modal-overlay" *ngIf="showRegisterModal" (click)="onBackdropClick($event)">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Crear Cuenta</h2>
+        <button class="modal-close" (click)="closeModals()">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Error de registro -->
+        <div class="alert alert-error" *ngIf="registerError">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
+          </svg>
+          <span>{{ registerError }}</span>
+        </div>
+
+        <!-- Éxito de registro -->
+        <div class="alert alert-success" *ngIf="registerSuccess">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
+          </svg>
+          <span>Registro completado exitosamente. Redirigiendo...</span>
+        </div>
+
+        <form (ngSubmit)="onRegister()">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="register-nombre">Nombre</label>
+              <input 
+                type="text" 
+                id="register-nombre"
+                [(ngModel)]="registerData.nombre"
+                name="nombre"
+                class="form-input"
+                placeholder="Juan"
+                autocomplete="given-name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="register-apellido">Apellido</label>
+              <input 
+                type="text" 
+                id="register-apellido"
+                [(ngModel)]="registerData.apellido"
+                name="apellido"
+                class="form-input"
+                placeholder="Pérez"
+                autocomplete="family-name"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="register-email">Correo Electrónico Corporativo</label>
+            <input 
+              type="email" 
+              id="register-email"
+              [(ngModel)]="registerData.email"
+              name="email"
+              class="form-input"
+              placeholder="usuario@empresa.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="register-password">Contraseña</label>
+            <input 
+              type="password" 
+              id="register-password"
+              [(ngModel)]="registerData.password"
+              name="password"
+              class="form-input"
+              placeholder="Mínimo 6 caracteres"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="register-confirm-password">Confirmar Contraseña</label>
+            <input 
+              type="password" 
+              id="register-confirm-password"
+              [(ngModel)]="registerData.confirmPassword"
+              name="confirmPassword"
+              class="form-input"
+              placeholder="Repita su contraseña"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            Crear Cuenta
+          </button>
+        </form>
+
+        <div class="modal-footer">
+          <p class="text-center">
+            ¿Ya tiene una cuenta? 
+            <button class="btn-link" (click)="switchToLogin()">Iniciar sesión</button>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
