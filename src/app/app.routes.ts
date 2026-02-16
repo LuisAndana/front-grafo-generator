@@ -25,6 +25,12 @@ export const routes: Routes = [
         .then(m => m.UsuariosModule)
   },
   {
+    path: 'focus-group',
+    loadChildren: () =>
+      import('./features/focus-group/focus-group.module')
+        .then(m => m.FocusGroupModule)
+  },
+  {
     path: 'elicitacion',
     loadChildren: () =>
       import('./features/elicitacion/elicitacion-module')
@@ -51,13 +57,13 @@ export const routes: Routes = [
       import('./features/requerimientos/requerimientos-module')
         .then(m => m.RequerimientosRoutingModule)
   },
- {
-  path: 'negociacion',
-  loadChildren: () =>
-    import('./features/negociacion/negociacion-module').then(
-      (m) => m.NegociacionRoutingModule
-    ),
-},
+  {
+    path: 'negociacion',
+    loadChildren: () =>
+      import('./features/negociacion/negociacion-module').then(
+        (m) => m.NegociacionRoutingModule
+      ),
+  },
   {
     path: 'srs',
     loadChildren: () =>

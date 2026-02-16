@@ -1,0 +1,102 @@
+<div class="focus-group-dashboard">
+  <div class="dashboard-header">
+    <h1>📋 Focus Groups</h1>
+    <p class="subtitle">Gestiona tus talleres de trabajo y sesiones de focus group</p>
+    <button class="btn btn-primary" (click)="irACrear()">
+      ➕ Nuevo Focus Group
+    </button>
+  </div>
+
+  <div class="dashboard-controls">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Buscar por nombre, moderador, ubicación..."
+        [(ngModel)]="termino_busqueda"
+        (keyup)="buscar()"
+        class="search-input">
+    </div>
+    
+    <div class="filter-box">
+      <select 
+        [(ngModel)]="filtro_estado"
+        (change)="filtrar()"
+        class="filter-select">
+        <option value="todos">Todos los estados</option>
+        <option value="borrador">Borrador</option>
+        <option value="activo">Activo</option>
+        <option value="completado">Completado</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="cargando">
+    <div class="spinner"></div>
+    <p>Cargando focus groups...</p>
+  </div>
+
+  <div class="focus-groups-grid" *ngIf="!cargando && focusGroupsFiltrados.length > 0">
+    <div class="fg-card" *ngFor="let fg of focusGroupsFiltrados">
+      <div class="card-header">
+        <h3>{{ fg.nombre_taller }}</h3>
+        <span [class]="'badge ' + estadoBadgeClase(fg.estado)">
+          {{ estadoTexto(fg.estado) }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="info-row">
+          <span class="label">📅 Fecha:</span>
+          <span class="value">{{ fg.fecha | date: 'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">⏱️ Duración:</span>
+          <span class="value">{{ fg.duracion }} minutos</span>
+        </div>
+        <div class="info-row">
+          <span class="label">👤 Moderador:</span>
+          <span class="value">{{ fg.moderador }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">📍 Ubicación:</span>
+          <span class="value">{{ fg.ubicacion }}</span>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat">
+            <span class="stat-value">{{ fg.participantes.length }}</span>
+            <span class="stat-label">Participantes</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ fg.objetivos.length }}</span>
+            <span class="stat-label">Objetivos</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ fg.requerimientos.length }}</span>
+            <span class="stat-label">Requerimientos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn btn-sm btn-secondary" (click)="ver(fg)">
+          👁️ Ver Detalle
+        </button>
+        <button class="btn btn-sm btn-secondary" (click)="editar(fg.id)">
+          ✏️ Editar
+        </button>
+        <button class="btn btn-sm btn-danger" (click)="eliminar(fg.id)">
+          🗑️ Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="!cargando && focusGroupsFiltrados.length === 0">
+    <div class="empty-icon">📭</div>
+    <h3>No hay Focus Groups</h3>
+    <p *ngIf="focusGroups.length > 0">No se encontraron resultados para tu búsqueda</p>
+    <p *ngIf="focusGroups.length === 0">Crea tu primer Focus Group para comenzar</p>
+    <button class="btn btn-primary" (click)="irACrear()">Crear Focus Group</button>
+  </div>
+</div>
