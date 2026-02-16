@@ -1,148 +1,214 @@
-<div class="elicitacion-container">
+<div class="max-w-xl m-auto mt-lg fade-in">
 
-  <h2 class="titulo">
-    <mat-icon>assignment</mat-icon>
-    Elicitación de Información
-  </h2>
+  <!-- HEADER -->
+  <div class="mb-lg text-center">
+    <h1 class="text-2xl font-bold text-primary">
+      Elicitación de Información
+    </h1>
+    <p class="text-muted mt-sm">
+      Recolección estructurada de información para definición de requerimientos
+    </p>
+  </div>
 
   <!-- GRID SUPERIOR -->
-  <div class="top-grid">
+  <div class="grid grid-cols-2 gap-lg mb-lg">
 
     <!-- ENTREVISTAS -->
-    <mat-card class="card">
-      <h3>
-        <mat-icon>groups</mat-icon>
-        Entrevistas
-      </h3>
+    <div class="card shadow-sm">
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Pregunta</mat-label>
-        <input matInput [(ngModel)]="entrevista.pregunta">
-      </mat-form-field>
+      <div class="card-header">
+        <h3 class="card-title text-lg">
+          Entrevistas
+        </h3>
+      </div>
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Respuesta</mat-label>
-        <textarea matInput rows="3" [(ngModel)]="entrevista.respuesta"></textarea>
-      </mat-form-field>
+      <div class="card-body">
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Observaciones</mat-label>
-        <textarea matInput rows="2" [(ngModel)]="entrevista.observaciones"></textarea>
-      </mat-form-field>
+        <div class="form-group">
+          <label class="form-label">Pregunta</label>
+          <input class="form-input"
+                 [(ngModel)]="entrevista.pregunta">
+        </div>
 
-      <button mat-stroked-button color="primary"
-              (click)="agregarEntrevista()">
-        + Agregar entrevista
-      </button>
-    </mat-card>
+        <div class="form-group">
+          <label class="form-label">Respuesta</label>
+          <textarea class="form-textarea"
+                    [(ngModel)]="entrevista.respuesta">
+          </textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observaciones</label>
+          <textarea class="form-textarea"
+                    [(ngModel)]="entrevista.observaciones">
+          </textarea>
+        </div>
+
+        <button class="btn-primary btn-sm"
+        (click)="agregarEntrevista()">
+  + Agregar entrevista
+</button>
 
 
-    <!-- PROCESOS ACTUALES -->
-    <mat-card class="card">
-      <h3>
-        <mat-icon>sync_alt</mat-icon>
-        Procesos actuales
-      </h3>
+      </div>
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Nombre del proceso</mat-label>
-        <input matInput [(ngModel)]="proceso.nombre">
-      </mat-form-field>
+    </div>
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Descripción</mat-label>
-        <textarea matInput rows="3" [(ngModel)]="proceso.descripcion"></textarea>
-      </mat-form-field>
+    <!-- PROCESOS -->
+    <div class="card shadow-sm">
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Problemas detectados</mat-label>
-        <textarea matInput rows="2" [(ngModel)]="proceso.problemas"></textarea>
-      </mat-form-field>
+      <div class="card-header">
+        <h3 class="card-title text-lg">
+          Procesos actuales
+        </h3>
+      </div>
 
-      <button mat-stroked-button color="primary"
-              (click)="agregarProceso()">
+      <div class="card-body">
+
+        <div class="form-group">
+          <label class="form-label">Nombre del proceso</label>
+          <input class="form-input"
+                 [(ngModel)]="proceso.nombre">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Descripción</label>
+          <textarea class="form-textarea"
+                    [(ngModel)]="proceso.descripcion">
+          </textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Problemas detectados</label>
+          <textarea class="form-textarea"
+                    [(ngModel)]="proceso.problemas">
+          </textarea>
+        </div>
+
+        <button class="btn-primary btn-sm"
+         (click)="agregarProceso()">
         + Agregar proceso
-      </button>
-    </mat-card>
+        </button>
+
+
+      </div>
+
+    </div>
 
   </div>
 
-
   <!-- NECESIDADES -->
-  <mat-card class="card necesidades">
-    <h3>
-      <mat-icon>check_circle</mat-icon>
-      Necesidades del Cliente
-    </h3>
+  <div class="card shadow-sm mb-lg">
 
-    <div class="checkbox-grid">
-      <mat-checkbox [(ngModel)]="necesidadesBase.usuarios">
-        Gestión de usuarios
-      </mat-checkbox>
-
-      <mat-checkbox [(ngModel)]="necesidadesBase.reportes">
-        Reportes
-      </mat-checkbox>
-
-      <mat-checkbox [(ngModel)]="necesidadesBase.inventarios">
-        Inventarios
-      </mat-checkbox>
-
-      <mat-checkbox [(ngModel)]="necesidadesBase.ventas">
-        Ventas
-      </mat-checkbox>
+    <div class="card-header">
+      <h3 class="card-title text-lg">
+        Necesidades del Cliente
+      </h3>
     </div>
 
-    <mat-divider></mat-divider>
+    <div class="card-body">
 
-    <div class="nueva-necesidad">
-      <mat-form-field appearance="outline">
-        <mat-label>Nueva necesidad</mat-label>
-        <input matInput [(ngModel)]="nuevaNecesidad">
-      </mat-form-field>
+      <div class="grid grid-cols-2 gap-md mb-md">
 
-      <button mat-mini-fab color="primary"
-              (click)="agregarNecesidad()">
-        <mat-icon>add</mat-icon>
-      </button>
-    </div>
+        <label class="flex items-center gap-sm cursor-pointer">
+          <input type="checkbox"
+                 [(ngModel)]="necesidadesBase.usuarios">
+          Gestión de usuarios
+        </label>
 
-    <!-- Lista dinámica -->
-    <div *ngIf="listaNecesidades.length > 0" class="lista-extra">
-      <div *ngFor="let n of listaNecesidades; let i = index">
-        {{ n }}
-        <button mat-icon-button color="warn"
-                (click)="eliminarNecesidad(i)">
-          <mat-icon>delete</mat-icon>
+        <label class="flex items-center gap-sm cursor-pointer">
+          <input type="checkbox"
+                 [(ngModel)]="necesidadesBase.reportes">
+          Reportes
+        </label>
+
+        <label class="flex items-center gap-sm cursor-pointer">
+          <input type="checkbox"
+                 [(ngModel)]="necesidadesBase.inventarios">
+          Inventarios
+        </label>
+
+        <label class="flex items-center gap-sm cursor-pointer">
+          <input type="checkbox"
+                 [(ngModel)]="necesidadesBase.ventas">
+          Ventas
+        </label>
+
+      </div>
+
+      <div class="border-t pt-md mt-md flex gap-sm">
+
+        <input class="form-input"
+               [(ngModel)]="nuevaNecesidad"
+               placeholder="Nueva necesidad">
+
+        <button class="btn btn-primary btn-sm"
+                (click)="agregarNecesidad()">
+          Agregar
         </button>
+
       </div>
+
+      <!-- LISTA DINÁMICA -->
+      <div *ngIf="listaNecesidades.length > 0"
+           class="mt-md flex flex-col gap-sm">
+
+        <div *ngFor="let n of listaNecesidades; let i = index"
+             class="flex justify-between items-center border rounded-md p-sm">
+
+          <span>{{ n }}</span>
+
+          <button class="btn btn-danger btn-sm"
+                  (click)="eliminarNecesidad(i)">
+            Eliminar
+          </button>
+
+        </div>
+
+      </div>
+
     </div>
-  </mat-card>
 
+  </div>
 
-  <!-- RESUMEN DINÁMICO -->
-  <mat-card class="card resumen">
-    <h3>
-      <mat-icon>bar_chart</mat-icon>
-      Resumen de Elicitación
-    </h3>
+  <!-- RESUMEN -->
+  <div class="card shadow-sm">
 
-    <div class="resumen-box">
-      <div class="resumen-item">
-        <strong>{{ entrevistas.length }}</strong>
-        <span>Entrevistas</span>
-      </div>
-
-      <div class="resumen-item">
-        <strong>{{ procesos.length }}</strong>
-        <span>Procesos</span>
-      </div>
-
-      <div class="resumen-item">
-        <strong>{{ totalNecesidades }}</strong>
-        <span>Necesidades</span>
-      </div>
+    <div class="card-header">
+      <h3 class="card-title text-lg">
+        Resumen de Elicitación
+      </h3>
     </div>
-  </mat-card>
+
+    <div class="card-body">
+
+      <div class="flex justify-around text-center">
+
+        <div>
+          <span class="text-2xl font-bold text-primary">
+            {{ entrevistas.length }}
+          </span>
+          <p class="text-muted text-sm">Entrevistas</p>
+        </div>
+
+        <div>
+          <span class="text-2xl font-bold text-primary">
+            {{ procesos.length }}
+          </span>
+          <p class="text-muted text-sm">Procesos</p>
+        </div>
+
+        <div>
+          <span class="text-2xl font-bold text-primary">
+            {{ totalNecesidades }}
+          </span>
+          <p class="text-muted text-sm">Necesidades</p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
 
 </div>

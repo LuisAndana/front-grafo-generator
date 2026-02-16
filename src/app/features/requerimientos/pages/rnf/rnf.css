@@ -1,125 +1,132 @@
-/* Fondo general */
+/* ============================================
+   RNF - HOST
+   ============================================ */
+
 :host {
   display: block;
-  background-color: #f4f6fb;
-  min-height: 100vh;
-  padding: 40px 0;
+  padding: var(--spacing-3xl) 0;
 }
 
-/* Contenedor principal */
+/* ============================================
+   CONTENEDOR
+   ============================================ */
+
 .container {
-  background: white;
-  padding: 40px;
-  border-radius: 20px;
   max-width: 1200px;
   margin: auto;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
 }
 
-/* Título */
+/* ============================================
+   TÍTULO
+   ============================================ */
+
 h2 {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  margin-bottom: 30px;
-  color: #1f1f1f;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xl);
 }
 
-/* ===== RESUMEN ===== */
+/* ============================================
+   RESUMEN
+   ============================================ */
+
 .resumen {
   display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
   flex-wrap: wrap;
 }
 
 .resumen .box {
   flex: 1;
   min-width: 180px;
-  background: linear-gradient(135deg, #7b1fa2, #9c27b0);
-  color: white;
-  padding: 18px;
-  border-radius: 14px;
+  background-color: var(--primary-color);
+  color: #ffffff;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-xl);
   text-align: center;
-  font-weight: 500;
-  box-shadow: 0 6px 18px rgba(21, 101, 192, 0.3);
-  transition: 0.2s;
+  font-weight: var(--font-weight-medium);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast),
+              box-shadow var(--transition-fast);
 }
 
 .resumen .box:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
-/* ===== TARJETAS ===== */
+/* ============================================
+   CARDS
+   ============================================ */
+
 mat-card {
-  border-radius: 18px !important;
-  padding: 25px !important;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05) !important;
+  background-color: var(--card-bg) !important;
+  border-radius: var(--card-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+  padding: var(--card-padding) !important;
+  margin-bottom: var(--spacing-xl);
 }
 
-/* ===== FORMULARIO ===== */
+/* ============================================
+   FORMULARIO
+   ============================================ */
+
 .form-card {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  margin-bottom: 35px;
+  gap: var(--spacing-lg);
 }
 
-/* ===== BOTONES ===== */
+/* ============================================
+   BOTONES
+   ============================================ */
+
 .botones {
   display: flex;
-  gap: 15px;
+  gap: var(--spacing-md);
   align-items: center;
   flex-wrap: wrap;
+  margin-top: var(--spacing-md);
 }
 
-button {
-  border-radius: 30px !important;
-  height: 50px;
-  font-weight: 500;
-  padding: 0 25px;
-  transition: 0.2s;
-}
+/* No forzamos estilos de button */
+/* Usamos el theme azul ya configurado */
 
-button:hover {
-  transform: translateY(-2px);
-}
+/* ============================================
+   TABLA
+   ============================================ */
 
-/* Botón principal RNF */
-button[color="primary"] {
-  background: linear-gradient(135deg, #7b1fa2, #9c27b0);
-  color: white;
-  box-shadow: 0 6px 18px rgba(123, 31, 162, 0.3);
-}
-
-
-/* ===== TABLA ===== */
 table {
   width: 100%;
-  border-radius: 12px;
+  border-radius: var(--border-radius-lg);
   overflow: hidden;
 }
 
 th {
-  background-color: #f4f6fb;
-  font-weight: 600;
+  background-color: var(--neutral-100);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  font-size: 13px;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.5px;
 }
 
 td, th {
-  padding: 14px !important;
+  padding: var(--spacing-md) !important;
 }
 
 table tr:hover {
-  background-color: #f3f8ff;
-  transition: 0.2s;
+  background-color: var(--neutral-50);
+  transition: background-color var(--transition-fast);
 }
 
-/* Responsive */
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
 @media (max-width: 768px) {
+
   .form-card {
     grid-template-columns: 1fr;
   }
@@ -133,7 +140,7 @@ table tr:hover {
     align-items: stretch;
   }
 
-  button {
+  .botones button {
     width: 100%;
   }
 }
