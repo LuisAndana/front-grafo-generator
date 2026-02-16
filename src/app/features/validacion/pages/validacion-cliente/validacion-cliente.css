@@ -1,0 +1,30 @@
+/* Tarjetas del checklist */
+.check-card {
+  padding: var(--spacing-md);
+  border: var(--border-width) solid var(--neutral-200);
+  border-radius: var(--border-radius-md);
+  background-color: #ffffff;
+  transition: all var(--transition-base);
+}
+
+.check-card:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.check-active {
+  border-color: var(--primary-color);
+  background-color: var(--neutral-50);
+  box-shadow: var(--shadow-sm);
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+ul {
+  padding-left: 1.2rem;
+}
