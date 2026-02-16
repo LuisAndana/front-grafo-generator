@@ -1,0 +1,182 @@
+/* ============================================
+   PAGE
+============================================ */
+
+.encuesta-page {
+  padding-top: var(--spacing-2xl);
+  padding-bottom: var(--spacing-4xl);
+  animation: fadeIn var(--transition-base);
+}
+
+/* ============================================
+   HEADER
+============================================ */
+
+.encuesta-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.subtitle {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--neutral-500);
+}
+
+/* ============================================
+   CARD
+============================================ */
+
+.encuesta-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* ============================================
+   SECTIONS
+============================================ */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.section h4 {
+  color: var(--neutral-800);
+}
+
+/* Header con botón */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ============================================
+   FORM
+============================================ */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--neutral-700);
+}
+
+/* Inputs usando variables globales */
+
+input,
+textarea {
+  width: 100%;
+  padding: var(--input-padding-y) var(--input-padding-x);
+  border-radius: var(--input-radius);
+  border: var(--border-width) solid var(--input-border);
+  background-color: var(--input-bg);
+  font-size: var(--font-size-base);
+  transition: 
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: var(--shadow-focus-primary);
+}
+
+/* ============================================
+   PREGUNTAS
+============================================ */
+
+.pregunta-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  background-color: var(--neutral-50);
+  border: var(--border-width) solid var(--neutral-200);
+  transition: 
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.pregunta-card:hover {
+  background-color: var(--neutral-100);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.pregunta-index {
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-color);
+  min-width: 24px;
+}
+
+.pregunta-card input {
+  flex: 1;
+}
+
+/* Botón eliminar */
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--error-color);
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.delete-btn:hover {
+  transform: scale(1.2);
+}
+
+/* ============================================
+   EMPTY STATE
+============================================ */
+
+.empty-state {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--neutral-500);
+  background-color: var(--neutral-100);
+  border-radius: var(--border-radius-md);
+}
+
+/* ============================================
+   ACTIONS
+============================================ */
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

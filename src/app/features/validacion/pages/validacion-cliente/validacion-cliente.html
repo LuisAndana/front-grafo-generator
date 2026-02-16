@@ -1,1 +1,186 @@
-<p>validacion-cliente works!</p>
+<div class="max-w-xl m-auto mt-lg fade-in">
+
+  <!-- HEADER PRINCIPAL -->
+  <div class="mb-lg text-center">
+    <h1 class="text-2xl font-bold text-primary">
+      Validación del Cliente
+    </h1>
+    <p class="text-muted mt-sm">
+      Confirmación formal de requerimientos antes del inicio del desarrollo
+    </p>
+  </div>
+
+  <div class="card shadow-lg">
+
+    <!-- PROGRESO -->
+    <div class="card-header bg-gray">
+      <div class="flex justify-between items-center">
+        <span class="text-sm font-medium">Estado del Documento</span>
+
+        <span *ngIf="aprobado"
+              class="badge badge-success">
+          ✔ Validado
+        </span>
+
+        <span *ngIf="!aprobado"
+              class="badge badge-warning">
+          Pendiente
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      <!-- ========================= -->
+      <!-- CHECKLIST COMO TARJETAS -->
+      <!-- ========================= -->
+
+      <div class="mb-lg">
+
+        <h3 class="font-semibold mb-md">Checklist de Revisión</h3>
+
+        <div class="grid grid-cols-2 gap-md">
+
+          <div class="check-card"
+               [class.check-active]="checklist.rf">
+            <label class="flex items-center gap-sm cursor-pointer">
+              <input type="checkbox" [(ngModel)]="checklist.rf">
+              Requerimientos Funcionales
+            </label>
+          </div>
+
+          <div class="check-card"
+               [class.check-active]="checklist.rnf">
+            <label class="flex items-center gap-sm cursor-pointer">
+              <input type="checkbox" [(ngModel)]="checklist.rnf">
+              Requerimientos No Funcionales
+            </label>
+          </div>
+
+          <div class="check-card"
+               [class.check-active]="checklist.casosUso">
+            <label class="flex items-center gap-sm cursor-pointer">
+              <input type="checkbox" [(ngModel)]="checklist.casosUso">
+              Casos de Uso
+            </label>
+          </div>
+
+          <div class="check-card"
+               [class.check-active]="checklist.restricciones">
+            <label class="flex items-center gap-sm cursor-pointer">
+              <input type="checkbox" [(ngModel)]="checklist.restricciones">
+              Restricciones
+            </label>
+          </div>
+
+          <div class="check-card col-span-2"
+               [class.check-active]="checklist.prioridades">
+            <label class="flex items-center gap-sm cursor-pointer">
+              <input type="checkbox" [(ngModel)]="checklist.prioridades">
+              Priorización Definida
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ========================= -->
+      <!-- OBSERVACIONES -->
+      <!-- ========================= -->
+
+      <div class="form-group">
+        <label class="form-label">Observaciones del Cliente</label>
+        <textarea
+          class="form-textarea"
+          [(ngModel)]="observaciones"
+          placeholder="Ingrese comentarios adicionales...">
+        </textarea>
+      </div>
+
+      <!-- ========================= -->
+      <!-- DATOS DE APROBACIÓN -->
+      <!-- ========================= -->
+
+      <div class="border-t mt-lg pt-lg">
+
+        <h3 class="font-semibold mb-md">Datos de Aprobación</h3>
+
+        <div class="grid grid-cols-2 gap-lg">
+
+          <div class="form-group">
+            <label class="form-label">Nombre del Aprobador</label>
+            <input
+              type="text"
+              class="form-input"
+              [(ngModel)]="aprobador"
+              placeholder="Nombre completo">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fecha</label>
+            <input
+              type="date"
+              class="form-input"
+              [(ngModel)]="fecha">
+          </div>
+
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Firma Digital</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="firmaDigital"
+            placeholder="Firma electrónica o token">
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- FOOTER -->
+    <!-- ========================= -->
+
+    <div class="card-footer flex justify-between items-center">
+
+      <div class="flex items-center gap-md">
+
+        <button
+          *ngIf="aprobado"
+          class="btn btn-ghost btn-sm"
+          (click)="limpiarValidacion()">
+          Reiniciar
+        </button>
+
+      </div>
+
+      <button
+        class="btn btn-primary btn-lg"
+        [disabled]="!validarFormulario()"
+        (click)="aprobar()">
+
+        Aprobar Requerimientos
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- RESULTADO -->
+  <div *ngIf="aprobado"
+       class="alert alert-success mt-lg fade-in-up shadow-sm">
+
+    <strong>Generación automática activada:</strong>
+
+    <ul class="mt-sm">
+      <li>Tablas de Base de Datos</li>
+      <li>Formularios</li>
+      <li>CRUD</li>
+      <li>Roles y Permisos</li>
+    </ul>
+
+  </div>
+
+</div>

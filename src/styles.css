@@ -377,3 +377,104 @@ a:hover {
     opacity: 0.5;
   }
 }
+
+/* ============================================
+   BOTONES GLOBALES
+   ============================================ */
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border: none;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
+  font-weight: var(--button-font-weight);
+  cursor: pointer;
+  transition: 
+    background-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-sm {
+  padding: 0.5rem 1.5rem;
+  font-size: var(--font-size-sm);
+}
+
+
+/* ============================================
+   ANGULAR MATERIAL - OVERRIDE PRIMARY (AZUL GRAFOS)
+   ============================================ */
+
+/* Botón Raised Primary */
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+.mat-mdc-raised-button.mat-primary:hover {
+  background-color: var(--primary-hover) !important;
+}
+
+/* Botón Stroked (warn) */
+.mat-mdc-outlined-button.mat-warn {
+  border-color: var(--error-color) !important;
+  color: var(--error-color) !important;
+}
+
+.mat-mdc-outlined-button.mat-warn:hover {
+  background-color: var(--error-light) !important;
+}
+
+/* Icon buttons warn */
+.mat-mdc-icon-button.mat-warn {
+  color: var(--error-color) !important;
+}
+
+/* Chips */
+.mat-mdc-chip {
+  border-radius: var(--border-radius-md) !important;
+  font-weight: var(--font-weight-medium);
+}
+
+/* ============================================
+   CARDS GLOBALES
+   ============================================ */
+
+.mat-mdc-card {
+  background-color: var(--card-bg) !important;
+  border-radius: var(--card-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+/* ============================================
+   FIX COLOR TABLAS MATERIAL
+   ============================================ */
+
+.mat-mdc-table {
+  background-color: var(--card-bg) !important;
+}
+
+.mat-mdc-header-row {
+  background-color: var(--neutral-100) !important;
+}
+
+.mat-mdc-row {
+  background-color: var(--card-bg) !important;
+}
+
+.mat-mdc-row:hover {
+  background-color: var(--neutral-50) !important;
+}
+

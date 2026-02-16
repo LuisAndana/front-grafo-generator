@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SrsGeneratorComponent } from './srs-generator.component';
+import { EncuestaComponent } from './encuesta.component';
 
-describe('SrsGenerator', () => {
-  let component: SrsGeneratorComponent;
-  let fixture: ComponentFixture<SrsGeneratorComponent>;
+describe('Encuesta', () => {
+  let component: EncuestaComponent;
+  let fixture: ComponentFixture<EncuestaComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SrsGeneratorComponent]
+      imports: [EncuestaComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(SrsGeneratorComponent);
+    fixture = TestBed.createComponent(EncuestaComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

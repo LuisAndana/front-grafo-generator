@@ -1,0 +1,146 @@
+/* ============================================
+   RF - CONTENEDOR
+   ============================================ */
+
+.container {
+  padding: var(--spacing-3xl);
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* ============================================
+   TÍTULO
+   ============================================ */
+
+h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* ============================================
+   RESUMEN
+   ============================================ */
+
+.resumen {
+  display: flex;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-xl);
+}
+
+.resumen .box {
+  background-color: var(--card-bg);
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--border-radius-xl);
+  font-weight: var(--font-weight-semibold);
+  min-width: 160px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast),
+              box-shadow var(--transition-fast);
+}
+
+.resumen .box:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   TARJETAS
+   ============================================ */
+
+mat-card {
+  border-radius: var(--card-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+  padding: var(--card-padding) !important;
+  background-color: var(--card-bg);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* ============================================
+   FORMULARIO
+   ============================================ */
+
+.form-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+
+.botones {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: var(--spacing-md);
+}
+
+/* Quitamos estilos locales de button */
+/* Ahora usan los estilos globales */
+
+/* ============================================
+   TABLA
+   ============================================ */
+
+table {
+  width: 100%;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+th {
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--neutral-100);
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+}
+
+td, th {
+  padding: var(--spacing-md) !important;
+}
+
+table tr:hover {
+  background-color: var(--neutral-50);
+  transition: background-color var(--transition-fast);
+}
+
+/* ============================================
+   CHIPS
+   ============================================ */
+
+mat-chip {
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--border-radius-md);
+  padding: 4px 10px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+
+  .form-card {
+    grid-template-columns: 1fr;
+  }
+
+  .resumen {
+    flex-direction: column;
+  }
+
+  .botones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .botones button {
+    width: 100%;
+  }
+}

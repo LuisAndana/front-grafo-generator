@@ -1,0 +1,73 @@
+<div class="historial-container">
+
+  <!-- TÍTULO -->
+  <div class="page-header">
+    <h1>Historial de Usuario</h1>
+    <p>Registro de actividades realizadas en el sistema</p>
+  </div>
+
+  <!-- LISTA -->
+  <div *ngFor="let item of historial"
+       class="historial-card"
+       (click)="toggle(item)">
+
+    <!-- HEADER -->
+    <div class="card-header">
+      
+      <div class="left">
+
+        <div class="icon-box">
+        </div>
+
+        <div>
+          <h3>{{ item.accion }}</h3>
+          <p class="modulo">{{ item.modulo }}</p>
+        </div>
+
+      </div>
+
+      <div class="right">
+        <span class="fecha">{{ item.fecha | date:'medium' }}</span>
+        <span class="arrow"
+              [class.rotate]="expandedId === item.id">
+          ▾
+        </span>
+      </div>
+
+    </div>
+
+    <!-- DETALLE -->
+    <div class="card-body"
+         *ngIf="expandedId === item.id">
+
+      <div *ngIf="item.detalles?.titulo">
+        <strong>Título:</strong> {{ item.detalles.titulo }}
+      </div>
+
+      <div *ngIf="item.detalles?.objetivo">
+        <strong>Objetivo:</strong> {{ item.detalles.objetivo }}
+      </div>
+
+      <div *ngIf="item.detalles?.perfil">
+        <strong>Perfil:</strong> {{ item.detalles.perfil }}
+      </div>
+
+      <div *ngIf="item.detalles?.totalPreguntas">
+        <strong>Total de preguntas:</strong>
+        {{ item.detalles.totalPreguntas }}
+      </div>
+
+      <div *ngIf="item.detalles?.preguntas?.length">
+        <strong>Preguntas:</strong>
+        <ul>
+          <li *ngFor="let p of item.detalles.preguntas">
+            {{ p.numero }} - {{ p.texto }}
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

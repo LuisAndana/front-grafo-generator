@@ -1,0 +1,26 @@
+/* ===========================
+   Ajustes específicos módulo
+   =========================== */
+
+/* Checkbox más visible */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+/* Lista dinámica de necesidades */
+.lista-necesidad-item {
+  transition: all var(--transition-base);
+}
+
+.lista-necesidad-item:hover {
+  background-color: var(--neutral-50);
+  transform: translateY(-2px);
+}
+
+/* Animación suave */
+.card {
+  animation: fadeIn var(--transition-base);
+}

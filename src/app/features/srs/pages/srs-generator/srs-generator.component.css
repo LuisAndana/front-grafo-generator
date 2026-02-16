@@ -1,0 +1,369 @@
+.srs-generator-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.srs-header {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+.srs-header h1 {
+  font-size: 2.2em;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.srs-header p {
+  font-size: 1em;
+  color: #666;
+  font-weight: 300;
+}
+
+.project-info {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-field label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95em;
+}
+
+.input-field,
+.textarea-field,
+.select-field {
+  padding: 12px 14px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input-field:focus,
+.textarea-field:focus,
+.select-field:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.textarea-field {
+  resize: vertical;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Tabs Navigation */
+.tabs-navigation {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 10px 18px;
+  background: #f0f2f5;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #555;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.tab-btn:hover {
+  background: #e0e4e8;
+  transform: translateY(-1px);
+}
+
+.tab-btn.active {
+  background: #0066cc;
+  color: white;
+  border-color: #0066cc;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+/* Tabs Content */
+.tabs-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.tab-content {
+  padding: 30px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-content h2 {
+  color: #2c3e50;
+  margin-bottom: 25px;
+  font-size: 1.6em;
+  border-bottom: 3px solid #0066cc;
+  padding-bottom: 12px;
+}
+
+.add-btn,
+.add-step-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.add-btn:hover,
+.add-step-btn:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.add-btn:active,
+.add-step-btn:active {
+  transform: translateY(0);
+}
+
+/* Item Cards - Simetricos */
+.item-card {
+  background: #f8f9fa;
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.item-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #0066cc;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e4e8;
+}
+
+.item-header h4 {
+  color: #0066cc;
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+/* Form Group para agrupar inputs */
+.form-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group .input-field,
+.form-group .select-field {
+  width: 100%;
+}
+
+.form-group .full-width {
+  grid-column: 1 / -1;
+}
+
+/* Remove Button */
+.remove-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.remove-btn:hover {
+  background: #c0392b;
+  transform: scale(1.1);
+}
+
+.remove-btn:active {
+  transform: scale(0.95);
+}
+
+.remove-step-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  font-weight: 300;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.remove-step-btn:hover {
+  background: #c0392b;
+  transform: scale(1.1);
+}
+
+/* Section Label */
+.section-label {
+  display: block;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 20px 0 15px 0;
+  font-size: 0.95em;
+}
+
+/* Step Item */
+.step-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.step-item .input-field {
+  flex: 1;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.generate-btn {
+  background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+  color: white;
+  border: none;
+  padding: 14px 45px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+}
+
+.generate-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 102, 204, 0.4);
+}
+
+.generate-btn:active {
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .srs-generator-container {
+    padding: 15px;
+  }
+
+  .srs-header h1 {
+    font-size: 1.6em;
+  }
+
+  .tabs-navigation {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tab-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+
+  .item-card {
+    padding: 20px;
+  }
+
+  .form-group {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+}

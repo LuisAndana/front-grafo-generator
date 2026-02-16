@@ -1,14 +1,16 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { RouterModule, Routes } from '@angular/router';
+import { ElicitacionDashboard } from './pages/elicitacion-dashboard/elicitacion-dashboard';
 
-import { ElicitacionRoutingModule } from './elicitacion-routing-module';
-
+const routes: Routes = [
+  {
+    path: '',
+    component: ElicitacionDashboard
+  }
+];
 
 @NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    ElicitacionRoutingModule
-  ]
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
 })
-export class ElicitacionModule { }
+export class ElicitacionRoutingModule {}

@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, Inject, PLATFORM_ID, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,11 +22,14 @@ import { MatNativeDateModule } from '@angular/material/core';
     MatNativeDateModule
   ]
 })
-export class ProyectoFormComponent {
+export class ProyectoFormComponent implements OnInit {
 
   proyectoForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
     this.proyectoForm = this.fb.group({
       nombre: ['', Validators.required],
       cliente: ['', Validators.required],
@@ -38,10 +41,51 @@ export class ProyectoFormComponent {
     });
   }
 
+  // =============================
+  // INIT
+  // =============================
+
+  ngOnInit(): void {
+    this.cargarProyecto();
+  }
+
+  // =============================
+  // GUARDAR
+  // =============================
+
   guardar() {
     if (this.proyectoForm.valid) {
+
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem(
+          'proyectoData',
+          JSON.stringify(this.proyectoForm.value)
+        );
+      }
+
       alert('Proyecto guardado correctamente');
       this.proyectoForm.reset();
     }
   }
+
+  // =============================
+  // CARGAR
+  // =============================
+
+  cargarProyecto() {
+    if (isPlatformBrowser(this.platformId)) {
+
+      const data = localStorage.getItem('proyectoData');
+
+      if (!data) return;
+
+      const parsed = JSON.parse(data);
+
+      this.proyectoForm.patchValue({
+        ...parsed,
+        fechaInicio: parsed.fechaInicio ? new Date(parsed.fechaInicio) : ''
+      });
+    }
+  }
+
 }
