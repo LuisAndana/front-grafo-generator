@@ -1,12 +1,19 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  standalone: true,
+  imports: [RouterOutlet, CommonModule],
+  template: `<router-outlet></router-outlet>`,
+  styles: []
 })
-export class App {
-  protected readonly title = signal('grafo-generator');
+export class App implements OnInit {
+  constructor(private http: HttpClient) {}
+
+  ngOnInit() {
+    // Aquí puedes hacer llamadas globales si las necesitas
+  }
 }
