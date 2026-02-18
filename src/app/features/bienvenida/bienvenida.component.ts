@@ -33,7 +33,7 @@ export class BienvenidaComponent {
   registerError = '';
   registerSuccess = false;
 
-  private apiUrl = 'http://localhost:8000';
+  private apiUrl = 'http://localhost:8000/usuarios';
 
   constructor(private router: Router, private http: HttpClient) {}
 
