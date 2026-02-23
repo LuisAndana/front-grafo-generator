@@ -50,9 +50,15 @@ export class BienvenidaComponent implements OnDestroy, OnInit {
 
   ngOnInit() {
     // Verificar si ya está autenticado
-    const token = localStorage.getItem('access_token');
-    if (token) {
+    const token = localStorage.getItem('srs_token');
+    const usuario = localStorage.getItem('srs_usuario');
+    
+    // Solo redirigir si AMBOS existen (token válido + usuario)
+    if (token && usuario) {
+      console.log('✅ Usuario ya autenticado, redirigiendo a /proyecto');
       this.router.navigate(['/proyecto']);
+    } else {
+      console.log('👤 No hay autenticación, mostrando bienvenida');
     }
   }
 

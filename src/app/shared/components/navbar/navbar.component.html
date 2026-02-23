@@ -1,19 +1,20 @@
-<nav class="navbar">
+<nav class="navbar" role="navigation" aria-label="Barra de navegación principal">
   <div class="navbar-container">
     <!-- Botón Hamburguesa -->
     <button 
       class="hamburger-btn"
       (click)="toggleMenu()"
       type="button"
-      aria-label="Alternar menú lateral">
+      aria-label="Abrir o cerrar menú lateral"
+      title="Menú lateral">
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
     </button>
 
     <!-- Brand / Logo -->
-    <a routerLink="/proyecto" class="navbar-brand">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" class="logo">
+    <a routerLink="/proyecto" class="navbar-brand" title="Ir a Proyecto">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" class="logo" aria-hidden="true">
         <rect x="4" y="4" width="24" height="24" rx="3" stroke="currentColor" stroke-width="2"/>
         <circle cx="12" cy="12" r="2" fill="currentColor"/>
         <circle cx="20" cy="12" r="2" fill="currentColor"/>
@@ -25,7 +26,7 @@
     </a>
 
     <!-- Spacer -->
-    <div class="spacer"></div>
+    <div class="spacer" aria-hidden="true"></div>
 
     <!-- User Menu -->
     <div class="navbar-menu">
@@ -37,15 +38,15 @@
           (click)="toggleUserMenu($event)"
           [class.active]="showUserMenu"
           type="button"
-          aria-label="Menú de usuario"
+          [attr.aria-label]="'Menú de ' + getNombreUsuario()"
           aria-haspopup="true"
           [attr.aria-expanded]="showUserMenu">
-          <div class="user-avatar">
+          <div class="user-avatar" title="Avatar del usuario">
             {{ getInitials() }}
           </div>
           <div class="user-info">
-            <span class="user-name">{{ getNombreUsuario() }}</span>
-            <span class="user-email">{{ usuario.email }}</span>
+            <span class="user-name" title="Nombre del usuario">{{ getNombreUsuario() }}</span>
+            <span class="user-email" title="Correo del usuario">{{ usuario.email }}</span>
           </div>
           <svg 
             width="20" 
@@ -56,7 +57,8 @@
             stroke-linecap="round" 
             stroke-linejoin="round"
             class="chevron-icon"
-            [class.rotated]="showUserMenu">
+            [class.rotated]="showUserMenu"
+            aria-hidden="true">
             <path d="M6 9l6 6 6-6"/>
           </svg>
         </button>
@@ -64,7 +66,8 @@
         <!-- Dropdown Menu -->
         <div 
           class="dropdown-menu" 
-          *ngIf="showUserMenu && usuario">
+          *ngIf="showUserMenu && usuario"
+          role="menu">
           
           <!-- User Info Header -->
           <div class="dropdown-header">
@@ -76,24 +79,26 @@
                 <div class="dropdown-name">{{ getNombreUsuario() }}</div>
                 <div class="dropdown-email">{{ usuario.email }}</div>
                 <div class="dropdown-role" *ngIf="usuario.rol">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                   </svg>
-                  {{ getRolFormatted() }}
+                  <span>{{ getRolFormatted() }}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="dropdown-divider"></div>
+          <div class="dropdown-divider" aria-hidden="true"></div>
 
           <!-- Menu Items -->
           <a 
             routerLink="/perfil" 
             class="dropdown-item" 
             (click)="closeUserMenu()"
-            routerLinkActive="active">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            routerLinkActive="active"
+            role="menuitem"
+            title="Ver mi perfil">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
@@ -104,8 +109,10 @@
             routerLink="/usuarios" 
             class="dropdown-item" 
             (click)="closeUserMenu()"
-            routerLinkActive="active">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            routerLinkActive="active"
+            role="menuitem"
+            title="Gestionar usuarios">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
@@ -113,14 +120,16 @@
             <span>Gestionar Usuarios</span>
           </a>
 
-          <div class="dropdown-divider"></div>
+          <div class="dropdown-divider" aria-hidden="true"></div>
 
           <!-- Logout Button -->
           <button 
             class="dropdown-item dropdown-item-danger" 
             (click)="handleLogout()"
-            type="button">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            type="button"
+            role="menuitem"
+            title="Cerrar sesión">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
               <polyline points="16 17 21 12 16 7"/>
               <line x1="21" y1="12" x2="9" y2="12"/>
@@ -134,8 +143,9 @@
           *ngIf="!usuario"
           class="logout-btn"
           (click)="irABienvenida()"
-          type="button">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          type="button"
+          title="Iniciar sesión">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>

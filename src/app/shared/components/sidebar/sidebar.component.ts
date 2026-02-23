@@ -1,16 +1,23 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+interface MenuItem {
+  label: string;
+  icon: string;
+  route: string;
+}
+
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.css']
+  styleUrls: ['./sidebar.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   @Input() isOpen = true;
@@ -18,7 +25,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  menuItems = [
+  menuItems: MenuItem[] = [
     {
       label: 'Proyecto',
       icon: 'home',
@@ -61,15 +68,24 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) {
+    console.log('📋 SidebarComponent inicializado con', this.menuItems.length, 'items');
+  }
 
   ngOnInit() {
-    // Lógica adicional si es necesaria
+    console.log('📋 SidebarComponent ngOnInit - Items:', this.menuItems.length);
+    console.log('📋 isOpen:', this.isOpen);
+    console.log('📋 Menu items:', this.menuItems);
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  onMenuItemClick(): void {
+    console.log('📋 Item de menú clickeado');
+    this.closeSidebar.emit();
   }
 
   getIcon(iconName: string): string {
@@ -94,7 +110,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         <path d="M12 14c-2.209 0-4 1.791-4 4s1.791 4 4 4 4-1.791 4-4-1.791-4-4-4z"/>
       </svg>`,
       srs: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 6.253v13m0-13C6.507 6.253 3 9.064 3 12.756c0 3.692 3.507 6.503 9 6.503m0-13c5.493 0 9 2.811 9 6.503 0 3.692-3.507 6.503-9 6.503m0-13v13m0-13c-5.493 0-9 2.811-9 6.503 0 3.692 3.507 6.503 9 6.503m0-13c5.493 0 9 2.811 9 6.503 0 3.692-3.507 6.503-9 6.503"/>
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 7h6m-6 4h6"/>
       </svg>`,
       validacion: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="20 6 9 17 4 12"/>
@@ -104,6 +120,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
         <polyline points="12 6 12 12 16 14"/>
       </svg>`
     };
-    return icons[iconName] || '';
+    
+    const icon = icons[iconName] || '';
+    console.log(`🎨 Retornando icon para: ${iconName}`);
+    return icon;
   }
 }

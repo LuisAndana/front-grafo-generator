@@ -1,14 +1,27 @@
 <aside class="sidebar" [class.open]="isOpen">
   <nav class="sidebar-nav">
+    <!-- Debug: Mostrar cantidad de items -->
+    <div style="padding: 10px; font-size: 12px; color: #999; display: none;">
+      Items: {{ menuItems.length }}
+    </div>
+
+    <!-- Items del menú -->
     <a 
-      *ngFor="let item of menuItems"
+      *ngFor="let item of menuItems; let i = index"
       [routerLink]="item.route"
       routerLinkActive="active"
       [routerLinkActiveOptions]="{ exact: false }"
       class="nav-item"
-      (click)="closeSidebar.emit()">
+      (click)="onMenuItemClick()"
+      [attr.data-index]="i"
+      [title]="item.label">
       <div class="nav-icon" [innerHTML]="getIcon(item.icon)"></div>
       <span class="nav-label">{{ item.label }}</span>
     </a>
+
+    <!-- Si no hay items, mostrar mensaje -->
+    <div *ngIf="menuItems.length === 0" style="padding: 20px; color: #999; text-align: center;">
+      No hay items en el menú
+    </div>
   </nav>
 </aside>

@@ -12,18 +12,19 @@ import { AuthService } from './core/services/auth.service';
   template: `
     <div class="app-layout">
       <app-navbar 
+        *ngIf="usuario"
         (toggleSidebar)="toggleSidebar()"
-        [sidebarOpen]="sidebarOpen">
+        [sidebarOpen]="sidebarOpen"
+        [usuario]="usuario">
       </app-navbar>
+      
       <div class="app-body">
-        <!-- Sidebar solo si hay usuario -->
         <app-sidebar 
           *ngIf="usuario"
           [isOpen]="sidebarOpen"
           (closeSidebar)="closeSidebar()">
         </app-sidebar>
         
-        <!-- Main content -->
         <main class="app-main">
           <router-outlet></router-outlet>
         </main>
@@ -31,10 +32,15 @@ import { AuthService } from './core/services/auth.service';
     </div>
   `,
   styles: [`
+    :host {
+      --header-height: 64px;
+    }
+
     .app-layout {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      background: var(--bg-color, #f5f5f5);
     }
 
     .app-body {
@@ -42,6 +48,7 @@ import { AuthService } from './core/services/auth.service';
       flex: 1;
       overflow: hidden;
       position: relative;
+      gap: 0;
     }
 
     .app-main {
@@ -51,55 +58,80 @@ import { AuthService } from './core/services/auth.service';
       padding: 0;
       width: 100%;
     }
+
+    @media (max-width: 768px) {
+      .app-body {
+        position: relative;
+      }
+    }
   `]
 })
 export class App implements OnInit {
   usuario: any = null;
-  sidebarOpen = true;  // ✅ Por defecto abierto en desktop
+  sidebarOpen = true;
 
   constructor(private authService: AuthService) {
     console.log('🎨 App constructor iniciado');
     
-    // ✅ LIMPIAR localStorage al iniciar (para eliminar datos viejos)
-    console.log('🗑️ Limpiando localStorage antiguo...');
-    localStorage.removeItem('srs_token');
-    localStorage.removeItem('srs_usuario');
-    localStorage.removeItem('srs_authenticated');
-    localStorage.removeItem('user');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    console.log('✅ localStorage limpiado');
+    this.verificarYLimpiarStorageInvalido();
     
-    // Ahora cargar usuario (que será null)
-    this.usuario = null;
-    console.log('👤 Usuario inicial:', this.usuario);
-
-    // ✅ DETECTAR TAMAÑO DE PANTALLA AL INICIAR
     this.detectarTamanioPantalla();
   }
 
   ngOnInit() {
     console.log('🎨 App ngOnInit');
     
-    // Suscribirse a cambios del usuario
     this.authService.usuario$.subscribe(usuario => {
       console.log('📊 Usuario actualizado en App desde AuthService:', usuario);
       this.usuario = usuario;
       
       if (usuario) {
         console.log('✅ Usuario logueado:', usuario.nombre);
-        console.log('👤 Mostrando sidebar');
+        console.log('👤 Mostrando navbar y sidebar');
+        this.detectarTamanioPantalla();
       } else {
         console.log('❌ Usuario deslogueado');
-        console.log('👤 Ocultando sidebar');
+        console.log('👤 Ocultando navbar y sidebar');
+        this.sidebarOpen = false;
       }
     });
 
-    // ✅ ESCUCHAR CAMBIOS DE TAMAÑO DE PANTALLA
     window.addEventListener('resize', () => this.detectarTamanioPantalla());
   }
 
-  // ✅ MÉTODO PARA DETECTAR TAMAÑO DE PANTALLA
+  private verificarYLimpiarStorageInvalido() {
+    const token = localStorage.getItem('srs_token');
+    const usuario = localStorage.getItem('srs_usuario');
+    const authenticated = localStorage.getItem('srs_authenticated');
+
+    console.log('🔍 Verificando estado de localStorage...');
+    console.log('   - Token:', token ? 'existe' : 'no existe');
+    console.log('   - Usuario:', usuario ? 'existe' : 'no existe');
+    console.log('   - Authenticated:', authenticated);
+
+    if (token && !usuario) {
+      console.log('⚠️ Datos corruptos detectados (token sin usuario) - Limpiando...');
+      this.limpiarAuthData();
+      return;
+    }
+
+    if (authenticated === 'true' && (!token || !usuario)) {
+      console.log('⚠️ Estado inconsistente detectado - Limpiando...');
+      this.limpiarAuthData();
+      return;
+    }
+
+    console.log('✅ Estado de localStorage válido');
+  }
+
+  private limpiarAuthData() {
+    console.log('🗑️ Limpiando datos de autenticación inválidos...');
+    localStorage.removeItem('srs_token');
+    localStorage.removeItem('srs_usuario');
+    localStorage.removeItem('srs_authenticated');
+    console.log('✅ Datos limpios');
+  }
+
   detectarTamanioPantalla() {
     const esMovil = window.innerWidth <= 768;
     if (esMovil) {
@@ -118,7 +150,10 @@ export class App implements OnInit {
   }
 
   closeSidebar() {
-    console.log('☰ Cerrando sidebar');
-    this.sidebarOpen = false;
+    console.log('☰ Cerrando sidebar desde App');
+    const esMovil = window.innerWidth <= 768;
+    if (esMovil) {
+      this.sidebarOpen = false;
+    }
   }
 }

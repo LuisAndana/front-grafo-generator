@@ -14,9 +14,9 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   @Input() sidebarOpen = true;
+  @Input() usuario: Usuario | null = null;
   @Output() toggleSidebar = new EventEmitter<void>();
 
-  usuario: Usuario | null = null;
   showUserMenu = false;
   private destroy$ = new Subject<void>();
 
@@ -25,7 +25,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private router: Router
   ) {
     console.log('🎨 NavbarComponent constructor - Cargando usuario del localStorage');
-    // Cargar usuario del localStorage si existe
     const usuarioStr = localStorage.getItem('srs_usuario');
     if (usuarioStr) {
       try {
@@ -39,12 +38,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('🎨 NavbarComponent ngOnInit');
-    this.authService.usuario$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(usuario => {
-        console.log('📊 Usuario actualizado desde AuthService:', usuario);
-        this.usuario = usuario;
-      });
+    if (!this.usuario) {
+      this.authService.usuario$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(usuario => {
+          console.log('📊 Usuario actualizado desde AuthService:', usuario);
+          this.usuario = usuario;
+        });
+    }
   }
 
   ngOnDestroy() {
@@ -62,11 +63,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleMenu() {
-    console.log('☰ Hamburguesa clickeada - sidebarOpen antes:', this.sidebarOpen);
+  toggleMenu(event?: Event) {
+    console.log('☰ Hamburguesa clickeada');
     event?.stopPropagation();
     this.toggleSidebar.emit();
-    console.log('☰ Hamburguesa clickeada - evento emitido');
+    console.log('☰ Evento emitido');
   }
 
   toggleUserMenu(event: Event) {
@@ -81,36 +82,26 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.showUserMenu = false;
   }
 
-  /**
-   * Logout - ejecuta logout del AuthService
-   */
   logout() {
     console.log('🚪 Ejecutando logout desde navbar...');
     this.authService.logout();
     this.closeUserMenu();
   }
 
-  /**
-   * Handle Logout - wrapper para el botón del dropdown
-   */
   handleLogout() {
     console.log('🚪 handleLogout llamado');
     this.logout();
   }
 
-  /**
-   * Ir a Bienvenida - para cuando no hay usuario
-   */
   irABienvenida() {
     console.log('🔄 Navegando a /bienvenida desde botón Login');
     this.router.navigate(['/bienvenida']).then(success => {
       console.log('✅ Navegación a /bienvenida:', success ? 'exitosa' : 'fallida');
+    }).catch(error => {
+      console.error('❌ Error en navegación:', error);
     });
   }
 
-  /**
-   * Obtener iniciales del usuario
-   */
   getInitials(): string {
     if (!this.usuario) {
       return 'U';
@@ -122,9 +113,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return `${nombre}${apellido}` || 'U';
   }
 
-  /**
-   * Obtener rol formateado del usuario
-   */
   getRolFormatted(): string {
     if (!this.usuario?.rol) {
       return 'Usuario';
@@ -141,9 +129,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return roles[this.usuario.rol] || this.usuario.rol;
   }
 
-  /**
-   * Obtener nombre completo del usuario
-   */
   getNombreUsuario(): string {
     if (!this.usuario) {
       return 'Usuario';
