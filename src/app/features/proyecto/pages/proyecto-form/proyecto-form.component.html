@@ -1,49 +1,264 @@
+<div class="proyecto-form-container">
+  <!-- Header del Formulario -->
+  <div class="form-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="6" y="8" width="20" height="18" rx="2"/>
+          <path d="M10 14h12M10 19h12M6 12h20"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1 class="form-title">Registro del Proyecto</h1>
+        <p class="form-subtitle">{{ getTitleForStep() }}</p>
+      </div>
+    </div>
+    <div class="header-progress">
+      <div class="progress-badge">
+        <span class="badge-text">Paso {{ currentStep }} de 3</span>
+      </div>
+    </div>
+  </div>
 
-<div class="container">
-  <h2>Registro del Proyecto (Incepción)</h2>
+  <!-- Barra de progreso -->
+  <div class="progress-bar-container">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="(currentStep / 3) * 100"></div>
+    </div>
+    <div class="progress-steps">
+      <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+        <span class="step-number">1</span>
+        <span class="step-label">Básica</span>
+      </div>
+      <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+        <span class="step-number">2</span>
+        <span class="step-label">Descripción</span>
+      </div>
+      <div class="step" [class.active]="currentStep >= 3">
+        <span class="step-number">3</span>
+        <span class="step-label">Detalles</span>
+      </div>
+    </div>
+  </div>
 
-  <form [formGroup]="proyectoForm" (ngSubmit)="guardar()">
+  <!-- Tarjeta del Formulario -->
+  <div class="form-card">
+    <form [formGroup]="proyectoForm">
+      
+      <!-- PASO 1: Información Básica -->
+      <div class="form-step" *ngIf="currentStep === 1">
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">01</span>
+            Información Básica del Proyecto
+          </h3>
+          
+          <div class="form-group">
+            <label class="form-label" for="nombre">Nombre del Proyecto *</label>
+            <input 
+              id="nombre"
+              type="text"
+              formControlName="nombre"
+              class="form-input"
+              placeholder="Ej: Sistema de Gestión de Inventario"
+            />
+            <div class="form-help">Nombre único y descriptivo del proyecto</div>
+            <div class="form-error" *ngIf="isFieldInvalid('nombre')">
+              {{ getErrorMessage('nombre') }}
+            </div>
+          </div>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Nombre del Proyecto</mat-label>
-      <input matInput formControlName="nombre">
-    </mat-form-field>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cliente">Cliente *</label>
+              <input 
+                id="cliente"
+                type="text"
+                formControlName="cliente"
+                class="form-input"
+                placeholder="Ej: Empresa XYZ"
+              />
+              <div class="form-error" *ngIf="isFieldInvalid('cliente')">
+                {{ getErrorMessage('cliente') }}
+              </div>
+            </div>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Cliente</mat-label>
-      <input matInput formControlName="cliente">
-    </mat-form-field>
+            <div class="form-group">
+              <label class="form-label" for="organizacion">Organización *</label>
+              <input 
+                id="organizacion"
+                type="text"
+                formControlName="organizacion"
+                class="form-input"
+                placeholder="Ej: Departamento de TI"
+              />
+              <div class="form-error" *ngIf="isFieldInvalid('organizacion')">
+                {{ getErrorMessage('organizacion') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Organización</mat-label>
-      <input matInput formControlName="organizacion">
-    </mat-form-field>
+      <!-- PASO 2: Descripción -->
+      <div class="form-step" *ngIf="currentStep === 2">
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">02</span>
+            Descripción y Objetivos
+          </h3>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Descripción del Problema</mat-label>
-      <textarea matInput rows="3" formControlName="descripcionProblema"></textarea>
-    </mat-form-field>
+          <div class="form-group">
+            <label class="form-label" for="descripcionProblema">Descripción del Problema *</label>
+            <textarea
+              id="descripcionProblema"
+              formControlName="descripcionProblema"
+              class="form-textarea"
+              rows="4"
+              placeholder="Describa el problema que el proyecto resolverá..."
+            ></textarea>
+            <div class="form-help">Máximo 500 caracteres</div>
+            <div class="form-error" *ngIf="isFieldInvalid('descripcionProblema')">
+              {{ getErrorMessage('descripcionProblema') }}
+            </div>
+          </div>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Objetivo General</mat-label>
-      <textarea matInput rows="3" formControlName="objetivo"></textarea>
-    </mat-form-field>
+          <div class="form-group">
+            <label class="form-label" for="objetivo">Objetivo General *</label>
+            <textarea
+              id="objetivo"
+              formControlName="objetivo"
+              class="form-textarea"
+              rows="4"
+              placeholder="Defina el objetivo principal del proyecto..."
+            ></textarea>
+            <div class="form-help">Objetivo SMART y medible</div>
+            <div class="form-error" *ngIf="isFieldInvalid('objetivo')">
+              {{ getErrorMessage('objetivo') }}
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Fecha de Inicio</mat-label>
-      <input matInput [matDatepicker]="picker" formControlName="fechaInicio">
-      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-    </mat-form-field>
+      <!-- PASO 3: Detalles -->
+      <div class="form-step" *ngIf="currentStep === 3">
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">03</span>
+            Detalles y Responsabilidades
+          </h3>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Analista Responsable</mat-label>
-      <input matInput formControlName="analista">
-    </mat-form-field>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="fechaInicio">Fecha de Inicio *</label>
+              <input 
+                id="fechaInicio"
+                type="date"
+                formControlName="fechaInicio"
+                class="form-input"
+              />
+              <div class="form-error" *ngIf="isFieldInvalid('fechaInicio')">
+                {{ getErrorMessage('fechaInicio') }}
+              </div>
+            </div>
 
-    <button mat-raised-button color="primary" type="submit">
-      Guardar Proyecto
-    </button>
+            <div class="form-group">
+              <label class="form-label" for="analista">Analista Responsable *</label>
+              <input 
+                id="analista"
+                type="text"
+                formControlName="analista"
+                class="form-input"
+                placeholder="Nombre del analista"
+              />
+              <div class="form-help">Persona encargada del proyecto</div>
+              <div class="form-error" *ngIf="isFieldInvalid('analista')">
+                {{ getErrorMessage('analista') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-  </form>
+      <!-- Mensajes de estado -->
+      <div class="form-message" *ngIf="successMessage" class="message-success">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 10.5L8 18.5L3 13.5"/>
+        </svg>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <!-- Acciones del Formulario -->
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn btn-secondary"
+          (click)="previousStep()"
+          *ngIf="currentStep > 1"
+          [disabled]="isSubmitting"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 12H5M8 15l-3-3 3-3"/>
+          </svg>
+          <span>Anterior</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          (click)="nextStep()"
+          *ngIf="currentStep < 3"
+          [disabled]="!isStepValid() || isSubmitting"
+        >
+          <span>Siguiente</span>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h10M12 15l3-3-3-3"/>
+          </svg>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          (click)="guardar()"
+          *ngIf="currentStep === 3"
+          [disabled]="!proyectoForm.valid || isSubmitting"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 8l-5 5-5-5M7 4v10a2 2 0 002 2h6a2 2 0 002-2V4"/>
+          </svg>
+          <span *ngIf="!isSubmitting">Guardar Proyecto</span>
+          <span *ngIf="isSubmitting">Guardando...</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn btn-secondary"
+          (click)="limpiar()"
+          *ngIf="currentStep === 3"
+          [disabled]="isSubmitting"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h12M8 6V4a1 1 0 011-1h2a1 1 0 011 1v2m-5 0h6M6 9v8a2 2 0 002 2h4a2 2 0 002-2V9"/>
+          </svg>
+          <span>Limpiar</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Información adicional -->
+  <div class="form-info">
+    <div class="info-card">
+      <div class="info-icon info-icon-info">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="10" cy="10" r="9"/>
+          <path d="M10 14v-4M10 6h.01"/>
+        </svg>
+      </div>
+      <div class="info-content">
+        <h4>Información importante</h4>
+        <p>Todos los campos marcados con (*) son obligatorios. Avance a través de los pasos para completar el registro de su proyecto.</p>
+      </div>
+    </div>
+  </div>
 </div>

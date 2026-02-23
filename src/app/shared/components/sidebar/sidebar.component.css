@@ -1,0 +1,167 @@
+/* ========================================
+   SIDEBAR COMPONENT - COLAPSABLE
+   ======================================== */
+
+.sidebar {
+  width: 280px;
+  background: var(--card-bg);
+  border-right: var(--border-width) solid var(--card-border);
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: sticky;
+  top: 64px;
+  z-index: 100;
+  transition: all 300ms ease;
+}
+
+/* ========== NAVEGACIÓN ========== */
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: var(--spacing-lg) var(--spacing-md);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--neutral-600);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-fast);
+  position: relative;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background-color: var(--neutral-50);
+  color: var(--primary-color);
+}
+
+.nav-item.active {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--primary-color);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Indicador izquierdo en activo */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary-color);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-item.active {
+  padding-left: calc(var(--spacing-lg) - 4px);
+}
+
+/* ========== ICONO ========== */
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.nav-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}
+
+/* ========== LABEL ========== */
+
+.nav-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========== SCROLLBAR PERSONALIZADO ========== */
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--neutral-300);
+  border-radius: var(--border-radius-full);
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-400);
+}
+
+/* ========== RESPONSIVE - DESKTOP ========== */
+
+@media (min-width: 769px) {
+  .sidebar {
+    /* Desktop: siempre visible */
+    transform: translateX(0) !important;
+    position: sticky;
+    width: 280px;
+  }
+}
+
+/* ========== RESPONSIVE - TABLET/MÓVIL ========== */
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 64px;
+    width: 280px;
+    height: calc(100vh - 64px);
+    transition: transform 300ms ease;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-xl);
+    z-index: 999;
+  }
+
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .sidebar-nav {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .nav-item {
+    padding: var(--spacing-md) var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .nav-item {
+    padding: var(--spacing-md);
+  }
+
+  .nav-label {
+    font-size: var(--font-size-sm);
+  }
+}

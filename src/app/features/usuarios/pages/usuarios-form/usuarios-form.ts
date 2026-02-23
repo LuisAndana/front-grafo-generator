@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 export interface Usuario {
   id?: string;
   nombre: string;
+  rol?: string;  
   rolSistema: string;
   descripcionFunciones: string;
   permisosEsperados: string;
