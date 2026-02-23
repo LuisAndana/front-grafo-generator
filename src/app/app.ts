@@ -55,7 +55,7 @@ import { AuthService } from './core/services/auth.service';
 })
 export class App implements OnInit {
   usuario: any = null;
-  sidebarOpen = false;  // Comienza cerrado en móvil, abierto en desktop
+  sidebarOpen = true;  // ✅ Por defecto abierto en desktop
 
   constructor(private authService: AuthService) {
     console.log('🎨 App constructor iniciado');
@@ -73,6 +73,9 @@ export class App implements OnInit {
     // Ahora cargar usuario (que será null)
     this.usuario = null;
     console.log('👤 Usuario inicial:', this.usuario);
+
+    // ✅ DETECTAR TAMAÑO DE PANTALLA AL INICIAR
+    this.detectarTamanioPantalla();
   }
 
   ngOnInit() {
@@ -91,6 +94,21 @@ export class App implements OnInit {
         console.log('👤 Ocultando sidebar');
       }
     });
+
+    // ✅ ESCUCHAR CAMBIOS DE TAMAÑO DE PANTALLA
+    window.addEventListener('resize', () => this.detectarTamanioPantalla());
+  }
+
+  // ✅ MÉTODO PARA DETECTAR TAMAÑO DE PANTALLA
+  detectarTamanioPantalla() {
+    const esMovil = window.innerWidth <= 768;
+    if (esMovil) {
+      this.sidebarOpen = false;
+      console.log('📱 Pantalla móvil - Sidebar cerrado por defecto');
+    } else {
+      this.sidebarOpen = true;
+      console.log('🖥️ Pantalla desktop - Sidebar abierto por defecto');
+    }
   }
 
   toggleSidebar() {
