@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
 import { AuthService } from './core/services/auth.service';
@@ -12,7 +12,7 @@ import { AuthService } from './core/services/auth.service';
   template: `
     <div class="app-layout">
       <app-navbar 
-        *ngIf="usuario"
+        *ngIf="!isWelcomePage"
         (toggleSidebar)="toggleSidebar()"
         [sidebarOpen]="sidebarOpen"
         [usuario]="usuario">
@@ -20,7 +20,7 @@ import { AuthService } from './core/services/auth.service';
       
       <div class="app-body">
         <app-sidebar 
-          *ngIf="usuario"
+          *ngIf="!isWelcomePage && usuario"
           [isOpen]="sidebarOpen"
           (closeSidebar)="closeSidebar()">
         </app-sidebar>
@@ -69,17 +69,24 @@ import { AuthService } from './core/services/auth.service';
 export class App implements OnInit {
   usuario: any = null;
   sidebarOpen = true;
+  isWelcomePage = false;
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private router: Router) {
     console.log('🎨 App constructor iniciado');
     
     this.verificarYLimpiarStorageInvalido();
-    
     this.detectarTamanioPantalla();
   }
 
   ngOnInit() {
     console.log('🎨 App ngOnInit');
+    
+    // Detectar si estamos en la página de bienvenida
+    this.router.events.subscribe(() => {
+      this.isWelcomePage = this.router.url === '/bienvenida';
+      console.log('📍 Página actual:', this.router.url);
+      console.log('📍 ¿Es bienvenida?:', this.isWelcomePage);
+    });
     
     this.authService.usuario$.subscribe(usuario => {
       console.log('📊 Usuario actualizado en App desde AuthService:', usuario);
@@ -91,7 +98,7 @@ export class App implements OnInit {
         this.detectarTamanioPantalla();
       } else {
         console.log('❌ Usuario deslogueado');
-        console.log('👤 Ocultando navbar y sidebar');
+        console.log('👤 Navbar y sidebar ocultos si estamos en bienvenida');
         this.sidebarOpen = false;
       }
     });
