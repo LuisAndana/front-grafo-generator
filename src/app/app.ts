@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
 import { AuthService } from './core/services/auth.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -20,7 +21,7 @@ import { AuthService } from './core/services/auth.service';
       
       <div class="app-body">
         <app-sidebar 
-          *ngIf="!isWelcomePage && usuario"
+          *ngIf="!isWelcomePage"
           [isOpen]="sidebarOpen"
           (closeSidebar)="closeSidebar()">
         </app-sidebar>
@@ -76,17 +77,22 @@ export class App implements OnInit {
     
     this.verificarYLimpiarStorageInvalido();
     this.detectarTamanioPantalla();
+    
+    // Detectar ruta inicial
+    this.isWelcomePage = this.router.url === '/bienvenida';
   }
 
   ngOnInit() {
     console.log('🎨 App ngOnInit');
     
-    // Detectar si estamos en la página de bienvenida
-    this.router.events.subscribe(() => {
-      this.isWelcomePage = this.router.url === '/bienvenida';
-      console.log('📍 Página actual:', this.router.url);
-      console.log('📍 ¿Es bienvenida?:', this.isWelcomePage);
-    });
+    // Detectar cambios de ruta
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.isWelcomePage = event.url === '/bienvenida';
+        console.log('📍 Página actual:', event.url);
+        console.log('📍 ¿Es bienvenida?:', this.isWelcomePage);
+      });
     
     this.authService.usuario$.subscribe(usuario => {
       console.log('📊 Usuario actualizado en App desde AuthService:', usuario);
@@ -94,11 +100,9 @@ export class App implements OnInit {
       
       if (usuario) {
         console.log('✅ Usuario logueado:', usuario.nombre);
-        console.log('👤 Mostrando navbar y sidebar');
         this.detectarTamanioPantalla();
       } else {
         console.log('❌ Usuario deslogueado');
-        console.log('👤 Navbar y sidebar ocultos si estamos en bienvenida');
         this.sidebarOpen = false;
       }
     });
@@ -117,7 +121,7 @@ export class App implements OnInit {
     console.log('   - Authenticated:', authenticated);
 
     if (token && !usuario) {
-      console.log('⚠️ Datos corruptos detectados (token sin usuario) - Limpiando...');
+      console.log('⚠️ Datos corruptos detectados - Limpiando...');
       this.limpiarAuthData();
       return;
     }
@@ -143,10 +147,10 @@ export class App implements OnInit {
     const esMovil = window.innerWidth <= 768;
     if (esMovil) {
       this.sidebarOpen = false;
-      console.log('📱 Pantalla móvil - Sidebar cerrado por defecto');
+      console.log('📱 Pantalla móvil - Sidebar cerrado');
     } else {
       this.sidebarOpen = true;
-      console.log('🖥️ Pantalla desktop - Sidebar abierto por defecto');
+      console.log('🖥️ Pantalla desktop - Sidebar abierto');
     }
   }
 
