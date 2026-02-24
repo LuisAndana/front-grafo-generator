@@ -31,39 +31,23 @@
     <!-- User Menu -->
     <div class="navbar-menu">
       <div class="user-menu">
-        <!-- Si hay usuario, mostrar avatar -->
+        <!-- Si hay usuario, mostrar SOLO el avatar (icono de perfil) -->
         <button 
           *ngIf="usuario"
-          class="user-button" 
+          class="profile-button" 
           (click)="toggleUserMenu($event)"
           [class.active]="showUserMenu"
           type="button"
-          [attr.aria-label]="'Menú de ' + getNombreUsuario()"
+          [attr.aria-label]="'Menú de perfil de ' + getNombreUsuario()"
           aria-haspopup="true"
-          [attr.aria-expanded]="showUserMenu">
-          <div class="user-avatar" title="Avatar del usuario">
+          [attr.aria-expanded]="showUserMenu"
+          title="Menú de perfil">
+          <div class="profile-avatar">
             {{ getInitials() }}
           </div>
-          <div class="user-info">
-            <span class="user-name" title="Nombre del usuario">{{ getNombreUsuario() }}</span>
-            <span class="user-email" title="Correo del usuario">{{ usuario.email }}</span>
-          </div>
-          <svg 
-            width="20" 
-            height="20" 
-            fill="none" 
-            stroke="currentColor" 
-            stroke-width="2" 
-            stroke-linecap="round" 
-            stroke-linejoin="round"
-            class="chevron-icon"
-            [class.rotated]="showUserMenu"
-            aria-hidden="true">
-            <path d="M6 9l6 6 6-6"/>
-          </svg>
         </button>
 
-        <!-- Dropdown Menu -->
+        <!-- Dropdown Menu - PERFIL, USUARIOS, CERRAR SESIÓN -->
         <div 
           class="dropdown-menu" 
           *ngIf="showUserMenu && usuario"
@@ -125,7 +109,7 @@
           <!-- Logout Button -->
           <button 
             class="dropdown-item dropdown-item-danger" 
-            (click)="handleLogout()"
+            (click)="openLogoutConfirm()"
             type="button"
             role="menuitem"
             title="Cerrar sesión">
@@ -156,3 +140,45 @@
     </div>
   </div>
 </nav>
+
+<!-- MODAL DE CONFIRMACIÓN DE LOGOUT -->
+<div 
+  class="logout-modal-overlay"
+  *ngIf="showLogoutConfirm"
+  (click)="closeLogoutConfirm()"
+  role="dialog"
+  aria-labelledby="logout-dialog-title"
+  aria-modal="true">
+  
+  <div 
+    class="logout-modal"
+    (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="logout-modal-header">
+      <h2 id="logout-dialog-title">¿Cerrar Sesión?</h2>
+    </div>
+
+    <!-- Content -->
+    <div class="logout-modal-content">
+      <p>¿Estás seguro de que deseas cerrar sesión?</p>
+      <p class="logout-modal-subtitle">Deberás iniciar sesión nuevamente para acceder a tu cuenta.</p>
+    </div>
+
+    <!-- Footer with Actions -->
+    <div class="logout-modal-footer">
+      <button 
+        class="logout-modal-btn logout-modal-btn-cancel"
+        (click)="closeLogoutConfirm()"
+        type="button">
+        Cancelar
+      </button>
+      <button 
+        class="logout-modal-btn logout-modal-btn-confirm"
+        (click)="confirmLogout()"
+        type="button">
+        Sí, Cerrar Sesión
+      </button>
+    </div>
+  </div>
+</div>

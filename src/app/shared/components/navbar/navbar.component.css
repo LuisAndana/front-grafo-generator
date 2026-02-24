@@ -1,32 +1,33 @@
 /* ========================================
-   NAVBAR COMPONENT - MEJORADO
+   NAVBAR COMPONENT - DISEÑO MEJORADO
    ======================================== */
 
 .navbar {
-  background: linear-gradient(135deg, var(--card-bg) 0%, var(--neutral-50) 100%);
-  border-bottom: var(--border-width) solid var(--card-border);
-  position: sticky;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid #e9ecef;
+  position: fixed;          /* ← CAMBIO CLAVE: de sticky a fixed */
   top: 0;
-  z-index: var(--z-sticky);
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-fast);
-  backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.95);
+  left: 0;
+  right: 0;
+  height: 64px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
 }
 
 .navbar:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .navbar-container {
   max-width: 100%;
   margin: 0 auto;
-  padding: 0 var(--spacing-lg);
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  height: var(--header-height);
-  gap: var(--spacing-lg);
+  height: 64px;
+  gap: 1.5rem;
 }
 
 /* ========== BOTÓN HAMBURGUESA ========== */
@@ -38,13 +39,13 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-md);
-  transition: all var(--transition-fast);
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
 .hamburger-btn:hover {
-  background-color: var(--neutral-100);
+  background-color: #f0f2f5;
   transform: scale(1.05);
 }
 
@@ -55,9 +56,9 @@
 .hamburger-line {
   width: 24px;
   height: 2.5px;
-  background-color: var(--neutral-700);
+  background-color: #495057;
   border-radius: 2px;
-  transition: all var(--transition-fast);
+  transition: all 0.3s ease;
 }
 
 /* ========== BRAND ========== */
@@ -65,9 +66,9 @@
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: 0.75rem;
   text-decoration: none;
-  transition: all var(--transition-fast);
+  transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
@@ -76,24 +77,24 @@
 }
 
 .logo {
-  color: var(--primary-color);
+  color: #3b82f6;
   flex-shrink: 0;
-  transition: all var(--transition-fast);
-  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.15));
 }
 
 .navbar-brand:hover .logo {
   transform: scale(1.1) rotate(5deg);
-  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.25));
 }
 
 .brand-text {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  color: var(--neutral-900);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #212529;
   white-space: nowrap;
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -110,7 +111,7 @@
 .navbar-menu {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
+  gap: 1.5rem;
   flex-shrink: 0;
 }
 
@@ -118,194 +119,76 @@
   position: relative;
 }
 
-.user-button {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  background: linear-gradient(135deg, var(--neutral-50) 0%, var(--neutral-100) 100%);
-  border: var(--border-width) solid var(--card-border);
-  cursor: pointer;
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--border-radius-lg);
-  transition: all var(--transition-fast);
-}
+/* ========== PROFILE BUTTON ========== */
 
-.user-button:hover {
-  background: linear-gradient(135deg, var(--neutral-100) 0%, var(--neutral-150) 100%);
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
-}
-
-.user-button:active,
-.user-button.active {
-  background: var(--neutral-100);
-  border-color: var(--primary-color);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-  transform: translateY(0);
-}
-
-.user-button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* ========== LOGOUT BUTTON ========== */
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  color: white;
-  background: linear-gradient(135deg, var(--error-color) 0%, #d32f2f 100%);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  border-radius: var(--border-radius-lg);
-  transition: all var(--transition-fast);
-  cursor: pointer;
+.profile-button {
+  background: none;
   border: none;
-  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.logout-btn:hover {
-  background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
+.profile-button:hover {
+  transform: scale(1.1);
 }
 
-.logout-btn:active {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+.profile-button:active,
+.profile-button.active {
+  transform: scale(0.95);
 }
 
-.logout-btn svg {
-  width: 20px;
-  height: 20px;
-  transition: all var(--transition-fast);
+.profile-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-.logout-btn:hover svg {
-  transform: translateX(2px);
-}
-
-/* ========== AVATAR ========== */
-
-.user-avatar,
-.dropdown-avatar {
-  border-radius: var(--border-radius-full);
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+.profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--font-weight-bold);
-  flex-shrink: 0;
-  box-shadow: var(--shadow-md);
+  font-weight: 700;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
   border: 2px solid white;
+  transition: all 0.3s ease;
 }
 
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  font-size: var(--font-size-sm);
-  transition: all var(--transition-fast);
-}
-
-.user-button:hover .user-avatar {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-}
-
-.dropdown-avatar {
-  width: 56px;
-  height: 56px;
-  font-size: var(--font-size-lg);
-  box-shadow: var(--shadow-lg);
-}
-
-/* ========== USER INFO ========== */
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  max-width: 150px;
-}
-
-.user-name,
-.dropdown-name {
-  font-weight: var(--font-weight-semibold);
-  color: var(--neutral-900);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.user-name {
-  font-size: var(--font-size-sm);
-}
-
-.dropdown-name {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-xs);
-  word-break: break-word;
-}
-
-.user-email,
-.dropdown-email {
-  font-size: var(--font-size-xs);
-  color: var(--neutral-500);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.dropdown-email {
-  font-size: var(--font-size-sm);
-  color: var(--neutral-600);
-  margin-bottom: var(--spacing-sm);
-  word-break: break-all;
-}
-
-/* ========== CHEVRON ICON ========== */
-
-.chevron-icon {
-  flex-shrink: 0;
-  transition: transform var(--transition-fast);
-  color: var(--neutral-500);
-}
-
-.chevron-icon.rotated {
-  transform: rotate(180deg);
+.profile-button:hover .profile-avatar {
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+  transform: scale(1.05);
 }
 
 /* ========== DROPDOWN ========== */
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + var(--spacing-sm));
+  top: calc(100% + 0.5rem);
   right: 0;
-  background: linear-gradient(135deg, var(--card-bg) 0%, var(--neutral-50) 100%);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-xl);
-  min-width: 300px;
-  z-index: var(--z-dropdown);
-  border: var(--border-width) solid var(--card-border);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  min-width: 320px;
+  z-index: 1100;
+  border: 1px solid #e9ecef;
   overflow: hidden;
-  animation: dropdownSlideIn var(--transition-base) ease-out;
+  animation: dropdownSlideIn 0.3s ease-out;
   backdrop-filter: blur(10px);
 }
 
 @keyframes dropdownSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-15px) scale(0.95);
+    transform: translateY(-12px) scale(0.95);
   }
   to {
     opacity: 1;
@@ -316,15 +199,31 @@
 /* ========== DROPDOWN HEADER ========== */
 
 .dropdown-header {
-  padding: var(--spacing-lg);
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   color: white;
 }
 
 .dropdown-user-info {
   display: flex;
   align-items: flex-start;
-  gap: var(--spacing-md);
+  gap: 1rem;
+}
+
+.dropdown-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
 }
 
 .dropdown-user-details {
@@ -332,13 +231,19 @@
   min-width: 0;
 }
 
-.dropdown-user-details .dropdown-name,
-.dropdown-user-details .dropdown-email {
+.dropdown-name {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
   color: white;
 }
 
-.dropdown-user-details .dropdown-email {
-  color: rgba(255, 255, 255, 0.85);
+.dropdown-email {
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+  word-break: break-all;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* ========== ROLE BADGE ========== */
@@ -346,15 +251,15 @@
 .dropdown-role {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
   background: rgba(255, 255, 255, 0.2);
   color: white;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  border-radius: var(--border-radius-md);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  margin-top: var(--spacing-xs);
+  margin-top: 0.375rem;
 }
 
 .dropdown-role svg {
@@ -365,8 +270,8 @@
 /* ========== DIVIDER ========== */
 
 .dropdown-divider {
-  height: var(--border-width);
-  background: var(--card-border);
+  height: 1px;
+  background: #e9ecef;
   margin: 0;
 }
 
@@ -375,13 +280,13 @@
 .dropdown-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md) var(--spacing-lg);
-  color: var(--neutral-700);
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  color: #495057;
   text-decoration: none;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  transition: all var(--transition-fast);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
   cursor: pointer;
   border: none;
   background: none;
@@ -397,16 +302,16 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
   transform: scaleY(0);
   transform-origin: center;
-  transition: transform var(--transition-fast);
+  transition: transform 0.3s ease;
 }
 
 .dropdown-item:hover {
-  background: linear-gradient(90deg, var(--neutral-50) 0%, transparent 100%);
-  color: var(--primary-color);
-  padding-left: calc(var(--spacing-lg) + 4px);
+  background: #f8f9fa;
+  color: #3b82f6;
+  padding-left: calc(1.25rem + 4px);
 }
 
 .dropdown-item:hover::before {
@@ -414,7 +319,7 @@
 }
 
 .dropdown-item.active {
-  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
   color: white;
 }
 
@@ -424,12 +329,14 @@
 
 .dropdown-item svg {
   flex-shrink: 0;
-  color: var(--neutral-500);
-  transition: all var(--transition-fast);
+  color: #adb5bd;
+  transition: all 0.3s ease;
+  width: 18px;
+  height: 18px;
 }
 
 .dropdown-item:hover svg {
-  color: var(--primary-color);
+  color: #3b82f6;
   transform: scale(1.1);
 }
 
@@ -440,78 +347,331 @@
 /* ========== DANGER ITEM (Logout) ========== */
 
 .dropdown-item-danger {
-  color: var(--error-color);
+  color: #dc3545;
 }
 
 .dropdown-item-danger svg {
-  color: var(--error-color);
+  color: #dc3545;
 }
 
 .dropdown-item-danger:hover {
-  background: linear-gradient(90deg, rgba(244, 67, 54, 0.1) 0%, transparent 100%);
-  color: var(--error-color);
+  background: rgba(220, 53, 69, 0.08);
+  color: #dc3545;
 }
 
 .dropdown-item-danger:hover::before {
-  background: var(--error-color);
+  background: #dc3545;
 }
 
 .dropdown-item-danger:hover svg {
-  color: var(--error-color);
+  color: #dc3545;
   transform: scale(1.2) rotate(15deg);
+}
+
+/* ========== LOGOUT BUTTON ========== */
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: white;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+.logout-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover svg {
+  transform: translateX(2px);
+}
+
+/* ========== MODAL DE CONFIRMACIÓN DE LOGOUT ========== */
+
+.logout-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.logout-modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25), 0 0 1px rgba(0, 0, 0, 0.1);
+  max-width: 450px;
+  width: 95%;
+  overflow: hidden;
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header del Modal */
+.logout-modal-header {
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.logout-modal-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(10px, 10px);
+  }
+}
+
+.logout-modal-header h2 {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.5px;
+}
+
+/* Contenido del Modal */
+.logout-modal-content {
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.logout-modal-content p {
+  margin: 0;
+  font-size: 1.0625rem;
+  color: #2d3748;
+  line-height: 1.8;
+  font-weight: 500;
+}
+
+.logout-modal-content p:first-child {
+  margin-bottom: 1rem;
+}
+
+.logout-modal-subtitle {
+  font-size: 0.9375rem;
+  color: #718096;
+  margin-top: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Footer del Modal */
+.logout-modal-footer {
+  padding: 1.75rem 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  border-top: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.logout-modal-btn {
+  padding: 0.875rem 1.75rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 140px;
+  position: relative;
+  overflow: hidden;
+}
+
+.logout-modal-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.logout-modal-btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.logout-modal-btn-cancel {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+}
+
+.logout-modal-btn-cancel:hover {
+  background: #cbd5e0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.logout-modal-btn-cancel:active {
+  transform: translateY(0);
+}
+
+.logout-modal-btn-confirm {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  border: none;
+}
+
+.logout-modal-btn-confirm:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+
+.logout-modal-btn-confirm:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
 }
 
 /* ========== RESPONSIVE ========== */
 
 @media (max-width: 767px) {
   .navbar-container {
-    padding: 0 var(--spacing-md);
+    padding: 0 1rem;
   }
 
-  .brand-text,
-  .user-info {
+  .brand-text {
     display: none;
   }
 
-  .user-button {
-    padding: var(--spacing-xs);
-  }
-
-  .logout-btn {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: var(--font-size-xs);
-  }
-
   .dropdown-menu {
-    right: var(--spacing-md);
-    left: var(--spacing-md);
-    min-width: auto;
-    max-width: calc(100vw - var(--spacing-md) * 2);
+    right: 0;
+    left: auto;
+    max-width: calc(100vw - 1rem);
   }
 
   .dropdown-header {
-    padding: var(--spacing-md);
+    padding: 1rem;
   }
 
   .dropdown-avatar {
     width: 48px;
     height: 48px;
-    font-size: var(--font-size-base);
+    font-size: 1.125rem;
   }
 
   .dropdown-name {
-    font-size: var(--font-size-sm);
+    font-size: 0.9375rem;
   }
 
   .dropdown-email {
-    font-size: var(--font-size-xs);
+    font-size: 0.8125rem;
+  }
+
+  .logout-modal {
+    width: 90%;
+    max-width: 420px;
+  }
+
+  .logout-modal-header {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .logout-modal-header h2 {
+    font-size: 1.625rem;
+  }
+
+  .logout-modal-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .logout-modal-content p {
+    font-size: 1rem;
+  }
+
+  .logout-modal-footer {
+    flex-direction: column-reverse;
+    padding: 1.5rem;
+    gap: 0.75rem;
+  }
+
+  .logout-modal-btn {
+    width: 100%;
+    min-width: unset;
   }
 }
 
 @media (max-width: 480px) {
   .navbar-container {
-    padding: 0 var(--spacing-sm);
-    gap: var(--spacing-sm);
+    padding: 0 0.75rem;
+    gap: 0.75rem;
   }
 
   .logo {
@@ -520,13 +680,14 @@
   }
 
   .dropdown-menu {
-    right: var(--spacing-sm);
-    left: var(--spacing-sm);
-    max-width: calc(100vw - var(--spacing-sm) * 2);
+    right: 0;
+    left: auto;
+    min-width: 280px;
+    max-width: calc(100vw - 0.75rem);
   }
 
   .logout-btn {
-    padding: var(--spacing-sm) var(--spacing-sm);
+    padding: 0.625rem 0.75rem;
   }
 
   .logout-btn span {
@@ -534,7 +695,49 @@
   }
 
   .logout-btn svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .profile-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.75rem;
+  }
+
+  .dropdown-item {
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .logout-modal {
+    width: 100%;
+    max-width: calc(100vw - 1rem);
+    margin: 0 0.5rem;
+  }
+
+  .logout-modal-header {
+    padding: 2rem 1.5rem;
+  }
+
+  .logout-modal-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .logout-modal-content {
+    padding: 1.75rem 1.5rem;
+  }
+
+  .logout-modal-content p {
+    font-size: 0.9375rem;
+  }
+
+  .logout-modal-footer {
+    padding: 1.25rem;
+  }
+
+  .logout-modal-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
   }
 }

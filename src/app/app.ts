@@ -49,6 +49,7 @@ import { filter } from 'rxjs/operators';
       flex: 1;
       overflow: hidden;
       position: relative;
+      padding-top: 64px;
       gap: 0;
     }
 

@@ -18,6 +18,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   showUserMenu = false;
+  showLogoutConfirm = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -82,15 +83,35 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.showUserMenu = false;
   }
 
+  /**
+   * Mostrar modal de confirmación de logout
+   */
+  openLogoutConfirm() {
+    console.log('🔓 Abriendo modal de confirmación de logout');
+    this.showLogoutConfirm = true;
+  }
+
+  /**
+   * Cerrar modal de confirmación
+   */
+  closeLogoutConfirm() {
+    console.log('❌ Cerrando modal de confirmación de logout');
+    this.showLogoutConfirm = false;
+  }
+
+  /**
+   * Confirmar y ejecutar logout
+   */
+  confirmLogout() {
+    console.log('🚪 Confirmado logout, ejecutando...');
+    this.logout();
+  }
+
   logout() {
     console.log('🚪 Ejecutando logout desde navbar...');
     this.authService.logout();
     this.closeUserMenu();
-  }
-
-  handleLogout() {
-    console.log('🚪 handleLogout llamado');
-    this.logout();
+    this.closeLogoutConfirm();
   }
 
   irABienvenida() {

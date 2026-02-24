@@ -136,10 +136,15 @@ export class BienvenidaComponent implements OnDestroy, OnInit {
         next: (response) => {
           this.isLoading = false;
           
-          // Guardar tokens y usuario
-          localStorage.setItem('access_token', response.tokens.access_token);
-          localStorage.setItem('refresh_token', response.tokens.refresh_token);
-          localStorage.setItem('user', JSON.stringify(response.user));
+          // ✅ CORREGIDO: Guardar tokens y usuario con las keys correctas
+          localStorage.setItem('srs_token', response.tokens.access_token);
+          localStorage.setItem('srs_refresh_token', response.tokens.refresh_token);
+          localStorage.setItem('srs_usuario', JSON.stringify(response.user));
+          localStorage.setItem('srs_authenticated', 'true');
+          
+          console.log('✅ Login exitoso, usuario guardado en localStorage');
+          console.log('   - srs_token:', response.tokens.access_token.substring(0, 20) + '...');
+          console.log('   - srs_usuario:', response.user);
           
           this.closeModals();
           
@@ -206,10 +211,15 @@ export class BienvenidaComponent implements OnDestroy, OnInit {
           this.isLoading = false;
           this.registerSuccess = true;
 
-          // Guardar tokens y usuario
-          localStorage.setItem('access_token', response.tokens.access_token);
-          localStorage.setItem('refresh_token', response.tokens.refresh_token);
-          localStorage.setItem('user', JSON.stringify(response.user));
+          // ✅ CORREGIDO: Guardar tokens y usuario con las keys correctas
+          localStorage.setItem('srs_token', response.tokens.access_token);
+          localStorage.setItem('srs_refresh_token', response.tokens.refresh_token);
+          localStorage.setItem('srs_usuario', JSON.stringify(response.user));
+          localStorage.setItem('srs_authenticated', 'true');
+
+          console.log('✅ Registro exitoso, usuario guardado en localStorage');
+          console.log('   - srs_token:', response.tokens.access_token.substring(0, 20) + '...');
+          console.log('   - srs_usuario:', response.user);
 
           // Esperar un momento antes de redirigir
           setTimeout(() => {
