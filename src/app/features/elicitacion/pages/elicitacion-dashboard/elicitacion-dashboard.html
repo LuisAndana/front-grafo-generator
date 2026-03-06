@@ -10,205 +10,165 @@
     </p>
   </div>
 
+  <!-- ÉXITO -->
+  <div class="alert alert-success mb-lg" *ngIf="showSuccess">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
+    </svg>
+    <span>{{ successMessage }}</span>
+  </div>
+
   <!-- GRID SUPERIOR -->
   <div class="grid grid-cols-2 gap-lg mb-lg">
 
     <!-- ENTREVISTAS -->
     <div class="card shadow-sm">
-
       <div class="card-header">
-        <h3 class="card-title text-lg">
-          Entrevistas
-        </h3>
+        <h3 class="card-title text-lg">Entrevistas</h3>
       </div>
-
       <div class="card-body">
-
         <div class="form-group">
           <label class="form-label">Pregunta</label>
-          <input class="form-input"
-                 [(ngModel)]="entrevista.pregunta">
+          <input class="form-input" [(ngModel)]="entrevista.pregunta">
         </div>
-
         <div class="form-group">
           <label class="form-label">Respuesta</label>
-          <textarea class="form-textarea"
-                    [(ngModel)]="entrevista.respuesta">
-          </textarea>
+          <textarea class="form-textarea" [(ngModel)]="entrevista.respuesta"></textarea>
         </div>
-
         <div class="form-group">
           <label class="form-label">Observaciones</label>
-          <textarea class="form-textarea"
-                    [(ngModel)]="entrevista.observaciones">
-          </textarea>
+          <textarea class="form-textarea" [(ngModel)]="entrevista.observaciones"></textarea>
         </div>
+        <button class="btn-primary btn-sm" (click)="agregarEntrevista()">
+          + Agregar entrevista
+        </button>
 
-        <button class="btn-primary btn-sm"
-        (click)="agregarEntrevista()">
-  + Agregar entrevista
-</button>
-
-
+        <!-- Lista de entrevistas guardadas -->
+        <div *ngFor="let e of entrevistas" class="mt-md p-sm border rounded-md">
+          <strong>{{ e.pregunta }}</strong>
+          <p class="text-sm text-muted" *ngIf="e.respuesta">R: {{ e.respuesta }}</p>
+          <button class="btn btn-danger btn-sm mt-sm" (click)="eliminarEntrevista(e.id_entrevista!)">
+            Eliminar
+          </button>
+        </div>
       </div>
-
     </div>
 
     <!-- PROCESOS -->
     <div class="card shadow-sm">
-
       <div class="card-header">
-        <h3 class="card-title text-lg">
-          Procesos actuales
-        </h3>
+        <h3 class="card-title text-lg">Procesos actuales</h3>
       </div>
-
       <div class="card-body">
-
         <div class="form-group">
           <label class="form-label">Nombre del proceso</label>
-          <input class="form-input"
-                 [(ngModel)]="proceso.nombre">
+          <input class="form-input" [(ngModel)]="proceso.nombre">
         </div>
-
         <div class="form-group">
           <label class="form-label">Descripción</label>
-          <textarea class="form-textarea"
-                    [(ngModel)]="proceso.descripcion">
-          </textarea>
+          <textarea class="form-textarea" [(ngModel)]="proceso.descripcion"></textarea>
         </div>
-
         <div class="form-group">
           <label class="form-label">Problemas detectados</label>
-          <textarea class="form-textarea"
-                    [(ngModel)]="proceso.problemas">
-          </textarea>
+          <textarea class="form-textarea" [(ngModel)]="proceso.problemas"></textarea>
         </div>
-
-        <button class="btn-primary btn-sm"
-         (click)="agregarProceso()">
-        + Agregar proceso
+        <button class="btn-primary btn-sm" (click)="agregarProceso()">
+          + Agregar proceso
         </button>
 
-
+        <!-- Lista de procesos guardados -->
+        <div *ngFor="let p of procesos" class="mt-md p-sm border rounded-md">
+          <strong>{{ p.nombre_proceso }}</strong>
+          <p class="text-sm text-muted" *ngIf="p.descripcion">{{ p.descripcion }}</p>
+          <button class="btn btn-danger btn-sm mt-sm" (click)="eliminarProceso(p.id_proceso!)">
+            Eliminar
+          </button>
+        </div>
       </div>
-
     </div>
 
   </div>
 
   <!-- NECESIDADES -->
   <div class="card shadow-sm mb-lg">
-
     <div class="card-header">
-      <h3 class="card-title text-lg">
-        Necesidades del Cliente
-      </h3>
+      <h3 class="card-title text-lg">Necesidades del Cliente</h3>
     </div>
-
     <div class="card-body">
 
+      <!-- Checkboxes predefinidos -->
       <div class="grid grid-cols-2 gap-md mb-md">
-
         <label class="flex items-center gap-sm cursor-pointer">
-          <input type="checkbox"
-                 [(ngModel)]="necesidadesBase.usuarios">
+          <input type="checkbox" [(ngModel)]="necesidadesBase.usuarios"
+                 (change)="guardarNecesidadBase('Gestión de usuarios', necesidadesBase.usuarios)">
           Gestión de usuarios
         </label>
-
         <label class="flex items-center gap-sm cursor-pointer">
-          <input type="checkbox"
-                 [(ngModel)]="necesidadesBase.reportes">
+          <input type="checkbox" [(ngModel)]="necesidadesBase.reportes"
+                 (change)="guardarNecesidadBase('Reportes', necesidadesBase.reportes)">
           Reportes
         </label>
-
         <label class="flex items-center gap-sm cursor-pointer">
-          <input type="checkbox"
-                 [(ngModel)]="necesidadesBase.inventarios">
+          <input type="checkbox" [(ngModel)]="necesidadesBase.inventarios"
+                 (change)="guardarNecesidadBase('Inventarios', necesidadesBase.inventarios)">
           Inventarios
         </label>
-
         <label class="flex items-center gap-sm cursor-pointer">
-          <input type="checkbox"
-                 [(ngModel)]="necesidadesBase.ventas">
+          <input type="checkbox" [(ngModel)]="necesidadesBase.ventas"
+                 (change)="guardarNecesidadBase('Ventas', necesidadesBase.ventas)">
           Ventas
         </label>
-
       </div>
 
+      <!-- Agregar necesidad personalizada -->
       <div class="border-t pt-md mt-md flex gap-sm">
-
-        <input class="form-input"
-               [(ngModel)]="nuevaNecesidad"
-               placeholder="Nueva necesidad">
-
-        <button class="btn btn-primary btn-sm"
-                (click)="agregarNecesidad()">
-          Agregar
-        </button>
-
+        <input class="form-input" [(ngModel)]="nuevaNecesidad" placeholder="Nueva necesidad">
+        <button class="btn btn-primary btn-sm" (click)="agregarNecesidad()">Agregar</button>
       </div>
 
-      <!-- LISTA DINÁMICA -->
-      <div *ngIf="listaNecesidades.length > 0"
-           class="mt-md flex flex-col gap-sm">
-
-        <div *ngFor="let n of listaNecesidades; let i = index"
+      <!-- Lista de necesidades guardadas -->
+      <div *ngIf="listaNecesidades.length > 0" class="mt-md flex flex-col gap-sm">
+        <div *ngFor="let n of listaNecesidades"
              class="flex justify-between items-center border rounded-md p-sm">
-
-          <span>{{ n }}</span>
-
-          <button class="btn btn-danger btn-sm"
-                  (click)="eliminarNecesidad(i)">
+          <span>{{ n.nombre }}</span>
+          <button class="btn btn-danger btn-sm" (click)="eliminarNecesidad(n.id_necesidad!)">
             Eliminar
           </button>
-
         </div>
-
       </div>
-
     </div>
-
   </div>
 
   <!-- RESUMEN -->
-  <div class="card shadow-sm">
-
+  <div class="card shadow-sm mb-lg">
     <div class="card-header">
-      <h3 class="card-title text-lg">
-        Resumen de Elicitación
-      </h3>
+      <h3 class="card-title text-lg">Resumen de Elicitación</h3>
     </div>
-
     <div class="card-body">
-
       <div class="flex justify-around text-center">
-
         <div>
-          <span class="text-2xl font-bold text-primary">
-            {{ entrevistas.length }}
-          </span>
+          <span class="text-2xl font-bold text-primary">{{ entrevistas.length }}</span>
           <p class="text-muted text-sm">Entrevistas</p>
         </div>
-
         <div>
-          <span class="text-2xl font-bold text-primary">
-            {{ procesos.length }}
-          </span>
+          <span class="text-2xl font-bold text-primary">{{ procesos.length }}</span>
           <p class="text-muted text-sm">Procesos</p>
         </div>
-
         <div>
-          <span class="text-2xl font-bold text-primary">
-            {{ totalNecesidades }}
-          </span>
+          <span class="text-2xl font-bold text-primary">{{ totalNecesidades }}</span>
           <p class="text-muted text-sm">Necesidades</p>
         </div>
-
       </div>
-
     </div>
+  </div>
 
+  <!-- BOTÓN CONTINUAR -->
+  <div class="text-center mb-lg">
+    <button class="btn btn-primary btn-lg"
+            (click)="guardarYContinuar()"
+            [disabled]="isSaving">
+      {{ isSaving ? 'Guardando...' : 'Continuar a Requerimientos →' }}
+    </button>
   </div>
 
 </div>

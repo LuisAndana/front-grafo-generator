@@ -1,158 +1,186 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
+import { ElicitacionService, Entrevista, Proceso, Necesidad } from '../../services/elicitacion.service';
 
 @Component({
   selector: 'app-elicitacion-dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatIconModule,
-    MatDividerModule
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './elicitacion-dashboard.html',
   styleUrls: ['./elicitacion-dashboard.css']
 })
 export class ElicitacionDashboard implements OnInit {
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(
+    private elicitacionService: ElicitacionService,
+    private router: Router
+  ) {}
 
-  // =============================
-  // MODELOS
-  // =============================
+  // ═══════════ MODELOS DE FORMULARIO ═══════════
 
-  entrevista = {
-    pregunta: '',
-    respuesta: '',
-    observaciones: ''
-  };
+  entrevista = { pregunta: '', respuesta: '', observaciones: '' };
+  proceso = { nombre: '', descripcion: '', problemas: '' };
+  necesidadesBase = { usuarios: false, reportes: false, inventarios: false, ventas: false };
+  nuevaNecesidad = '';
 
-  proceso = {
-    nombre: '',
-    descripcion: '',
-    problemas: ''
-  };
+  // ═══════════ LISTAS DESDE BD ═══════════
 
-  necesidadesBase = {
-    usuarios: false,
-    reportes: false,
-    inventarios: false,
-    ventas: false
-  };
+  entrevistas: Entrevista[] = [];
+  procesos: Proceso[] = [];
+  listaNecesidades: Necesidad[] = [];
 
-  nuevaNecesidad: string = '';
+  // ═══════════ ESTADO ═══════════
 
-  entrevistas: any[] = [];
-  procesos: any[] = [];
-  listaNecesidades: string[] = [];
+  showSuccess = false;
+  successMessage = '';
+  isSaving = false;
 
-  // =============================
-  // INIT
-  // =============================
+  // ═══════════ INIT ═══════════
 
   ngOnInit(): void {
     this.cargarDatos();
   }
 
-  // =============================
-  // ENTREVISTAS
-  // =============================
+  cargarDatos(): void {
+    this.elicitacionService.getEntrevistas().subscribe({
+      next: (data) => this.entrevistas = data,
+      error: (err) => console.error('Error cargando entrevistas:', err)
+    });
 
-  agregarEntrevista() {
-    if (this.entrevista.pregunta.trim() === '') return;
+    this.elicitacionService.getProcesos().subscribe({
+      next: (data) => this.procesos = data,
+      error: (err) => console.error('Error cargando procesos:', err)
+    });
 
-    this.entrevistas.push({ ...this.entrevista });
-    this.entrevista = { pregunta: '', respuesta: '', observaciones: '' };
-
-    this.guardarDatos();
+    this.elicitacionService.getNecesidades().subscribe({
+      next: (data) => this.listaNecesidades = data,
+      error: (err) => console.error('Error cargando necesidades:', err)
+    });
   }
 
-  // =============================
-  // PROCESOS
-  // =============================
+  // ═══════════ ENTREVISTAS ═══════════
 
-  agregarProceso() {
-    if (this.proceso.nombre.trim() === '') return;
+  agregarEntrevista(): void {
+    if (!this.entrevista.pregunta.trim()) return;
 
-    this.procesos.push({ ...this.proceso });
-    this.proceso = { nombre: '', descripcion: '', problemas: '' };
-
-    this.guardarDatos();
+    this.elicitacionService.crearEntrevista({
+      proyecto_id: null,
+      pregunta: this.entrevista.pregunta,
+      respuesta: this.entrevista.respuesta,
+      observaciones: this.entrevista.observaciones
+    }).subscribe({
+      next: (nueva) => {
+        this.entrevistas.unshift(nueva);
+        this.entrevista = { pregunta: '', respuesta: '', observaciones: '' };
+        this.mostrarExito('Entrevista agregada');
+      },
+      error: (err) => console.error('Error creando entrevista:', err)
+    });
   }
 
-  // =============================
-  // NECESIDADES
-  // =============================
-
-  agregarNecesidad() {
-    if (this.nuevaNecesidad.trim() === '') return;
-
-    this.listaNecesidades.push(this.nuevaNecesidad);
-    this.nuevaNecesidad = '';
-
-    this.guardarDatos();
+  eliminarEntrevista(id: number): void {
+    this.elicitacionService.deleteEntrevista(id).subscribe({
+      next: () => {
+        this.entrevistas = this.entrevistas.filter(e => e.id_entrevista !== id);
+      }
+    });
   }
 
-  eliminarNecesidad(index: number) {
-    this.listaNecesidades.splice(index, 1);
-    this.guardarDatos();
+  // ═══════════ PROCESOS ═══════════
+
+  agregarProceso(): void {
+    if (!this.proceso.nombre.trim()) return;
+
+    this.elicitacionService.crearProceso({
+      proyecto_id: null,
+      nombre_proceso: this.proceso.nombre,
+      descripcion: this.proceso.descripcion,
+      problemas_detectados: this.proceso.problemas
+    }).subscribe({
+      next: (nuevo) => {
+        this.procesos.unshift(nuevo);
+        this.proceso = { nombre: '', descripcion: '', problemas: '' };
+        this.mostrarExito('Proceso agregado');
+      },
+      error: (err) => console.error('Error creando proceso:', err)
+    });
   }
 
-  // =============================
-  // RESUMEN DINÁMICO
-  // =============================
+  eliminarProceso(id: number): void {
+    this.elicitacionService.deleteProceso(id).subscribe({
+      next: () => {
+        this.procesos = this.procesos.filter(p => p.id_proceso !== id);
+      }
+    });
+  }
+
+  // ═══════════ NECESIDADES ═══════════
+
+  agregarNecesidad(): void {
+    if (!this.nuevaNecesidad.trim()) return;
+
+    this.elicitacionService.crearNecesidad({
+      proyecto_id: null,
+      nombre: this.nuevaNecesidad,
+      es_predefinida: 0,
+      seleccionada: 1
+    }).subscribe({
+      next: (nueva) => {
+        this.listaNecesidades.unshift(nueva);
+        this.nuevaNecesidad = '';
+        this.mostrarExito('Necesidad agregada');
+      },
+      error: (err) => console.error('Error creando necesidad:', err)
+    });
+  }
+
+  guardarNecesidadBase(nombre: string, seleccionada: boolean): void {
+    if (seleccionada) {
+      this.elicitacionService.crearNecesidad({
+        proyecto_id: null,
+        nombre: nombre,
+        es_predefinida: 1,
+        seleccionada: 1
+      }).subscribe({
+        next: (nueva) => this.listaNecesidades.unshift(nueva)
+      });
+    }
+  }
+
+  eliminarNecesidad(id: number): void {
+    this.elicitacionService.deleteNecesidad(id).subscribe({
+      next: () => {
+        this.listaNecesidades = this.listaNecesidades.filter(n => n.id_necesidad !== id);
+      }
+    });
+  }
+
+  // ═══════════ GUARDAR TODO Y REDIRIGIR ═══════════
+
+  guardarYContinuar(): void {
+    this.isSaving = true;
+    this.mostrarExito('Datos guardados correctamente. Redirigiendo a Requerimientos...');
+
+    setTimeout(() => {
+      this.isSaving = false;
+      this.router.navigate(['/requerimientos']);
+    }, 1500);
+  }
+
+  // ═══════════ RESUMEN ═══════════
 
   get totalNecesidades(): number {
-    const baseSeleccionadas =
-      Object.values(this.necesidadesBase).filter(v => v).length;
-
-    return baseSeleccionadas + this.listaNecesidades.length;
+    return this.listaNecesidades.length;
   }
 
-  // =============================
-  // LOCAL STORAGE (VERSIÓN SSR SAFE)
-  // =============================
+  // ═══════════ HELPERS ═══════════
 
-  guardarDatos() {
-    if (isPlatformBrowser(this.platformId)) {
-      const data = {
-        entrevistas: this.entrevistas,
-        procesos: this.procesos,
-        listaNecesidades: this.listaNecesidades,
-        necesidadesBase: this.necesidadesBase
-      };
-
-      localStorage.setItem('elicitacionData', JSON.stringify(data));
-    }
+  mostrarExito(mensaje: string): void {
+    this.successMessage = mensaje;
+    this.showSuccess = true;
+    setTimeout(() => this.showSuccess = false, 3000);
   }
-
-  cargarDatos() {
-    if (isPlatformBrowser(this.platformId)) {
-      const data = localStorage.getItem('elicitacionData');
-
-      if (!data) return;
-
-      const parsed = JSON.parse(data);
-
-      this.entrevistas = parsed.entrevistas || [];
-      this.procesos = parsed.procesos || [];
-      this.listaNecesidades = parsed.listaNecesidades || [];
-      this.necesidadesBase = parsed.necesidadesBase || this.necesidadesBase;
-    }
-  }
-
 }

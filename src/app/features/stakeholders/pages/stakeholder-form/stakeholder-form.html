@@ -2,7 +2,15 @@
   <h2 class="form-title">Captura de Stakeholders</h2>
   <p class="form-subtitle">Identificación de partes interesadas</p>
 
-  <!-- Mensaje de éxito - AHORA USA CLASE DEL SISTEMA -->
+  <!-- Indicador de proyecto vinculado -->
+  <div class="alert alert-info mb-lg" *ngIf="proyectoId">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
+    </svg>
+    <span>Vinculado al proyecto #{{ proyectoId }}</span>
+  </div>
+
+  <!-- Mensaje de éxito -->
   <div class="alert alert-success" *ngIf="showSuccess">
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
@@ -10,9 +18,17 @@
     <span>Stakeholder guardado exitosamente</span>
   </div>
 
+  <!-- Mensaje de error -->
+  <div class="alert alert-error" *ngIf="showError">
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
+    </svg>
+    <span>{{ errorMessage }}</span>
+  </div>
+
   <form #stakeholderForm="ngForm" (ngSubmit)="onSubmit()">
     
-    <!-- Nombre - USA CLASES DEL SISTEMA -->
+    <!-- Nombre -->
     <div class="form-group">
       <input 
         type="text" 
@@ -25,7 +41,7 @@
       />
     </div>
 
-    <!-- Rol - USA CLASES DEL SISTEMA -->
+    <!-- Rol -->
     <div class="form-group">
       <input 
         type="text" 
@@ -38,7 +54,7 @@
       />
     </div>
 
-    <!-- Tipo - USA CLASES DEL SISTEMA -->
+    <!-- Tipo — valores coinciden con el ENUM de la BD -->
     <div class="form-group">
       <select 
         id="tipo"
@@ -48,12 +64,15 @@
         required
       >
         <option value="" disabled selected>Tipo*</option>
-        <option value="Stakeholder">Stakeholder</option>
-        <option value="Usuario">Usuario</option>
+        <option value="Interno">Interno</option>
+        <option value="Externo">Externo</option>
+        <option value="Regulador">Regulador</option>
+        <option value="Proveedor">Proveedor</option>
+        <option value="Otro">Otro</option>
       </select>
     </div>
 
-    <!-- Área - USA CLASES DEL SISTEMA -->
+    <!-- Área -->
     <div class="form-group">
       <input 
         type="text" 
@@ -66,12 +85,12 @@
       />
     </div>
 
-    <!-- Nivel de Influencia - USA CLASES DEL SISTEMA -->
+    <!-- Nivel de Influencia -->
     <div class="form-group">
       <select 
-        id="nivelInfluencia"
-        name="nivelInfluencia"
-        [(ngModel)]="stakeholder.nivelInfluencia"
+        id="nivel_influencia"
+        name="nivel_influencia"
+        [(ngModel)]="stakeholder.nivel_influencia"
         class="form-select"
         required
       >
@@ -82,12 +101,12 @@
       </select>
     </div>
 
-    <!-- Interés en el Sistema - USA CLASES DEL SISTEMA -->
+    <!-- Interés en el Sistema -->
     <div class="form-group">
       <textarea 
-        id="interesSistema"
-        name="interesSistema"
-        [(ngModel)]="stakeholder.interesSistema"
+        id="interes_sistema"
+        name="interes_sistema"
+        [(ngModel)]="stakeholder.interes_sistema"
         class="form-textarea"
         placeholder="Interés en el Sistema*"
         rows="4"
@@ -95,14 +114,14 @@
       ></textarea>
     </div>
 
-    <!-- Botón - USA CLASES DEL SISTEMA -->
+    <!-- Botón -->
     <div class="text-center">
       <button 
         type="submit" 
         class="btn btn-primary btn-full"
-        [disabled]="!stakeholderForm.valid"
+        [disabled]="!stakeholderForm.valid || isSubmitting"
       >
-        Guardar Stakeholder
+        {{ isSubmitting ? 'Guardando...' : 'Guardar Stakeholder' }}
       </button>
     </div>
 

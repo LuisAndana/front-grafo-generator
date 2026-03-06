@@ -1,156 +1,122 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 export interface Stakeholder {
-  id?: string;
+  id_stake?: number;
+  proyecto_id?: number | null;
   nombre: string;
   rol: string;
-  tipo: 'Stakeholder' | 'Usuario' | '';
+  tipo: 'Interno' | 'Externo' | 'Regulador' | 'Proveedor' | 'Otro' | '';
   area: string;
-  nivelInfluencia: 'Alto' | 'Medio' | 'Bajo' | '';
-  interesSistema: string;
-  fechaRegistro?: Date;
+  nivel_influencia: 'Alto' | 'Medio' | 'Bajo' | '';
+  interes_sistema: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StakeholderCreate {
+  proyecto_id?: number | null;
+  nombre: string;
+  rol: string;
+  tipo: string;
+  area: string;
+  nivel_influencia: string;
+  interes_sistema: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class StakeholderService {
+  private readonly baseUrl = `${environment.apiUrl}/stakeholders`;
+
   private stakeholdersSubject = new BehaviorSubject<Stakeholder[]>([]);
   public stakeholders$: Observable<Stakeholder[]> = this.stakeholdersSubject.asObservable();
 
-  private readonly STORAGE_KEY = 'srs_stakeholders';
-  private isBrowser: boolean;
+  constructor(private http: HttpClient) {}
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.loadFromStorage();
+  /**
+   * Crear stakeholder en el backend
+   */
+  createStakeholder(data: StakeholderCreate): Observable<Stakeholder> {
+    return this.http.post<Stakeholder>(`${this.baseUrl}/`, data).pipe(
+      tap(nuevo => {
+        const lista = this.stakeholdersSubject.value;
+        this.stakeholdersSubject.next([nuevo, ...lista]);
+      }),
+      catchError(err => {
+        console.error('Error al crear stakeholder:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   /**
-   * Guardar stakeholder
+   * Listar stakeholders (opcionalmente filtrar por proyecto)
    */
-  saveStakeholder(stakeholder: Stakeholder): void {
-    const stakeholders = this.stakeholdersSubject.value;
-    const newStakeholder: Stakeholder = {
-      ...stakeholder,
-      id: this.generateId(),
-      fechaRegistro: new Date()
-    };
-    
-    const updated = [...stakeholders, newStakeholder];
-    this.stakeholdersSubject.next(updated);
-    this.saveToStorage(updated);
-  }
-
-  /**
-   * Actualizar stakeholder existente
-   */
-  updateStakeholder(id: string, stakeholder: Stakeholder): void {
-    const stakeholders = this.stakeholdersSubject.value;
-    const index = stakeholders.findIndex(s => s.id === id);
-    
-    if (index !== -1) {
-      stakeholders[index] = { ...stakeholder, id };
-      this.stakeholdersSubject.next([...stakeholders]);
-      this.saveToStorage(stakeholders);
+  getStakeholders(proyectoId?: number): Observable<Stakeholder[]> {
+    let params = new HttpParams();
+    if (proyectoId) {
+      params = params.set('proyecto_id', proyectoId.toString());
     }
+
+    return this.http.get<Stakeholder[]>(`${this.baseUrl}/`, { params }).pipe(
+      tap(lista => this.stakeholdersSubject.next(lista)),
+      catchError(err => {
+        console.error('Error al listar stakeholders:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /**
+   * Obtener un stakeholder por ID
+   */
+  getStakeholderById(id: number): Observable<Stakeholder> {
+    return this.http.get<Stakeholder>(`${this.baseUrl}/${id}`);
+  }
+
+  /**
+   * Actualizar stakeholder
+   */
+  updateStakeholder(id: number, data: Partial<StakeholderCreate>): Observable<Stakeholder> {
+    return this.http.put<Stakeholder>(`${this.baseUrl}/${id}`, data).pipe(
+      tap(actualizado => {
+        const lista = this.stakeholdersSubject.value.map(s =>
+          s.id_stake === id ? actualizado : s
+        );
+        this.stakeholdersSubject.next(lista);
+      }),
+      catchError(err => {
+        console.error('Error al actualizar stakeholder:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   /**
    * Eliminar stakeholder
    */
-  deleteStakeholder(id: string): void {
-    const stakeholders = this.stakeholdersSubject.value;
-    const filtered = stakeholders.filter(s => s.id !== id);
-    this.stakeholdersSubject.next(filtered);
-    this.saveToStorage(filtered);
+  deleteStakeholder(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${id}`).pipe(
+      tap(() => {
+        const lista = this.stakeholdersSubject.value.filter(s => s.id_stake !== id);
+        this.stakeholdersSubject.next(lista);
+      }),
+      catchError(err => {
+        console.error('Error al eliminar stakeholder:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   /**
-   * Obtener stakeholder por ID
-   */
-  getStakeholderById(id: string): Stakeholder | undefined {
-    return this.stakeholdersSubject.value.find(s => s.id === id);
-  }
-
-  /**
-   * Obtener todos los stakeholders
+   * Obtener lista actual en memoria
    */
   getAllStakeholders(): Stakeholder[] {
     return this.stakeholdersSubject.value;
-  }
-
-  /**
-   * Filtrar stakeholders por tipo
-   */
-  getStakeholdersByType(tipo: 'Stakeholder' | 'Usuario'): Stakeholder[] {
-    return this.stakeholdersSubject.value.filter(s => s.tipo === tipo);
-  }
-
-  /**
-   * Filtrar stakeholders por nivel de influencia
-   */
-  getStakeholdersByInfluence(nivel: 'Alto' | 'Medio' | 'Bajo'): Stakeholder[] {
-    return this.stakeholdersSubject.value.filter(s => s.nivelInfluencia === nivel);
-  }
-
-  /**
-   * Exportar stakeholders a JSON
-   */
-  exportToJSON(): string {
-    return JSON.stringify(this.stakeholdersSubject.value, null, 2);
-  }
-
-  /**
-   * Limpiar todos los stakeholders
-   */
-  clearAll(): void {
-    this.stakeholdersSubject.next([]);
-    if (this.isBrowser) {
-      localStorage.removeItem(this.STORAGE_KEY);
-    }
-  }
-
-  /**
-   * Generar ID único
-   */
-  private generateId(): string {
-    return `SH-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Guardar en localStorage (solo en navegador)
-   */
-  private saveToStorage(stakeholders: Stakeholder[]): void {
-    if (!this.isBrowser) {
-      return; // No hacer nada en el servidor
-    }
-
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(stakeholders));
-    } catch (error) {
-      console.error('Error al guardar stakeholders:', error);
-    }
-  }
-
-  /**
-   * Cargar desde localStorage (solo en navegador)
-   */
-  private loadFromStorage(): void {
-    if (!this.isBrowser) {
-      return; // No hacer nada en el servidor
-    }
-
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        const stakeholders = JSON.parse(stored);
-        this.stakeholdersSubject.next(stakeholders);
-      }
-    } catch (error) {
-      console.error('Error al cargar stakeholders:', error);
-    }
   }
 }
