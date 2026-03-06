@@ -556,3 +556,13 @@
     transform: translateY(0);
   }
 }
+
+
+/* Agregar al proyecto-form.component.css existente */
+
+/* Mensaje de error API */
+.message-error {
+  background-color: #fee2e2;
+  border-left-color: #ef4444;
+  color: #991b1b;
+} 

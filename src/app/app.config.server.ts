@@ -1,12 +1,11 @@
-import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-import { provideServerRendering, withRoutes } from '@angular/ssr';
-import { appConfig } from './app.config';
-import { serverRoutes } from './app.routes.server';
+import { RenderMode, ServerRoute } from '@angular/ssr';
 
-const serverConfig: ApplicationConfig = {
-  providers: [
-    provideServerRendering(withRoutes(serverRoutes))
-  ]
-};
-
-export const config = mergeApplicationConfig(appConfig, serverConfig);
+export const serverRoutes: ServerRoute[] = [
+  {
+    // Todas las rutas renderizan en el cliente (browser)
+    // Esto evita que Angular intente ejecutar guards/interceptores en el servidor
+    // donde localStorage no está disponible
+    path: '**',
+    renderMode: RenderMode.Client
+  }
+];

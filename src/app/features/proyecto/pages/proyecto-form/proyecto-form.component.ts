@@ -1,16 +1,18 @@
-import { Component, Inject, PLATFORM_ID, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+
+import { ProyectoService } from '../../../../core/services/project.service';
+import { ProyectoCreate } from '../../../../core/models/project.model';
+
 
 @Component({
   selector: 'app-proyecto-form',
   templateUrl: './proyecto-form.component.html',
   styleUrls: ['./proyecto-form.component.css'],
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule
-  ]
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class ProyectoFormComponent implements OnInit {
 
@@ -18,29 +20,33 @@ export class ProyectoFormComponent implements OnInit {
   currentStep = 1;
   isSubmitting = false;
   successMessage = '';
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private proyectoService: ProyectoService,
+    private router: Router,
   ) {
     this.proyectoForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
-      cliente: ['', [Validators.required, Validators.minLength(2)]],
-      organizacion: ['', [Validators.required, Validators.minLength(2)]],
-      descripcionProblema: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
-      objetivo: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
-      fechaInicio: ['', Validators.required],
-      analista: ['', [Validators.required, Validators.minLength(3)]]
+      // Paso 1 — Información básica
+      nombre:               ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
+      codigo:               ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+
+      // Paso 2 — Descripción
+      descripcion_problema: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
+      objetivo_general:     ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
+
+      // Paso 3 — Detalles
+      fecha_inicio:         ['', Validators.required],
+      analista_responsable: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
     });
   }
 
-  ngOnInit(): void {
-    this.cargarProyecto();
-  }
+  ngOnInit(): void {}
 
-  // =============================
-  // NAVEGACIÓN DE PASOS
-  // =============================
+  // ─────────────────────────────────────────────
+  // NAVEGACIÓN
+  // ─────────────────────────────────────────────
 
   nextStep(): void {
     if (this.isStepValid()) {
@@ -56,48 +62,40 @@ export class ProyectoFormComponent implements OnInit {
     }
   }
 
-  /**
-   * Validar si el paso actual es válido
-   */
   isStepValid(): boolean {
     switch (this.currentStep) {
       case 1:
-        // Validar paso 1
-        return !!(this.proyectoForm.get('nombre')?.valid && 
-               this.proyectoForm.get('cliente')?.valid && 
-               this.proyectoForm.get('organizacion')?.valid);
+        return !!(
+          this.proyectoForm.get('nombre')?.valid &&
+          this.proyectoForm.get('codigo')?.valid
+        );
       case 2:
-        // Validar paso 2
-        return !!(this.proyectoForm.get('descripcionProblema')?.valid && 
-               this.proyectoForm.get('objetivo')?.valid);
+        return !!(
+          this.proyectoForm.get('descripcion_problema')?.valid &&
+          this.proyectoForm.get('objetivo_general')?.valid
+        );
       case 3:
-        // Validar paso 3
-        return !!(this.proyectoForm.get('fechaInicio')?.valid && 
-               this.proyectoForm.get('analista')?.valid);
+        return !!(
+          this.proyectoForm.get('fecha_inicio')?.valid &&
+          this.proyectoForm.get('analista_responsable')?.valid
+        );
       default:
         return false;
     }
   }
 
-  /**
-   * Obtener el título para el paso actual
-   */
   getTitleForStep(): string {
-    switch (this.currentStep) {
-      case 1:
-        return 'Fase de Incepción - Información General';
-      case 2:
-        return 'Fase de Incepción - Descripción y Objetivos';
-      case 3:
-        return 'Fase de Incepción - Detalles y Responsabilidades';
-      default:
-        return '';
-    }
+    const titles: Record<number, string> = {
+      1: 'Fase de Incepción - Información General',
+      2: 'Fase de Incepción - Descripción y Objetivos',
+      3: 'Fase de Incepción - Detalles y Responsabilidades',
+    };
+    return titles[this.currentStep] ?? '';
   }
 
-  // =============================
-  // GUARDAR
-  // =============================
+  // ─────────────────────────────────────────────
+  // GUARDAR → POST al backend
+  // ─────────────────────────────────────────────
 
   guardar(): void {
     if (this.proyectoForm.invalid) {
@@ -106,67 +104,54 @@ export class ProyectoFormComponent implements OnInit {
     }
 
     this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
 
-    setTimeout(() => {
-      try {
-        if (isPlatformBrowser(this.platformId)) {
-          const datos = this.proyectoForm.value;
-          localStorage.setItem('proyectoData', JSON.stringify(datos));
-        }
+    const payload: ProyectoCreate = {
+      nombre:               this.proyectoForm.value.nombre,
+      codigo:               this.proyectoForm.value.codigo,
+      descripcion_problema: this.proyectoForm.value.descripcion_problema,
+      objetivo_general:     this.proyectoForm.value.objetivo_general,
+      fecha_inicio:         this.proyectoForm.value.fecha_inicio,  // "YYYY-MM-DD"
+      analista_responsable: this.proyectoForm.value.analista_responsable,
+    };
 
-        this.successMessage = '✓ Proyecto guardado correctamente';
-        
+    this.proyectoService.crear(payload).subscribe({
+      next: (proyecto) => {
+        this.isSubmitting = false;
+        this.successMessage = `✓ Proyecto "${proyecto.nombre}" creado correctamente`;
+
+        // Redirigir a Stakeholders con el ID del nuevo proyecto
         setTimeout(() => {
-          this.successMessage = '';
-          this.resetForm();
-        }, 3000);
-
+          this.router.navigate(['/stakeholders'], {
+            queryParams: { proyecto_id: proyecto.id_proyecto }
+          });
+        }, 1500);
+      },
+      error: (err) => {
         this.isSubmitting = false;
-
-      } catch (error) {
-        console.error('Error al guardar:', error);
-        this.isSubmitting = false;
-      }
-    }, 500);
+        this.errorMessage =
+          err?.error?.detail ?? 'Error al guardar el proyecto. Intente de nuevo.';
+      },
+    });
   }
 
-  // =============================
+  // ─────────────────────────────────────────────
   // LIMPIAR
-  // =============================
+  // ─────────────────────────────────────────────
 
   limpiar(): void {
     if (confirm('¿Desea limpiar el formulario?')) {
-      this.resetForm();
+      this.proyectoForm.reset();
+      this.currentStep = 1;
+      this.successMessage = '';
+      this.errorMessage = '';
     }
   }
 
-  private resetForm(): void {
-    this.proyectoForm.reset();
-    this.currentStep = 1;
-    this.successMessage = '';
-  }
-
-  // =============================
-  // CARGAR
-  // =============================
-
-  cargarProyecto(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      try {
-        const data = localStorage.getItem('proyectoData');
-        if (data) {
-          const parsed = JSON.parse(data);
-          this.proyectoForm.patchValue(parsed);
-        }
-      } catch (error) {
-        console.error('Error al cargar:', error);
-      }
-    }
-  }
-
-  // =============================
-  // VALIDACIÓN DE CAMPOS
-  // =============================
+  // ─────────────────────────────────────────────
+  // VALIDACIÓN
+  // ─────────────────────────────────────────────
 
   isFieldInvalid(fieldName: string): boolean {
     const field = this.proyectoForm.get(fieldName);
@@ -175,34 +160,18 @@ export class ProyectoFormComponent implements OnInit {
 
   getErrorMessage(fieldName: string): string {
     const control = this.proyectoForm.get(fieldName);
-    
-    if (!control || !control.errors) {
-      return '';
-    }
+    if (!control?.errors) return '';
 
-    if (control.hasError('required')) {
-      return 'Este campo es obligatorio';
-    }
-    
-    if (control.hasError('minlength')) {
-      const minLength = control.getError('minlength').requiredLength;
-      return `Mínimo ${minLength} caracteres`;
-    }
-    
-    if (control.hasError('maxlength')) {
-      const maxLength = control.getError('maxlength').requiredLength;
-      return `Máximo ${maxLength} caracteres`;
-    }
+    if (control.hasError('required'))   return 'Este campo es obligatorio';
+    if (control.hasError('minlength'))  return `Mínimo ${control.getError('minlength').requiredLength} caracteres`;
+    if (control.hasError('maxlength'))  return `Máximo ${control.getError('maxlength').requiredLength} caracteres`;
 
     return 'Campo inválido';
   }
 
   private marcarCamposInvalidos(): void {
     Object.keys(this.proyectoForm.controls).forEach(key => {
-      const control = this.proyectoForm.get(key);
-      if (control && control.invalid) {
-        control.markAsTouched();
-      }
+      this.proyectoForm.get(key)?.markAsTouched();
     });
   }
 }

@@ -1,251 +1,156 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';  // ✅ CORREGIDO: Sin .prod
+import { catchError, tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
-export interface Usuario {
+export interface UserResponse {
+  id: number;
   email: string;
-  nombre: string;
-  apellido: string;
-  rol?: string;
-  fechaLogin?: Date;
-  fechaRegistro?: Date;
+  username: string;
+  is_active: boolean;
+  created_at: string;
 }
 
-export interface LoginResponse {
-  token: string;
-  usuario: Usuario;
-  message?: string;
+export interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
 }
 
-export interface RegisterResponse {
-  token: string;
-  usuario: Usuario;
-  message?: string;
+export interface AuthResponse {
+  user: UserResponse;
+  tokens: TokenResponse;
+  message: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private usuarioSubject: BehaviorSubject<Usuario | null>;
-  public usuario$: Observable<Usuario | null>;
-  private apiUrl = environment.apiUrl || 'http://localhost:8000';
+
+  private userSubject: BehaviorSubject<UserResponse | null>;
+  public user$: Observable<UserResponse | null>;
+
+  private readonly apiUrl      = environment.apiUrl || 'http://localhost:8000';
+  private readonly TOKEN_KEY   = 'srs_token';
+  private readonly REFRESH_KEY = 'srs_refresh_token';
+  private readonly USER_KEY    = 'srs_usuario';
+  private readonly AUTH_KEY    = 'srs_authenticated';
 
   constructor(
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    const usuarioGuardado = this.getUsuarioFromStorage();
-    this.usuarioSubject = new BehaviorSubject<Usuario | null>(usuarioGuardado);
-    this.usuario$ = this.usuarioSubject.asObservable();
-    console.log('🔐 AuthService inicializado. Usuario cargado:', usuarioGuardado);
+    this.userSubject = new BehaviorSubject<UserResponse | null>(
+      this.getUserFromStorage()
+    );
+    this.user$ = this.userSubject.asObservable();
   }
 
-  /**
-   * Obtener el usuario actual
-   */
-  public get usuarioActual(): Usuario | null {
-    return this.usuarioSubject.value;
+  // ── Getters ────────────────────────────────────────────────────────────────
+
+  public get usuarioActual(): UserResponse | null {
+    return this.userSubject.value;
   }
 
-  /**
-   * Obtener el token actual
-   */
   public get token(): string | null {
-    return localStorage.getItem('srs_token');
+    try {
+      return localStorage.getItem(this.TOKEN_KEY);
+    } catch {
+      return null;
+    }
   }
 
-  /**
-   * Verificar si el usuario está autenticado
-   */
   public isAuthenticated(): boolean {
-    return localStorage.getItem('srs_authenticated') === 'true' && this.token !== null;
+    try {
+      return localStorage.getItem(this.AUTH_KEY) === 'true' && !!this.token;
+    } catch {
+      return false;
+    }
   }
 
-  /**
-   * Login con backend
-   */
-  login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/usuarios/login`, {
-      email,
+  // ── Login ──────────────────────────────────────────────────────────────────
+
+  login(username: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/api/auth/login`, {
+      username,
       password
     }).pipe(
-      tap(response => {
-        console.log('✅ Login exitoso:', response);
-        // Guardar token y usuario
-        this.setAuthData(response.token, response.usuario);
-        this.usuarioSubject.next(response.usuario);
-      }),
+      tap(response => this.saveSession(response)),
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Registro con backend
-   */
-  register(nombre: string, apellido: string, email: string, password: string): Observable<RegisterResponse> {
-    return this.http.post<RegisterResponse>(`${this.apiUrl}/usuarios/registro`, {
-      nombre,
-      apellido,
+  // ── Register ───────────────────────────────────────────────────────────────
+
+  register(username: string, email: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/api/auth/register`, {
+      username,
       email,
       password
     }).pipe(
-      tap(response => {
-        console.log('✅ Registro exitoso:', response);
-        // Guardar token y usuario
-        this.setAuthData(response.token, response.usuario);
-        this.usuarioSubject.next(response.usuario);
-      }),
+      tap(response => this.saveSession(response)),
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Logout
-   */
+  // ── Logout ─────────────────────────────────────────────────────────────────
+
   logout(): void {
-    console.log('🚪 Logout ejecutado');
-    this.clearAuthData();
-    this.usuarioSubject.next(null);
-    console.log('📍 Navegando a /bienvenida');
-    this.router.navigate(['/bienvenida']).then(success => {
-      console.log('✅ Navegación a /bienvenida:', success ? 'exitosa' : 'fallida');
-    });
+    this.clearSession();
+    this.userSubject.next(null);
+    this.router.navigate(['/bienvenida']);
   }
 
-  /**
-   * Verificar token con el backend
-   */
-  verifyToken(): Observable<boolean> {
-    const token = this.token;
-    if (!token) {
-      return throwError(() => new Error('No token found'));
-    }
+  // ── saveSession — SIN isPlatformBrowser, angular.json no tiene SSR ─────────
 
-    return this.http.post<{ valid: boolean }>(`${this.apiUrl}/usuarios/verify-token`, { token }).pipe(
-      map(response => response.valid),
-      catchError(() => {
-        this.logout();
-        return throwError(() => new Error('Invalid token'));
-      })
-    );
-  }
-
-  /**
-   * Actualizar perfil de usuario
-   */
-  actualizarPerfil(datosActualizados: Partial<Usuario>): Observable<Usuario> {
-    const usuarioActual = this.usuarioActual;
-    if (!usuarioActual) {
-      return throwError(() => new Error('No hay usuario autenticado'));
-    }
-
-    return this.http.put<Usuario>(`${this.apiUrl}/usuarios/perfil`, datosActualizados).pipe(
-      tap(usuarioActualizado => {
-        console.log('✅ Perfil actualizado:', usuarioActualizado);
-        this.setUsuarioStorage(usuarioActualizado);
-        this.usuarioSubject.next(usuarioActualizado);
-      }),
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Actualizar rol del usuario
-   */
-  actualizarRol(rol: string): void {
-    const usuarioActual = this.usuarioActual;
-    if (usuarioActual) {
-      const usuarioActualizado = { ...usuarioActual, rol };
-      this.setUsuarioStorage(usuarioActualizado);
-      this.usuarioSubject.next(usuarioActualizado);
+  saveSession(response: AuthResponse): void {
+    this.userSubject.next(response.user);
+    try {
+      localStorage.setItem(this.TOKEN_KEY,   response.tokens.access_token);
+      localStorage.setItem(this.REFRESH_KEY, response.tokens.refresh_token);
+      localStorage.setItem(this.USER_KEY,    JSON.stringify(response.user));
+      localStorage.setItem(this.AUTH_KEY,    'true');
+    } catch (e) {
+      console.error('No se pudo guardar sesión en localStorage:', e);
     }
   }
 
-  /**
-   * Guardar datos de autenticación
-   */
-  private setAuthData(token: string, usuario: Usuario): void {
-    console.log('💾 Guardando datos de autenticación');
-    localStorage.setItem('srs_token', token);
-    this.setUsuarioStorage(usuario);
-    localStorage.setItem('srs_authenticated', 'true');
+  private clearSession(): void {
+    try {
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.REFRESH_KEY);
+      localStorage.removeItem(this.USER_KEY);
+      localStorage.removeItem(this.AUTH_KEY);
+    } catch { /* ignorar */ }
   }
 
-  /**
-   * Limpiar datos de autenticación
-   */
-  private clearAuthData(): void {
-    console.log('🗑️ Limpiando datos de autenticación');
-    localStorage.removeItem('srs_token');
-    localStorage.removeItem('srs_usuario');
-    localStorage.removeItem('srs_authenticated');
-  }
-
-  /**
-   * Guardar usuario en localStorage
-   */
-  private setUsuarioStorage(usuario: Usuario): void {
-    const usuarioStr = JSON.stringify(usuario);
-    console.log('📝 Guardando usuario en localStorage:', usuarioStr);
-    localStorage.setItem('srs_usuario', usuarioStr);
-  }
-
-  /**
-   * Obtener usuario de localStorage
-   */
-  private getUsuarioFromStorage(): Usuario | null {
-    const usuarioStr = localStorage.getItem('srs_usuario');
-    console.log('📖 Leyendo usuario de localStorage:', usuarioStr);
-    
-    if (usuarioStr) {
-      try {
-        const usuario = JSON.parse(usuarioStr);
-        console.log('✅ Usuario parseado:', usuario);
-        
-        // Migración: agregar rol si no existe
-        if (!usuario.rol) {
-          usuario.rol = 'developer';
-          this.setUsuarioStorage(usuario);
-        }
-        
-        return usuario;
-      } catch (error) {
-        console.error('❌ Error al parsear usuario:', error);
-        return null;
-      }
+  private getUserFromStorage(): UserResponse | null {
+    try {
+      const raw = localStorage.getItem(this.USER_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
     }
-    return null;
   }
 
-  /**
-   * Manejo de errores HTTP
-   */
   private handleError(error: HttpErrorResponse) {
-    let errorMessage = 'Ocurrió un error en el servidor';
-
+    let msg = 'Error en el servidor';
     if (error.error instanceof ErrorEvent) {
-      // Error del cliente
-      errorMessage = `Error: ${error.error.message}`;
+      msg = error.error.message;
     } else {
-      // Error del servidor
-      if (error.status === 401) {
-        errorMessage = 'Credenciales inválidas';
-      } else if (error.status === 409) {
-        errorMessage = 'El usuario ya existe';
-      } else if (error.status === 400) {
-        errorMessage = error.error?.detail || 'Datos inválidos';
-      } else if (error.status === 500) {
-        errorMessage = 'Error interno del servidor';
-      } else if (error.error?.detail) {
-        errorMessage = error.error.detail;
+      switch (error.status) {
+        case 401: msg = 'Credenciales inválidas'; break;
+        case 400: msg = error.error?.detail || 'Datos inválidos'; break;
+        case 409: msg = 'El usuario ya existe'; break;
+        case 500: msg = 'Error interno del servidor'; break;
+        default:  msg = error.error?.detail || msg;
       }
     }
-
-    console.error('❌ Error:', errorMessage);
-    return throwError(() => ({ message: errorMessage, status: error.status }));
+    return throwError(() => ({ message: msg, status: error.status }));
   }
 }

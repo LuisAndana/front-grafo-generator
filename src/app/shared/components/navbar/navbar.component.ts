@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, HostListener, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, Input, Output, EventEmitter, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService, Usuario } from '../../../core/services/auth.service';
+import { AuthService, UserResponse } from '../../../core/services/auth.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -14,7 +15,7 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   @Input() sidebarOpen = true;
-  @Input() usuario: Usuario | null = null;
+  @Input() usuario: UserResponse | null = null;
   @Output() toggleSidebar = new EventEmitter<void>();
 
   showUserMenu = false;
@@ -23,27 +24,27 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    console.log('🎨 NavbarComponent constructor - Cargando usuario del localStorage');
-    const usuarioStr = localStorage.getItem('srs_usuario');
-    if (usuarioStr) {
-      try {
-        this.usuario = JSON.parse(usuarioStr);
-        console.log('✅ Usuario cargado del localStorage:', this.usuario);
-      } catch {
-        console.log('⚠️ No se pudo parsear usuario del localStorage');
+    // Solo acceder a localStorage en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      const usuarioStr = localStorage.getItem('srs_usuario');
+      if (usuarioStr) {
+        try {
+          this.usuario = JSON.parse(usuarioStr);
+        } catch {
+          // silencioso
+        }
       }
     }
   }
 
   ngOnInit() {
-    console.log('🎨 NavbarComponent ngOnInit');
     if (!this.usuario) {
-      this.authService.usuario$
+      this.authService.user$
         .pipe(takeUntil(this.destroy$))
-        .subscribe(usuario => {
-          console.log('📊 Usuario actualizado desde AuthService:', usuario);
+        .subscribe((usuario: UserResponse | null) => {
           this.usuario = usuario;
         });
     }
@@ -57,108 +58,59 @@ export class NavbarComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    const userMenu = target.closest('.user-menu');
-    
-    if (!userMenu && this.showUserMenu) {
+    if (!target.closest('.user-menu') && this.showUserMenu) {
       this.showUserMenu = false;
     }
   }
 
   toggleMenu(event?: Event) {
-    console.log('☰ Hamburguesa clickeada');
     event?.stopPropagation();
     this.toggleSidebar.emit();
-    console.log('☰ Evento emitido');
   }
 
   toggleUserMenu(event: Event) {
     event.stopPropagation();
     event.preventDefault();
     this.showUserMenu = !this.showUserMenu;
-    console.log('👤 Toggle user menu - abierto:', this.showUserMenu);
   }
 
   closeUserMenu() {
-    console.log('👤 Cerrando user menu');
     this.showUserMenu = false;
   }
 
-  /**
-   * Mostrar modal de confirmación de logout
-   */
   openLogoutConfirm() {
-    console.log('🔓 Abriendo modal de confirmación de logout');
     this.showLogoutConfirm = true;
   }
 
-  /**
-   * Cerrar modal de confirmación
-   */
   closeLogoutConfirm() {
-    console.log('❌ Cerrando modal de confirmación de logout');
     this.showLogoutConfirm = false;
   }
 
-  /**
-   * Confirmar y ejecutar logout
-   */
   confirmLogout() {
-    console.log('🚪 Confirmado logout, ejecutando...');
     this.logout();
   }
 
   logout() {
-    console.log('🚪 Ejecutando logout desde navbar...');
     this.authService.logout();
     this.closeUserMenu();
     this.closeLogoutConfirm();
   }
 
   irABienvenida() {
-    console.log('🔄 Navegando a /bienvenida desde botón Login');
-    this.router.navigate(['/bienvenida']).then(success => {
-      console.log('✅ Navegación a /bienvenida:', success ? 'exitosa' : 'fallida');
-    }).catch(error => {
-      console.error('❌ Error en navegación:', error);
-    });
+    this.router.navigate(['/bienvenida']);
   }
 
   getInitials(): string {
-    if (!this.usuario) {
-      return 'U';
-    }
-
-    const nombre = this.usuario.nombre?.charAt(0).toUpperCase() || '';
-    const apellido = this.usuario.apellido?.charAt(0).toUpperCase() || '';
-    
-    return `${nombre}${apellido}` || 'U';
+    if (!this.usuario) return 'U';
+    // El backend devuelve username, no nombre/apellido
+    return this.usuario.username?.charAt(0).toUpperCase() || 'U';
   }
 
   getRolFormatted(): string {
-    if (!this.usuario?.rol) {
-      return 'Usuario';
-    }
-    
-    const roles: { [key: string]: string } = {
-      'admin': 'Administrador',
-      'project_manager': 'Jefe de Proyecto',
-      'developer': 'Desarrollador',
-      'analyst': 'Analista',
-      'stakeholder': 'Stakeholder'
-    };
-    
-    return roles[this.usuario.rol] || this.usuario.rol;
+    return 'Analista';
   }
 
   getNombreUsuario(): string {
-    if (!this.usuario) {
-      return 'Usuario';
-    }
-
-    if (this.usuario.nombre && this.usuario.apellido) {
-      return `${this.usuario.nombre} ${this.usuario.apellido}`;
-    }
-
-    return this.usuario.nombre || 'Usuario';
+    return this.usuario?.username || 'Usuario';
   }
 }

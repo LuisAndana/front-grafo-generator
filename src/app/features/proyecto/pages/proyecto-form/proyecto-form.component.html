@@ -44,18 +44,20 @@
   <!-- Tarjeta del Formulario -->
   <div class="form-card">
     <form [formGroup]="proyectoForm">
-      
-      <!-- PASO 1: Información Básica -->
+
+      <!-- ══════════════════════════════════════
+           PASO 1: Información Básica
+           ══════════════════════════════════════ -->
       <div class="form-step" *ngIf="currentStep === 1">
         <div class="form-section">
           <h3 class="section-title">
             <span class="section-number">01</span>
             Información Básica del Proyecto
           </h3>
-          
+
           <div class="form-group">
             <label class="form-label" for="nombre">Nombre del Proyecto *</label>
-            <input 
+            <input
               id="nombre"
               type="text"
               formControlName="nombre"
@@ -68,39 +70,26 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="cliente">Cliente *</label>
-              <input 
-                id="cliente"
-                type="text"
-                formControlName="cliente"
-                class="form-input"
-                placeholder="Ej: Empresa XYZ"
-              />
-              <div class="form-error" *ngIf="isFieldInvalid('cliente')">
-                {{ getErrorMessage('cliente') }}
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="organizacion">Organización *</label>
-              <input 
-                id="organizacion"
-                type="text"
-                formControlName="organizacion"
-                class="form-input"
-                placeholder="Ej: Departamento de TI"
-              />
-              <div class="form-error" *ngIf="isFieldInvalid('organizacion')">
-                {{ getErrorMessage('organizacion') }}
-              </div>
+          <div class="form-group">
+            <label class="form-label" for="codigo">Código del Proyecto *</label>
+            <input
+              id="codigo"
+              type="text"
+              formControlName="codigo"
+              class="form-input"
+              placeholder="Ej: PROJ-2025-001"
+            />
+            <div class="form-help">Identificador único del proyecto (no se puede repetir)</div>
+            <div class="form-error" *ngIf="isFieldInvalid('codigo')">
+              {{ getErrorMessage('codigo') }}
             </div>
           </div>
         </div>
       </div>
 
-      <!-- PASO 2: Descripción -->
+      <!-- ══════════════════════════════════════
+           PASO 2: Descripción
+           ══════════════════════════════════════ -->
       <div class="form-step" *ngIf="currentStep === 2">
         <div class="form-section">
           <h3 class="section-title">
@@ -109,38 +98,40 @@
           </h3>
 
           <div class="form-group">
-            <label class="form-label" for="descripcionProblema">Descripción del Problema *</label>
+            <label class="form-label" for="descripcion_problema">Descripción del Problema *</label>
             <textarea
-              id="descripcionProblema"
-              formControlName="descripcionProblema"
+              id="descripcion_problema"
+              formControlName="descripcion_problema"
               class="form-textarea"
               rows="4"
               placeholder="Describa el problema que el proyecto resolverá..."
             ></textarea>
             <div class="form-help">Máximo 500 caracteres</div>
-            <div class="form-error" *ngIf="isFieldInvalid('descripcionProblema')">
-              {{ getErrorMessage('descripcionProblema') }}
+            <div class="form-error" *ngIf="isFieldInvalid('descripcion_problema')">
+              {{ getErrorMessage('descripcion_problema') }}
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="objetivo">Objetivo General *</label>
+            <label class="form-label" for="objetivo_general">Objetivo General *</label>
             <textarea
-              id="objetivo"
-              formControlName="objetivo"
+              id="objetivo_general"
+              formControlName="objetivo_general"
               class="form-textarea"
               rows="4"
               placeholder="Defina el objetivo principal del proyecto..."
             ></textarea>
             <div class="form-help">Objetivo SMART y medible</div>
-            <div class="form-error" *ngIf="isFieldInvalid('objetivo')">
-              {{ getErrorMessage('objetivo') }}
+            <div class="form-error" *ngIf="isFieldInvalid('objetivo_general')">
+              {{ getErrorMessage('objetivo_general') }}
             </div>
           </div>
         </div>
       </div>
 
-      <!-- PASO 3: Detalles -->
+      <!-- ══════════════════════════════════════
+           PASO 3: Detalles
+           ══════════════════════════════════════ -->
       <div class="form-step" *ngIf="currentStep === 3">
         <div class="form-section">
           <h3 class="section-title">
@@ -150,48 +141,57 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="fechaInicio">Fecha de Inicio *</label>
-              <input 
-                id="fechaInicio"
+              <label class="form-label" for="fecha_inicio">Fecha de Inicio *</label>
+              <input
+                id="fecha_inicio"
                 type="date"
-                formControlName="fechaInicio"
+                formControlName="fecha_inicio"
                 class="form-input"
               />
-              <div class="form-error" *ngIf="isFieldInvalid('fechaInicio')">
-                {{ getErrorMessage('fechaInicio') }}
+              <div class="form-error" *ngIf="isFieldInvalid('fecha_inicio')">
+                {{ getErrorMessage('fecha_inicio') }}
               </div>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="analista">Analista Responsable *</label>
-              <input 
-                id="analista"
+              <label class="form-label" for="analista_responsable">Analista Responsable *</label>
+              <input
+                id="analista_responsable"
                 type="text"
-                formControlName="analista"
+                formControlName="analista_responsable"
                 class="form-input"
-                placeholder="Nombre del analista"
+                placeholder="Nombre completo del analista"
               />
-              <div class="form-help">Persona encargada del proyecto</div>
-              <div class="form-error" *ngIf="isFieldInvalid('analista')">
-                {{ getErrorMessage('analista') }}
+              <div class="form-help">Persona encargada del análisis del proyecto</div>
+              <div class="form-error" *ngIf="isFieldInvalid('analista_responsable')">
+                {{ getErrorMessage('analista_responsable') }}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Mensajes de estado -->
-      <div class="form-message" *ngIf="successMessage" class="message-success">
+      <!-- Mensajes de éxito -->
+      <div class="form-message message-success" *ngIf="successMessage">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17 10.5L8 18.5L3 13.5"/>
+          <path d="M17 5L8 16L3 11"/>
         </svg>
         <span>{{ successMessage }}</span>
       </div>
 
-      <!-- Acciones del Formulario -->
+      <!-- Mensajes de error -->
+      <div class="form-message message-error" *ngIf="errorMessage">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="10" cy="10" r="9"/>
+          <path d="M10 6v5M10 14h.01"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Acciones -->
       <div class="form-actions">
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="btn btn-secondary"
           (click)="previousStep()"
           *ngIf="currentStep > 1"
@@ -203,8 +203,8 @@
           <span>Anterior</span>
         </button>
 
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="btn btn-primary"
           (click)="nextStep()"
           *ngIf="currentStep < 3"
@@ -216,8 +216,8 @@
           </svg>
         </button>
 
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="btn btn-primary"
           (click)="guardar()"
           *ngIf="currentStep === 3"
@@ -230,8 +230,8 @@
           <span *ngIf="isSubmitting">Guardando...</span>
         </button>
 
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="btn btn-secondary"
           (click)="limpiar()"
           *ngIf="currentStep === 3"
@@ -257,7 +257,7 @@
       </div>
       <div class="info-content">
         <h4>Información importante</h4>
-        <p>Todos los campos marcados con (*) son obligatorios. Avance a través de los pasos para completar el registro de su proyecto.</p>
+        <p>Todos los campos marcados con (*) son obligatorios. Al guardar, serás redirigido a la sección de Stakeholders para continuar con el registro.</p>
       </div>
     </div>
   </div>

@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
-import { AuthService } from './core/services/auth.service';
+import { AuthService, UserResponse } from './core/services/auth.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -69,102 +70,73 @@ import { filter } from 'rxjs/operators';
   `]
 })
 export class App implements OnInit {
-  usuario: any = null;
+  usuario: UserResponse | null = null;
   sidebarOpen = true;
   isWelcomePage = false;
 
-  constructor(private authService: AuthService, private router: Router) {
-    console.log('🎨 App constructor iniciado');
-    
-    this.verificarYLimpiarStorageInvalido();
-    this.detectarTamanioPantalla();
-    
-    // Detectar ruta inicial
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.verificarYLimpiarStorageInvalido();
+      this.detectarTamanioPantalla();
+    }
+
     this.isWelcomePage = this.router.url === '/bienvenida';
   }
 
   ngOnInit() {
-    console.log('🎨 App ngOnInit');
-    
     // Detectar cambios de ruta
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
         this.isWelcomePage = event.url === '/bienvenida';
-        console.log('📍 Página actual:', event.url);
-        console.log('📍 ¿Es bienvenida?:', this.isWelcomePage);
       });
-    
-    this.authService.usuario$.subscribe(usuario => {
-      console.log('📊 Usuario actualizado en App desde AuthService:', usuario);
+
+    // ← CORREGIDO: usuario$ → user$, tipo explícito
+    this.authService.user$.subscribe((usuario: UserResponse | null) => {
       this.usuario = usuario;
-      
-      if (usuario) {
-        console.log('✅ Usuario logueado:', usuario.nombre);
-        this.detectarTamanioPantalla();
-      } else {
-        console.log('❌ Usuario deslogueado');
+      if (!usuario) {
         this.sidebarOpen = false;
       }
     });
 
-    window.addEventListener('resize', () => this.detectarTamanioPantalla());
+    if (isPlatformBrowser(this.platformId)) {
+      window.addEventListener('resize', () => this.detectarTamanioPantalla());
+    }
   }
 
   private verificarYLimpiarStorageInvalido() {
-    const token = localStorage.getItem('srs_token');
-    const usuario = localStorage.getItem('srs_usuario');
+    // Solo se llama cuando isPlatformBrowser ya fue verificado
+    const token         = localStorage.getItem('srs_token');
+    const usuario       = localStorage.getItem('srs_usuario');
     const authenticated = localStorage.getItem('srs_authenticated');
 
-    console.log('🔍 Verificando estado de localStorage...');
-    console.log('   - Token:', token ? 'existe' : 'no existe');
-    console.log('   - Usuario:', usuario ? 'existe' : 'no existe');
-    console.log('   - Authenticated:', authenticated);
-
-    if (token && !usuario) {
-      console.log('⚠️ Datos corruptos detectados - Limpiando...');
+    if ((token && !usuario) || (authenticated === 'true' && (!token || !usuario))) {
       this.limpiarAuthData();
-      return;
     }
-
-    if (authenticated === 'true' && (!token || !usuario)) {
-      console.log('⚠️ Estado inconsistente detectado - Limpiando...');
-      this.limpiarAuthData();
-      return;
-    }
-
-    console.log('✅ Estado de localStorage válido');
   }
 
   private limpiarAuthData() {
-    console.log('🗑️ Limpiando datos de autenticación inválidos...');
     localStorage.removeItem('srs_token');
     localStorage.removeItem('srs_usuario');
     localStorage.removeItem('srs_authenticated');
-    console.log('✅ Datos limpios');
   }
 
   detectarTamanioPantalla() {
-    const esMovil = window.innerWidth <= 768;
-    if (esMovil) {
-      this.sidebarOpen = false;
-      console.log('📱 Pantalla móvil - Sidebar cerrado');
-    } else {
-      this.sidebarOpen = true;
-      console.log('🖥️ Pantalla desktop - Sidebar abierto');
-    }
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.sidebarOpen = window.innerWidth > 768;
   }
 
   toggleSidebar() {
-    console.log('☰ Toggle sidebar - antes:', this.sidebarOpen);
     this.sidebarOpen = !this.sidebarOpen;
-    console.log('☰ Toggle sidebar - después:', this.sidebarOpen);
   }
 
   closeSidebar() {
-    console.log('☰ Cerrando sidebar desde App');
-    const esMovil = window.innerWidth <= 768;
-    if (esMovil) {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (window.innerWidth <= 768) {
       this.sidebarOpen = false;
     }
   }
