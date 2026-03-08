@@ -1,11 +1,12 @@
+// src/app/features/proyecto/pages/proyecto-form/proyecto-form.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { ProyectoService } from '../../../../core/services/project.service';
-import { ProyectoCreate } from '../../../../core/models/project.model';
-
+import { ProyectoCreate, ProyectoUpdate } from '../../../../core/models/project.model';
+import { ProyectoActivoService } from '../../../../core/services/proyecto-activo.service';
 
 @Component({
   selector: 'app-proyecto-form',
@@ -22,30 +23,60 @@ export class ProyectoFormComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  // Modo edición: si hay proyecto activo
+  modoEdicion = false;
+  proyectoId: number | null = null;
+
   constructor(
     private fb: FormBuilder,
     private proyectoService: ProyectoService,
+    private proyectoActivoSvc: ProyectoActivoService,
     private router: Router,
   ) {
     this.proyectoForm = this.fb.group({
-      // Paso 1 — Información básica
       nombre:               ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
       codigo:               ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-
-      // Paso 2 — Descripción
       descripcion_problema: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
       objetivo_general:     ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
-
-      // Paso 3 — Detalles
       fecha_inicio:         ['', Validators.required],
       analista_responsable: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Si hay proyecto activo → modo edición: cargar datos del backend
+    const idActivo = this.proyectoActivoSvc.proyectoId;
+    if (idActivo) {
+      this.modoEdicion = true;
+      this.proyectoId = idActivo;
+      this.cargarProyecto(idActivo);
+    }
+  }
 
   // ─────────────────────────────────────────────
-  // NAVEGACIÓN
+  // CARGA DATOS PARA EDICIÓN
+  // ─────────────────────────────────────────────
+
+  private cargarProyecto(id: number): void {
+    this.proyectoService.obtener(id).subscribe({
+      next: (proyecto) => {
+        this.proyectoForm.patchValue({
+          nombre:               proyecto.nombre,
+          codigo:               proyecto.codigo,
+          descripcion_problema: proyecto.descripcion_problema,
+          objetivo_general:     proyecto.objetivo_general,
+          fecha_inicio:         proyecto.fecha_inicio,
+          analista_responsable: proyecto.analista_responsable,
+        });
+      },
+      error: () => {
+        this.errorMessage = 'No se pudieron cargar los datos del proyecto.';
+      },
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // NAVEGACIÓN DE PASOS
   // ─────────────────────────────────────────────
 
   nextStep(): void {
@@ -85,16 +116,26 @@ export class ProyectoFormComponent implements OnInit {
   }
 
   getTitleForStep(): string {
-    const titles: Record<number, string> = {
-      1: 'Fase de Incepción - Información General',
-      2: 'Fase de Incepción - Descripción y Objetivos',
-      3: 'Fase de Incepción - Detalles y Responsabilidades',
+    const prefix = this.modoEdicion ? 'Editar Proyecto' : 'Fase de Incepción';
+    const subtitles: Record<number, string> = {
+      1: `${prefix} - Información General`,
+      2: `${prefix} - Descripción y Objetivos`,
+      3: `${prefix} - Detalles y Responsabilidades`,
     };
-    return titles[this.currentStep] ?? '';
+    return subtitles[this.currentStep] ?? '';
+  }
+
+  get tituloFormulario(): string {
+    return this.modoEdicion ? 'Editar Proyecto' : 'Registro del Proyecto';
+  }
+
+  get labelBotonGuardar(): string {
+    if (this.isSubmitting) return this.modoEdicion ? 'Guardando...' : 'Creando...';
+    return this.modoEdicion ? 'Guardar Cambios' : 'Guardar Proyecto';
   }
 
   // ─────────────────────────────────────────────
-  // GUARDAR → POST al backend
+  // GUARDAR: crea o actualiza según modo
   // ─────────────────────────────────────────────
 
   guardar(): void {
@@ -107,45 +148,85 @@ export class ProyectoFormComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    const payload: ProyectoCreate = {
-      nombre:               this.proyectoForm.value.nombre,
-      codigo:               this.proyectoForm.value.codigo,
-      descripcion_problema: this.proyectoForm.value.descripcion_problema,
-      objetivo_general:     this.proyectoForm.value.objetivo_general,
-      fecha_inicio:         this.proyectoForm.value.fecha_inicio,  // "YYYY-MM-DD"
-      analista_responsable: this.proyectoForm.value.analista_responsable,
-    };
+    const formValue = this.proyectoForm.value;
 
-    this.proyectoService.crear(payload).subscribe({
-      next: (proyecto) => {
-        this.isSubmitting = false;
-        this.successMessage = `✓ Proyecto "${proyecto.nombre}" creado correctamente`;
+    if (this.modoEdicion && this.proyectoId) {
+      // ── EDITAR ────────────────────────────────
+      const payload: ProyectoUpdate = {
+        nombre:               formValue.nombre,
+        codigo:               formValue.codigo,
+        descripcion_problema: formValue.descripcion_problema,
+        objetivo_general:     formValue.objetivo_general,
+        fecha_inicio:         formValue.fecha_inicio,
+        analista_responsable: formValue.analista_responsable,
+      };
 
-        // Redirigir a Stakeholders con el ID del nuevo proyecto
-        setTimeout(() => {
-          this.router.navigate(['/stakeholders'], {
-            queryParams: { proyecto_id: proyecto.id_proyecto }
-          });
-        }, 1500);
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errorMessage =
-          err?.error?.detail ?? 'Error al guardar el proyecto. Intente de nuevo.';
-      },
-    });
+      this.proyectoService.actualizar(this.proyectoId, payload).subscribe({
+        next: (proyecto) => {
+          this.isSubmitting = false;
+          this.successMessage = `✓ Proyecto "${proyecto.nombre}" actualizado correctamente`;
+
+          // Actualizar el proyecto activo en el servicio con los nuevos datos
+          this.proyectoActivoSvc.seleccionar(proyecto);
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.errorMessage =
+            err?.error?.detail ?? 'Error al actualizar el proyecto. Intente de nuevo.';
+        },
+      });
+
+    } else {
+      // ── CREAR ─────────────────────────────────
+      const payload: ProyectoCreate = {
+        nombre:               formValue.nombre,
+        codigo:               formValue.codigo,
+        descripcion_problema: formValue.descripcion_problema,
+        objetivo_general:     formValue.objetivo_general,
+        fecha_inicio:         formValue.fecha_inicio,
+        analista_responsable: formValue.analista_responsable,
+      };
+
+      this.proyectoService.crear(payload).subscribe({
+        next: (proyecto) => {
+          this.isSubmitting = false;
+          this.successMessage = `✓ Proyecto "${proyecto.nombre}" creado correctamente`;
+
+          setTimeout(() => {
+            this.router.navigate(['/stakeholders'], {
+              queryParams: { proyecto_id: proyecto.id_proyecto }
+            });
+          }, 1500);
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.errorMessage =
+            err?.error?.detail ?? 'Error al guardar el proyecto. Intente de nuevo.';
+        },
+      });
+    }
   }
 
   // ─────────────────────────────────────────────
-  // LIMPIAR
+  // LIMPIAR / RESTAURAR
   // ─────────────────────────────────────────────
 
   limpiar(): void {
-    if (confirm('¿Desea limpiar el formulario?')) {
-      this.proyectoForm.reset();
-      this.currentStep = 1;
-      this.successMessage = '';
-      this.errorMessage = '';
+    if (this.modoEdicion) {
+      // En edición: restaurar datos originales del backend
+      if (confirm('¿Descartar los cambios y volver a los datos originales?')) {
+        this.cargarProyecto(this.proyectoId!);
+        this.currentStep = 1;
+        this.successMessage = '';
+        this.errorMessage = '';
+      }
+    } else {
+      if (confirm('¿Desea limpiar el formulario?')) {
+        this.proyectoForm.reset();
+        this.currentStep = 1;
+        this.successMessage = '';
+        this.errorMessage = '';
+      }
     }
   }
 
@@ -161,11 +242,9 @@ export class ProyectoFormComponent implements OnInit {
   getErrorMessage(fieldName: string): string {
     const control = this.proyectoForm.get(fieldName);
     if (!control?.errors) return '';
-
     if (control.hasError('required'))   return 'Este campo es obligatorio';
     if (control.hasError('minlength'))  return `Mínimo ${control.getError('minlength').requiredLength} caracteres`;
     if (control.hasError('maxlength'))  return `Máximo ${control.getError('maxlength').requiredLength} caracteres`;
-
     return 'Campo inválido';
   }
 

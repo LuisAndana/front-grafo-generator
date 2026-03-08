@@ -1,146 +1,119 @@
-/* ============================================
-   RF - CONTENEDOR
-   ============================================ */
+/* src/app/features/requerimientos/pages/rf/rf.css */
 
 .container {
-  padding: var(--spacing-3xl);
-  max-width: 1200px;
-  margin: auto;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
 }
-
-/* ============================================
-   TÍTULO
-   ============================================ */
 
 h2 {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-xl);
+  gap: 10px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #1a237e;
+  margin-bottom: 20px;
 }
 
-/* ============================================
-   RESUMEN
-   ============================================ */
-
+/* ─── RESUMEN ─────────────────────────────── */
 .resumen {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 24px;
 }
 
-.resumen .box {
-  background-color: var(--card-bg);
-  padding: var(--spacing-md) var(--spacing-xl);
-  border-radius: var(--border-radius-xl);
-  font-weight: var(--font-weight-semibold);
-  min-width: 160px;
+.box {
+  flex: 1;
+  min-width: 120px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  font-weight: 500;
   text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast),
-              box-shadow var(--transition-fast);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 
-.resumen .box:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-}
+.box.completados  { border-left: 4px solid #4caf50; }
+.box.en-progreso  { border-left: 4px solid #2196f3; }
+.box.borradores   { border-left: 4px solid #9e9e9e; }
 
-/* ============================================
-   TARJETAS
-   ============================================ */
-
-mat-card {
-  border-radius: var(--card-radius) !important;
-  box-shadow: var(--card-shadow) !important;
-  padding: var(--card-padding) !important;
-  background-color: var(--card-bg);
-  margin-bottom: var(--spacing-xl);
-}
-
-/* ============================================
-   FORMULARIO
-   ============================================ */
-
+/* ─── FORM CARD ─────────────────────────── */
 .form-card {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--spacing-lg);
+  padding: 20px;
+  margin-bottom: 24px;
+  border-radius: 12px;
 }
 
-/* ============================================
-   BOTONES
-   ============================================ */
+.form-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #3949ab;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+  width: 100%;
+}
 
 .botones {
   display: flex;
-  gap: var(--spacing-md);
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: var(--spacing-md);
+  gap: 12px;
+  margin-top: 16px;
 }
 
-/* Quitamos estilos locales de button */
-/* Ahora usan los estilos globales */
+.inline-spinner {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+}
 
-/* ============================================
-   TABLA
-   ============================================ */
-
+/* ─── TABLA ─────────────────────────────── */
 table {
   width: 100%;
-  border-radius: var(--border-radius-lg);
-  overflow: hidden;
 }
 
-th {
-  font-weight: var(--font-weight-semibold);
-  background-color: var(--neutral-100);
-  text-transform: uppercase;
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.5px;
+.row-editando {
+  background: #e8eaf6;
 }
 
-td, th {
-  padding: var(--spacing-md) !important;
+/* ─── CHIPS ─────────────────────────────── */
+.chip-alta    { background: #ef5350 !important; color: #fff !important; }
+.chip-media   { background: #fb8c00 !important; color: #fff !important; }
+.chip-baja    { background: #66bb6a !important; color: #fff !important; }
+
+.chip-estado-borrador    { background: #9e9e9e !important; color: #fff !important; }
+.chip-estado-en-progreso { background: #2196f3 !important; color: #fff !important; }
+.chip-estado-completado  { background: #4caf50 !important; color: #fff !important; }
+
+/* ─── SPINNER ─────────────────────────── */
+.spinner-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
 }
 
-table tr:hover {
-  background-color: var(--neutral-50);
-  transition: background-color var(--transition-fast);
+/* ─── EMPTY STATE ───────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+  color: #9e9e9e;
 }
 
-/* ============================================
-   CHIPS
-   ============================================ */
-
-mat-chip {
-  font-weight: var(--font-weight-medium);
-  border-radius: var(--border-radius-md);
-  padding: 4px 10px;
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-@media (max-width: 768px) {
-
-  .form-card {
-    grid-template-columns: 1fr;
-  }
-
-  .resumen {
-    flex-direction: column;
-  }
-
-  .botones {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .botones button {
-    width: 100%;
-  }
+.empty-state mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  display: block;
+  margin: 0 auto 12px;
 }

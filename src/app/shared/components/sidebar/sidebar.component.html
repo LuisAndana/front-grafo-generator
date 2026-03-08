@@ -1,27 +1,66 @@
+<!-- src/app/shared/components/sidebar/sidebar.component.html -->
 <aside class="sidebar" [class.open]="isOpen">
   <nav class="sidebar-nav">
-    <!-- Debug: Mostrar cantidad de items -->
-    <div style="padding: 10px; font-size: 12px; color: #999; display: none;">
-      Items: {{ menuItems.length }}
+
+    <!-- ── PROYECTO ACTIVO ────────────────────────────────────────── -->
+    <div *ngIf="proyectoActivo" class="proyecto-activo-box">
+      <div class="proyecto-activo-label">PROYECTO ACTIVO</div>
+      <div class="proyecto-activo-nombre">{{ proyectoActivo.nombre }}</div>
+      <span class="proyecto-activo-codigo">{{ proyectoActivo.codigo }}</span>
+      <button class="btn-cambiar" (click)="pedirSalir()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Cambiar proyecto
+      </button>
     </div>
 
-    <!-- Items del menú -->
-    <a 
-      *ngFor="let item of menuItems; let i = index"
-      [routerLink]="item.route"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="nav-item"
-      (click)="onMenuItemClick()"
-      [attr.data-index]="i"
-      [title]="item.label">
-      <div class="nav-icon" [innerHTML]="getIcon(item.icon)"></div>
-      <span class="nav-label">{{ item.label }}</span>
-    </a>
-
-    <!-- Si no hay items, mostrar mensaje -->
-    <div *ngIf="menuItems.length === 0" style="padding: 20px; color: #999; text-align: center;">
-      No hay items en el menú
+    <!-- ── SIN PROYECTO: mensaje ──────────────────────────────────── -->
+    <div *ngIf="!proyectoActivo" class="sin-proyecto-msg">
+      Selecciona un proyecto para comenzar
     </div>
+
+    <!-- ── MENÚ CON PROYECTO (navegable) ─────────────────────────── -->
+    <ng-container *ngIf="proyectoActivo">
+      <a
+        *ngFor="let item of menuItems; let i = index"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="nav-item"
+        (click)="onMenuItemClick()"
+        [attr.data-index]="i"
+        [title]="item.label">
+        <div class="nav-icon" [innerHTML]="getIcon(item.icon)"></div>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    </ng-container>
+
+    <!-- ── MENÚ SIN PROYECTO (bloqueado visualmente) ─────────────── -->
+    <ng-container *ngIf="!proyectoActivo">
+      <div
+        *ngFor="let item of menuItems"
+        class="nav-item nav-item-disabled"
+        title="Selecciona un proyecto primero">
+        <div class="nav-icon" [innerHTML]="getIcon(item.icon)"></div>
+        <span class="nav-label">{{ item.label }}</span>
+        <span class="lock-icon"></span>
+      </div>
+    </ng-container>
+
   </nav>
 </aside>
+
+<!-- ── MODAL CONFIRMAR SALIR ──────────────────────────────────────── -->
+<div *ngIf="mostrarConfirmSalir" class="confirm-overlay">
+  <div class="confirm-modal">
+    <h3>¿Salir del proyecto?</h3>
+    <p>Volverás al listado de proyectos. Los datos guardados no se perderán.</p>
+    <div class="confirm-btns">
+      <button class="confirm-btn-cancelar" (click)="cancelarSalir()">Quedarme</button>
+      <button class="confirm-btn-salir"    (click)="confirmarSalir()">Sí, salir</button>
+    </div>
+  </div>
+</div>

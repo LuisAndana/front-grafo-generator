@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+// src/app/shared/components/sidebar/sidebar.component.ts
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
+import { RouterModule, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ProyectoActivoService, ProyectoResumen } from '../../../core/services/proyecto-activo.service';
 
 interface MenuItem {
   label: string;
@@ -25,67 +26,59 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
+  proyectoActivo: ProyectoResumen | null = null;
+  mostrarConfirmSalir = false;
+
   menuItems: MenuItem[] = [
-    {
-      label: 'Proyecto',
-      icon: 'home',
-      route: '/proyecto'
-    },
-    {
-      label: 'Stakeholders',
-      icon: 'stakeholders',
-      route: '/stakeholders'
-    },
-    {
-      label: 'Elicitación',
-      icon: 'elicitacion',
-      route: '/elicitacion'
-    },
-    {
-      label: 'Requerimientos',
-      icon: 'requerimientos',
-      route: '/requerimientos'
-    },
-    {
-      label: 'Negociación',
-      icon: 'negociacion',
-      route: '/negociacion'
-    },
-    {
-      label: 'SRS',
-      icon: 'srs',
-      route: '/srs'
-    },
-    {
-      label: 'Validación',
-      icon: 'validacion',
-      route: '/validacion'
-    },
-    {
-      label: 'Historial',
-      icon: 'historial',
-      route: '/historial'
-    }
+    { label: 'Proyecto',       icon: 'home',           route: '/proyecto'       },
+    { label: 'Stakeholders',   icon: 'stakeholders',   route: '/stakeholders'   },
+    { label: 'Elicitación',    icon: 'elicitacion',    route: '/elicitacion'    },
+    { label: 'Requerimientos', icon: 'requerimientos', route: '/requerimientos' },
+    { label: 'Negociación',    icon: 'negociacion',    route: '/negociacion'    },
+    { label: 'SRS',            icon: 'srs',            route: '/srs'            },
+    { label: 'Validación',     icon: 'validacion',     route: '/validacion'     },
+    { label: 'Historial',      icon: 'historial',      route: '/historial'      },
   ];
 
-  constructor(private authService: AuthService) {
-    console.log('📋 SidebarComponent inicializado con', this.menuItems.length, 'items');
+  constructor(
+    private proyectoSvc: ProyectoActivoService,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.proyectoSvc.proyecto$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(p => {
+        this.proyectoActivo = p;
+        this.cdr.markForCheck();
+      });
   }
 
-  ngOnInit() {
-    console.log('📋 SidebarComponent ngOnInit - Items:', this.menuItems.length);
-    console.log('📋 isOpen:', this.isOpen);
-    console.log('📋 Menu items:', this.menuItems);
-  }
-
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   onMenuItemClick(): void {
-    console.log('📋 Item de menú clickeado');
     this.closeSidebar.emit();
+  }
+
+  pedirSalir(): void {
+    this.mostrarConfirmSalir = true;
+    this.cdr.markForCheck();
+  }
+
+  cancelarSalir(): void {
+    this.mostrarConfirmSalir = false;
+    this.cdr.markForCheck();
+  }
+
+  confirmarSalir(): void {
+    this.mostrarConfirmSalir = false;
+    this.proyectoSvc.limpiar();
+    this.router.navigate(['/proyectos']);
+    this.cdr.markForCheck();
   }
 
   getIcon(iconName: string): string {
@@ -118,11 +111,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       historial: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
         <polyline points="12 6 12 12 16 14"/>
-      </svg>`
+      </svg>`,
     };
-    
-    const icon = icons[iconName] || '';
-    console.log(`🎨 Retornando icon para: ${iconName}`);
-    return icon;
+    return icons[iconName] || '';
   }
 }
