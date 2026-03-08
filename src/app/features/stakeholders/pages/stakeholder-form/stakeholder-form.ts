@@ -1,8 +1,10 @@
+// src/app/features/stakeholders/pages/stakeholder-form/stakeholder-form.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { StakeholderService, StakeholderCreate } from '../../../../core/services/stakeholder.service';
+import { ProyectoActivoService } from '../../../../core/services/proyecto-activo.service';
 
 @Component({
   selector: 'app-stakeholder-form',
@@ -24,25 +26,24 @@ export class StakeholderFormComponent implements OnInit {
   };
 
   showSuccess = false;
-  showError = false;
+  showError   = false;
   errorMessage = '';
   isSubmitting = false;
 
   proyectoId: number | null = null;
+  proyectoNombre = '';
 
   constructor(
     private stakeholderService: StakeholderService,
-    private route: ActivatedRoute,
+    private proyectoActivoSvc: ProyectoActivoService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      if (params['proyecto_id']) {
-        this.proyectoId = Number(params['proyecto_id']);
-        this.stakeholder.proyecto_id = this.proyectoId;
-      }
-    });
+    // ← Leer proyecto activo del servicio (no de queryParams)
+    this.proyectoId = this.proyectoActivoSvc.proyectoId;
+    this.proyectoNombre = this.proyectoActivoSvc.proyecto?.nombre ?? '';
+    this.stakeholder.proyecto_id = this.proyectoId;
   }
 
   onSubmit() {
@@ -53,15 +54,14 @@ export class StakeholderFormComponent implements OnInit {
 
     const payload: StakeholderCreate = {
       ...this.stakeholder,
-      proyecto_id: this.proyectoId
+      proyecto_id: this.proyectoId   // ← siempre del servicio activo
     };
 
     this.stakeholderService.createStakeholder(payload).subscribe({
       next: () => {
         this.isSubmitting = false;
         this.showSuccess = true;
-
-        // Redirigir a Elicitación después de 1.5 segundos
+        this.resetForm();
         setTimeout(() => {
           this.showSuccess = false;
           this.router.navigate(['/elicitacion']);

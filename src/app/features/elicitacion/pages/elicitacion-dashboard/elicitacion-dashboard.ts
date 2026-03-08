@@ -1,9 +1,11 @@
+// src/app/features/elicitacion/pages/elicitacion-dashboard/elicitacion-dashboard.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { ElicitacionService, Entrevista, Proceso, Necesidad } from '../../services/elicitacion.service';
+import { ProyectoActivoService } from '../../../../core/services/proyecto-activo.service';
 
 @Component({
   selector: 'app-elicitacion-dashboard',
@@ -16,60 +18,71 @@ export class ElicitacionDashboard implements OnInit {
 
   constructor(
     private elicitacionService: ElicitacionService,
+    private proyectoActivoSvc: ProyectoActivoService,
     private router: Router
   ) {}
 
-  // ═══════════ MODELOS DE FORMULARIO ═══════════
+  // ─── Proyecto activo ────────────────────────────
+  proyectoId: number | null = null;
+  proyectoNombre = '';
 
+  // ─── Modelos de formulario ──────────────────────
   entrevista = { pregunta: '', respuesta: '', observaciones: '' };
-  proceso = { nombre: '', descripcion: '', problemas: '' };
+  proceso    = { nombre: '', descripcion: '', problemas: '' };
   necesidadesBase = { usuarios: false, reportes: false, inventarios: false, ventas: false };
-  nuevaNecesidad = '';
+  nuevaNecesidad  = '';
 
-  // ═══════════ LISTAS DESDE BD ═══════════
+  // ─── Listas desde BD ───────────────────────────
+  entrevistas:      Entrevista[] = [];
+  procesos:         Proceso[]    = [];
+  listaNecesidades: Necesidad[]  = [];
 
-  entrevistas: Entrevista[] = [];
-  procesos: Proceso[] = [];
-  listaNecesidades: Necesidad[] = [];
-
-  // ═══════════ ESTADO ═══════════
-
-  showSuccess = false;
+  // ─── Estado ─────────────────────────────────────
+  showSuccess    = false;
   successMessage = '';
-  isSaving = false;
+  isSaving       = false;
 
-  // ═══════════ INIT ═══════════
+  // ════════════════════════════════════════════════
+  // INIT
+  // ════════════════════════════════════════════════
 
   ngOnInit(): void {
+    // ← Leer proyecto activo
+    this.proyectoId     = this.proyectoActivoSvc.proyectoId;
+    this.proyectoNombre = this.proyectoActivoSvc.proyecto?.nombre ?? '';
     this.cargarDatos();
   }
 
   cargarDatos(): void {
-    this.elicitacionService.getEntrevistas().subscribe({
+    const pid = this.proyectoId ?? undefined;
+
+    this.elicitacionService.getEntrevistas(pid).subscribe({
       next: (data) => this.entrevistas = data,
       error: (err) => console.error('Error cargando entrevistas:', err)
     });
 
-    this.elicitacionService.getProcesos().subscribe({
+    this.elicitacionService.getProcesos(pid).subscribe({
       next: (data) => this.procesos = data,
       error: (err) => console.error('Error cargando procesos:', err)
     });
 
-    this.elicitacionService.getNecesidades().subscribe({
+    this.elicitacionService.getNecesidades(pid).subscribe({
       next: (data) => this.listaNecesidades = data,
       error: (err) => console.error('Error cargando necesidades:', err)
     });
   }
 
-  // ═══════════ ENTREVISTAS ═══════════
+  // ════════════════════════════════════════════════
+  // ENTREVISTAS
+  // ════════════════════════════════════════════════
 
   agregarEntrevista(): void {
-    if (!this.entrevista.pregunta.trim()) return;
+    if (!this.entrevista.pregunta.trim() || !this.entrevista.respuesta.trim()) return;
 
     this.elicitacionService.crearEntrevista({
-      proyecto_id: null,
-      pregunta: this.entrevista.pregunta,
-      respuesta: this.entrevista.respuesta,
+      proyecto_id:   this.proyectoId,   // ← con proyecto activo
+      pregunta:      this.entrevista.pregunta,
+      respuesta:     this.entrevista.respuesta,
       observaciones: this.entrevista.observaciones
     }).subscribe({
       next: (nueva) => {
@@ -89,15 +102,17 @@ export class ElicitacionDashboard implements OnInit {
     });
   }
 
-  // ═══════════ PROCESOS ═══════════
+  // ════════════════════════════════════════════════
+  // PROCESOS
+  // ════════════════════════════════════════════════
 
   agregarProceso(): void {
     if (!this.proceso.nombre.trim()) return;
 
     this.elicitacionService.crearProceso({
-      proyecto_id: null,
-      nombre_proceso: this.proceso.nombre,
-      descripcion: this.proceso.descripcion,
+      proyecto_id:          this.proyectoId,   // ← con proyecto activo
+      nombre_proceso:       this.proceso.nombre,
+      descripcion:          this.proceso.descripcion,
       problemas_detectados: this.proceso.problemas
     }).subscribe({
       next: (nuevo) => {
@@ -117,16 +132,18 @@ export class ElicitacionDashboard implements OnInit {
     });
   }
 
-  // ═══════════ NECESIDADES ═══════════
+  // ════════════════════════════════════════════════
+  // NECESIDADES
+  // ════════════════════════════════════════════════
 
   agregarNecesidad(): void {
     if (!this.nuevaNecesidad.trim()) return;
 
     this.elicitacionService.crearNecesidad({
-      proyecto_id: null,
-      nombre: this.nuevaNecesidad,
+      proyecto_id:    this.proyectoId,   // ← con proyecto activo
+      nombre:         this.nuevaNecesidad,
       es_predefinida: 0,
-      seleccionada: 1
+      seleccionada:   1
     }).subscribe({
       next: (nueva) => {
         this.listaNecesidades.unshift(nueva);
@@ -138,16 +155,16 @@ export class ElicitacionDashboard implements OnInit {
   }
 
   guardarNecesidadBase(nombre: string, seleccionada: boolean): void {
-    if (seleccionada) {
-      this.elicitacionService.crearNecesidad({
-        proyecto_id: null,
-        nombre: nombre,
-        es_predefinida: 1,
-        seleccionada: 1
-      }).subscribe({
-        next: (nueva) => this.listaNecesidades.unshift(nueva)
-      });
-    }
+    if (!seleccionada) return;
+
+    this.elicitacionService.crearNecesidad({
+      proyecto_id:    this.proyectoId,   // ← con proyecto activo
+      nombre:         nombre,
+      es_predefinida: 1,
+      seleccionada:   1
+    }).subscribe({
+      next: (nueva) => this.listaNecesidades.unshift(nueva)
+    });
   }
 
   eliminarNecesidad(id: number): void {
@@ -158,29 +175,30 @@ export class ElicitacionDashboard implements OnInit {
     });
   }
 
-  // ═══════════ GUARDAR TODO Y REDIRIGIR ═══════════
+  // ════════════════════════════════════════════════
+  // CONTINUAR
+  // ════════════════════════════════════════════════
 
   guardarYContinuar(): void {
     this.isSaving = true;
-    this.mostrarExito('Datos guardados correctamente. Redirigiendo a Requerimientos...');
-
+    this.mostrarExito('Datos guardados. Redirigiendo a Requerimientos...');
     setTimeout(() => {
       this.isSaving = false;
       this.router.navigate(['/requerimientos']);
     }, 1500);
   }
 
-  // ═══════════ RESUMEN ═══════════
+  // ════════════════════════════════════════════════
+  // HELPERS
+  // ════════════════════════════════════════════════
 
   get totalNecesidades(): number {
     return this.listaNecesidades.length;
   }
 
-  // ═══════════ HELPERS ═══════════
-
   mostrarExito(mensaje: string): void {
     this.successMessage = mensaje;
-    this.showSuccess = true;
+    this.showSuccess    = true;
     setTimeout(() => this.showSuccess = false, 3000);
   }
 }
