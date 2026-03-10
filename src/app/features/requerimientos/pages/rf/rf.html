@@ -14,9 +14,16 @@
     <div class="box borradores">Borradores {{ borradores }}</div>
   </div>
 
-  <!-- ─── SPINNER ────────────────────────────── -->
+  <!-- ─── SPINNER DE CARGA ────────────────────────────── -->
   <div *ngIf="cargando" class="spinner-wrap">
     <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando requerimientos...</p>
+  </div>
+
+  <!-- ─── MENSAJE DE ERROR ────────────────────────────── -->
+  <div *ngIf="errorMsg && !cargando" class="error-message">
+    <mat-icon>error</mat-icon>
+    {{ errorMsg }}
   </div>
 
   <!-- ─── FORMULARIO ─────────────────────────── -->
@@ -30,18 +37,19 @@
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Descripción</mat-label>
-        <textarea matInput [(ngModel)]="descripcion" rows="2"
+        <textarea matInput [(ngModel)]="descripcion" rows="2" required
                   placeholder="Ej: El sistema debe permitir..."></textarea>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Actor</mat-label>
-        <input matInput [(ngModel)]="actor" placeholder="Ej: Administrador">
+        <input matInput [(ngModel)]="actor" required
+               placeholder="Ej: Administrador">
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Prioridad</mat-label>
-        <mat-select [(ngModel)]="prioridad">
+        <mat-select [(ngModel)]="prioridad" required>
           <mat-option value="Alta">Alta</mat-option>
           <mat-option value="Media">Media</mat-option>
           <mat-option value="Baja">Baja</mat-option>
@@ -50,7 +58,7 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Estado</mat-label>
-        <mat-select [(ngModel)]="estado">
+        <mat-select [(ngModel)]="estado" required>
           <mat-option value="Borrador">Borrador</mat-option>
           <mat-option value="En progreso">En progreso</mat-option>
           <mat-option value="Completado">Completado</mat-option>
@@ -64,12 +72,13 @@
       <button mat-raised-button color="primary"
               (click)="agregar()"
               [disabled]="guardando">
-        <mat-spinner *ngIf="guardando" diameter="18" class="inline-spinner"></mat-spinner>
+        <mat-spinner *ngIf="guardando" diameter="16" class="inline-spinner"></mat-spinner>
         <mat-icon *ngIf="!guardando">{{ editandoId ? 'save' : 'add' }}</mat-icon>
         {{ editandoId ? 'Actualizar RF' : 'Agregar RF' }}
       </button>
 
       <button mat-stroked-button color="warn" (click)="cancelarEdicion()">
+        <mat-icon>clear</mat-icon>
         Limpiar
       </button>
 

@@ -1,5 +1,6 @@
-import { Component, Inject, PLATFORM_ID, OnInit } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+// src/app/features/requerimientos/pages/rnf/rnf.ts
+import { Component, Inject, PLATFORM_ID, OnInit, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +10,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
+import { RequerimientoNoFuncionalService, RNF } from '../../../../core/services/requerimiento-no-funcional.service';
+import { ProyectoActivoService } from '../../../../core/services/proyecto-activo.service';
 
 @Component({
   selector: 'app-rnf',
@@ -22,108 +27,198 @@ import { MatIconModule } from '@angular/material/icon';
     MatSelectModule,
     MatButtonModule,
     MatTableModule,
-    MatIconModule
+    MatIconModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './rnf.html',
   styleUrls: ['./rnf.css']
 })
 export class Rnf implements OnInit {
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(
+    private rnfService: RequerimientoNoFuncionalService,
+    private proyectoActivoSvc: ProyectoActivoService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
-  tipo = '';
-  descripcion = '';
-  metrica = '';
+  // Variables de proyecto
+  proyectoId: number | null = null;
 
-  rnfList: any[] = [];
+  // Formulario
+  tipo: string = '';
+  descripcion: string = '';
+  metrica: string = '';
+  editandoId: number | null = null;
 
+  // Lista
+  rnfList: RNF[] = [];
   columnas = ['codigo', 'tipo', 'descripcion', 'metrica', 'acciones'];
 
-  // =============================
-  // INIT
-  // =============================
+  // Estado UI
+  cargando = false;
+  guardando = false;
+  errorMsg = '';
 
+  // ════════════════════════════════════════════════
   ngOnInit(): void {
-    this.cargarDatos();
+    this.proyectoId = this.proyectoActivoSvc.proyectoId;
+    
+    if (this.proyectoId) {
+      this.cargarRNFs();
+    } else {
+      console.warn('No hay proyecto activo');
+    }
   }
 
-  // =============================
-  // GENERAR CÓDIGO AUTOMÁTICO
-  // =============================
+  /**
+   * Carga todos los RNF del proyecto actual
+   */
+  cargarRNFs(): void {
+    if (!this.proyectoId) return;
 
-  generarCodigo(): string {
-    const numero = this.rnfList.length + 1;
-    return `RNF${numero.toString().padStart(2, '0')}`;
+    this.cargando = true;
+    this.rnfService.listar(this.proyectoId).subscribe({
+      next: (data: RNF[]) => {
+        this.rnfList = [...data];
+        this.cargando = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error cargando RNFs:', err);
+        this.errorMsg = err?.error?.detail || 'Error al cargar los requerimientos';
+        this.cargando = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  // =============================
-  // AGREGAR
-  // =============================
-
-  agregar() {
-    if (!this.tipo || !this.descripcion || !this.metrica) {
-      alert('Completa todos los campos');
+  // ════════════════════════════════════════════════
+  /**
+   * Agregar o actualizar RNF
+   */
+  agregar(): void {
+    if (!this.tipo.trim() || !this.descripcion.trim()) {
+      alert('Completa todos los campos obligatorios');
       return;
     }
 
-    const nuevo = {
-      codigo: this.generarCodigo(),
-      tipo: this.tipo,
-      descripcion: this.descripcion,
-      metrica: this.metrica
-    };
+    if (!this.proyectoId) {
+      alert('No hay proyecto activo');
+      return;
+    }
 
-    // Spread operator para refrescar tabla
-    this.rnfList = [...this.rnfList, nuevo];
+    this.guardando = true;
+    this.errorMsg = '';
 
-    this.guardarDatos();
+    if (this.editandoId !== null) {
+      // ACTUALIZAR
+      this.rnfService.actualizar(this.editandoId, {
+        tipo: this.tipo,
+        descripcion: this.descripcion,
+        metrica: this.metrica || undefined,
+      }).subscribe({
+        next: (rnfActualizado) => {
+          // Actualizar en la lista
+          const index = this.rnfList.findIndex(r => r.id_rnf === this.editandoId);
+          if (index !== -1) {
+            this.rnfList[index] = rnfActualizado;
+            this.rnfList = [...this.rnfList];  // Refresh tabla
+          }
+          this.guardando = false;
+          this.limpiar();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.guardando = false;
+          this.errorMsg = err?.error?.detail || 'Error al actualizar';
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      // CREAR
+      this.rnfService.crear({
+        proyecto_id: this.proyectoId,
+        tipo: this.tipo,
+        descripcion: this.descripcion,
+        metrica: this.metrica || undefined,
+      }).subscribe({
+        next: (nuevoRNF) => {
+          this.rnfList = [...this.rnfList, nuevoRNF];
+          this.guardando = false;
+          this.limpiar();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.guardando = false;
+          this.errorMsg = err?.error?.detail || 'Error al crear el RNF';
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  /**
+   * Editar un RNF
+   */
+  editar(rnf: RNF): void {
+    this.editandoId = rnf.id_rnf;
+    this.tipo = rnf.tipo;
+    this.descripcion = rnf.descripcion;
+    this.metrica = rnf.metrica || '';
+  }
+
+  /**
+   * Eliminar un RNF
+   */
+  eliminar(rnf: RNF): void {
+    if (!confirm(`¿Eliminar el requerimiento ${rnf.codigo}?`)) {
+      return;
+    }
+
+    this.rnfService.eliminar(rnf.id_rnf).subscribe({
+      next: () => {
+        this.rnfList = this.rnfList.filter(r => r.id_rnf !== rnf.id_rnf);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error eliminando RNF:', err);
+        this.errorMsg = err?.error?.detail || 'Error al eliminar';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /**
+   * Cancelar edición y limpiar formulario
+   */
+  cancelarEdicion(): void {
     this.limpiar();
   }
 
-  // =============================
-  // ELIMINAR
-  // =============================
-
-  eliminar(index: number) {
-    this.rnfList.splice(index, 1);
-    this.rnfList = [...this.rnfList];
-    this.guardarDatos();
-  }
-
-  limpiar() {
+  /**
+   * Limpiar formulario
+   */
+  limpiar(): void {
     this.tipo = '';
     this.descripcion = '';
     this.metrica = '';
+    this.editandoId = null;
+    this.errorMsg = '';
   }
 
-  // =============================
-  // LOCAL STORAGE (SSR SAFE)
-  // =============================
+  // ════════════════════════════════════════════════
+  // CONTADORES
+  // ════════════════════════════════════════════════
 
-  guardarDatos() {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(
-        'rnfData',
-        JSON.stringify(this.rnfList)
-      );
-    }
-  }
-
-  cargarDatos() {
-    if (isPlatformBrowser(this.platformId)) {
-      const data = localStorage.getItem('rnfData');
-      if (!data) return;
-
-      this.rnfList = JSON.parse(data);
-      this.rnfList = [...this.rnfList]; // refresca tabla
-    }
-  }
-
-  // =============================
-  // CONTADOR TOTAL
-  // =============================
-
-  get total() {
+  get total(): number {
     return this.rnfList.length;
+  }
+
+  get porTipo(): { [key: string]: number } {
+    const conteo: { [key: string]: number } = {};
+    this.rnfList.forEach(rnf => {
+      conteo[rnf.tipo] = (conteo[rnf.tipo] || 0) + 1;
+    });
+    return conteo;
   }
 }
