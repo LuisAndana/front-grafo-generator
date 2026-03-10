@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   SIDEBAR - SRS MANAGER
+   SIDEBAR - SRS MANAGER - ICONOS MEJORADOS
    Usa variables globales de styles.css
    ══════════════════════════════════════════════════════════════ */
 
@@ -91,6 +91,7 @@
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
+
 .btn-cambiar:hover {
   background: #dbeafe;
   border-color: var(--primary-color, #1d4ed8);
@@ -166,21 +167,32 @@
   justify-content: center;
   width: 36px;
   height: 36px;
+  min-width: 36px;
   border-radius: 9px;
   background: var(--neutral-100, #f5f5f5);
   flex-shrink: 0;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
+  color: var(--neutral-500, #737373);
 }
 
-.nav-item:hover .nav-icon,
-.nav-item.active .nav-icon {
+.nav-item:hover .nav-icon {
   background: rgba(29, 78, 216, 0.1);
+  color: var(--primary-color, #1d4ed8);
+}
+
+.nav-item.active .nav-icon {
+  background: rgba(29, 78, 216, 0.15);
+  color: var(--primary-color, #1d4ed8);
 }
 
 .nav-icon svg {
-  width: 17px;
-  height: 17px;
+  width: 18px !important;
+  height: 18px !important;
   stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ── LABEL ─────────────────────────────────────────────────────── */
@@ -196,15 +208,16 @@
 /* ── ITEMS BLOQUEADOS ──────────────────────────────────────────── */
 
 .nav-item-disabled {
-  opacity: 0.38;
+  opacity: 0.45;
   cursor: not-allowed !important;
   pointer-events: none;
 }
 
 .lock-icon {
-  font-size: 12px;
+  font-size: 13px;
   margin-left: auto;
   flex-shrink: 0;
+  opacity: 0.5;
 }
 
 /* ── DIVISOR ENTRE GRUPOS ──────────────────────────────────────── */
@@ -220,13 +233,16 @@
 .sidebar::-webkit-scrollbar {
   width: 4px;
 }
+
 .sidebar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .sidebar::-webkit-scrollbar-thumb {
   background: var(--neutral-300, #d4d4d4);
   border-radius: 99px;
 }
+
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: var(--neutral-400, #a3a3a3);
 }
@@ -280,8 +296,13 @@
 }
 
 @keyframes fadeInOverlay {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .confirm-modal {
@@ -295,8 +316,15 @@
 }
 
 @keyframes slideUpModal {
-  from { transform: translateY(12px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .confirm-modal h3 {
@@ -330,6 +358,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
+
 .confirm-btn-cancelar:hover {
   background: var(--neutral-200, #e5e5e5);
 }
@@ -345,6 +374,7 @@
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
 }
+
 .confirm-btn-salir:hover {
   background: var(--primary-hover, #1e40af);
   transform: translateY(-1px);
