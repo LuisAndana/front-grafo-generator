@@ -75,6 +75,48 @@ export class ProyectosLista implements OnInit {
   }
 
   // ════════════════════════════════════════════
+  // GENERAR SRS ← NUEVO MÉTODO
+  // ════════════════════════════════════════════
+
+  /**
+   * Abre el generador de SRS para un proyecto específico
+   */
+ abrirGeneradorSRS(proyecto: ProyectoResumen, event: Event): void {
+  event.stopPropagation(); // Evita que se ejecute otra acción
+
+  console.log('🔄 [PROYECTOS-LISTA] Abriendo generador de SRS...');
+  console.log('📌 [PROYECTOS-LISTA] Proyecto:', proyecto);
+  console.log('📌 [PROYECTOS-LISTA] id_proyecto:', proyecto.id_proyecto);
+  console.log('📌 [PROYECTOS-LISTA] Tipo de id_proyecto:', typeof proyecto.id_proyecto);
+  
+  if (!proyecto || !proyecto.id_proyecto) {
+    console.error('❌ [PROYECTOS-LISTA] No se pudo obtener el ID del proyecto');
+    alert('❌ No se pudo obtener el ID del proyecto');
+    return;
+  }
+
+    // Seleccionar el proyecto (actualizarlo como activo)
+  console.log('👤 [PROYECTOS-LISTA] Seleccionando proyecto:', proyecto);
+  this.proyectoActivo.seleccionar(proyecto);
+
+  // Convertir a número si es necesario
+  const idParaGuardar = Number(proyecto.id_proyecto);
+  
+  console.log('💾 [PROYECTOS-LISTA] Guardando en sessionStorage:', idParaGuardar);
+  sessionStorage.setItem('proyectoActualId', idParaGuardar.toString());
+  
+  // Verificar que se guardó correctamente
+  const verificacion = sessionStorage.getItem('proyectoActualId');
+  console.log('✓ [PROYECTOS-LISTA] Verificación en sessionStorage:', verificacion);
+
+  // Navegar a SRS
+  console.log('🔗 [PROYECTOS-LISTA] Navegando a /srs');
+  this.router.navigate(['/srs']);
+
+  console.log('✓ [PROYECTOS-LISTA] Navegación iniciada');
+}
+
+  // ════════════════════════════════════════════
   // CREAR PROYECTO
   // ════════════════════════════════════════════
 

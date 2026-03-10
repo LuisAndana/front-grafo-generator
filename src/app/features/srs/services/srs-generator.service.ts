@@ -1,5 +1,6 @@
+// src/app/features/srs/services/srs-generator.service.ts
 import { Injectable } from '@angular/core';
-import jsPDF from 'jspdf';
+import { HttpClient } from '@angular/common/http';
 
 export interface Stakeholder {
   name: string;
@@ -53,318 +54,88 @@ export interface SRSDocument {
   providedIn: 'root'
 })
 export class SrsGeneratorService {
-
-  private readonly MARGIN_LEFT = 15;
-  private readonly MARGIN_TOP = 15;
-  private readonly MARGIN_RIGHT = 15;
-  private readonly BOTTOM_MARGIN = 20;
-  private readonly LINE_HEIGHT = 7;
-
-  // 🔥 FUNCIÓN SEGURA
-  private safe(value: unknown): string {
-    return typeof value === 'string' ? value : String(value ?? '');
-  }
-
-  generateSRSPdf(srsData: SRSDocument): void {
-
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    let y = this.MARGIN_TOP;
-
-    this.addTitle(pdf, 'Documento de Especificación de Requerimientos (SRS)', y);
-    y += 15;
-
-    this.addProjectInfo(pdf, this.safe(srsData.projectName), y);
-    y += 15;
-
-    y = this.addSection(pdf, 'Introducción', this.safe(srsData.introduction), y);
-
-    y = this.addStakeholdersSection(pdf, srsData.stakeholders ?? [], y);
-    y = this.addUsersSection(pdf, srsData.users ?? [], y);
-    y = this.addFunctionalRequirementsSection(pdf, srsData.functionalRequirements ?? [], y);
-    y = this.addNonFunctionalRequirementsSection(pdf, srsData.nonFunctionalRequirements ?? [], y);
-    y = this.addUseCasesSection(pdf, srsData.useCases ?? [], y);
-    y = this.addConstraintsSection(pdf, srsData.constraints ?? [], y);
-
-    const fileName =
-      `${this.safe(srsData.projectName) || 'Proyecto'}_SRS_${new Date().toISOString().split('T')[0]}.pdf`;
-
-    pdf.save(fileName);
-  }
-
-  private addTitle(pdf: jsPDF, title: string, y: number): void {
-    pdf.setFontSize(16);
-    pdf.setFont('helvetica', 'bold');
-
-    pdf.text(this.safe(title), pdf.internal.pageSize.getWidth() / 2, y, { align: 'center' });
-  }
-
-  private addProjectInfo(pdf: jsPDF, projectName: string, y: number): void {
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-
-    pdf.text(`Proyecto: ${this.safe(projectName)}`, this.MARGIN_LEFT, y);
-    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, this.MARGIN_LEFT, y + 7);
-  }
-
-  private addSection(pdf: jsPDF, title: string, content: string, y: number): number {
-
-    y = this.checkPageBreak(pdf, y, 30);
-
-    pdf.setFontSize(12);
-    pdf.setFont('helvetica', 'bold');
-
-    pdf.text(this.safe(title), this.MARGIN_LEFT, y);
-    y += 8;
-
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-
-
-    const maxWidth =
-      pdf.internal.pageSize.getWidth() - (this.MARGIN_LEFT + this.MARGIN_RIGHT);
-
-    const lines = pdf.splitTextToSize(this.safe(content), maxWidth);
-
-    pdf.text(lines, this.MARGIN_LEFT, y);
-    y += lines.length * this.LINE_HEIGHT + 10;
-
-    return y;
-  }
-
-  private addStakeholdersSection(pdf: jsPDF, stakeholders: Stakeholder[], y: number): number {
-
-    if (!stakeholders.length) return y;
-
-    y = this.addSection(pdf, 'Stakeholders', '', y);
-
-    stakeholders.forEach((s, i) => {
-
-      y = this.checkPageBreak(pdf, y, 20);
-
-      pdf.setFont('helvetica', 'bold');
-
-      pdf.text(this.safe(`${i + 1}. ${s.name}`), this.MARGIN_LEFT + 5, y);
-      y += this.LINE_HEIGHT;
-
-      pdf.setFont('helvetica', 'normal');
-
-
-      pdf.text(this.safe(`Rol: ${s.role}`), this.MARGIN_LEFT + 10, y);
-      y += this.LINE_HEIGHT;
-
-      const maxWidth =
-        pdf.internal.pageSize.getWidth() - (this.MARGIN_LEFT + 30);
-
-      const lines = pdf.splitTextToSize(
-        this.safe(`Responsabilidad: ${s.responsibility}`),
-        maxWidth
-      );
-
-      pdf.text(lines, this.MARGIN_LEFT + 10, y);
-      y += lines.length * this.LINE_HEIGHT + 5;
-    });
-
-    return y;
-  }
-
-  private addUsersSection(pdf: jsPDF, users: User[], y: number): number {
-
-    if (!users.length) return y;
-
-    y = this.addSection(pdf, 'Usuarios', '', y);
-
-    users.forEach((u, i) => {
-
-      y = this.checkPageBreak(pdf, y, 20);
-
-      pdf.setFont('helvetica', 'bold');
-
-      pdf.text(
-        this.safe(`${i + 1}. ${u.userType} (${u.userId})`),
-        this.MARGIN_LEFT + 5,
-        y
-      );
-      y += this.LINE_HEIGHT;
-
-      pdf.setFont('helvetica', 'normal');
-
-
-      const maxWidth =
-        pdf.internal.pageSize.getWidth() - (this.MARGIN_LEFT + 30);
-
-      const lines = pdf.splitTextToSize(
-        this.safe(u.description),
-        maxWidth
-      );
-
-      pdf.text(lines, this.MARGIN_LEFT + 10, y);
-      y += lines.length * this.LINE_HEIGHT + 5;
-    });
-
-    return y;
-  }
-
-  private addFunctionalRequirementsSection(pdf: jsPDF, reqs: FunctionalRequirement[], y: number): number {
-
-    if (!reqs.length) return y;
-
-    y = this.addSection(pdf, 'Requerimientos Funcionales (RF)', '', y);
-
-    reqs.forEach(r => {
-
-      y = this.checkPageBreak(pdf, y, 20);
-
-      pdf.setFont('helvetica', 'bold');
-
-      pdf.text(this.safe(r.rfId), this.MARGIN_LEFT + 5, y);
-      y += this.LINE_HEIGHT;
-
-      pdf.setFont('helvetica', 'normal');
-
-
-      const maxWidth =
-        pdf.internal.pageSize.getWidth() - (this.MARGIN_LEFT + 30);
-
-      const lines = pdf.splitTextToSize(
-        this.safe(r.description),
-        maxWidth
-      );
-
-      pdf.text(lines, this.MARGIN_LEFT + 10, y);
-      y += lines.length * this.LINE_HEIGHT;
-
-      pdf.setFont('helvetica', 'italic');
-
-      pdf.text(
-        this.safe(`Prioridad: ${r.priority}`),
-        this.MARGIN_LEFT + 10,
-        y
-      );
-      y += this.LINE_HEIGHT + 5;
-    });
-
-    return y;
-  }
-
-  private addNonFunctionalRequirementsSection(pdf: jsPDF, reqs: NonFunctionalRequirement[], y: number): number {
-
-    if (!reqs.length) return y;
-
-    y = this.addSection(pdf, 'Requerimientos No Funcionales (RNF)', '', y);
-
-    reqs.forEach(r => {
-
-      y = this.checkPageBreak(pdf, y, 20);
-
-      pdf.setFont('helvetica', 'bold');
-
-      pdf.text(
-        this.safe(`${r.rnfId} - ${r.category}`),
-        this.MARGIN_LEFT + 5,
-        y
-      );
-      y += this.LINE_HEIGHT;
-
-      pdf.setFont('helvetica', 'normal');
-
-
-      const maxWidth =
-        pdf.internal.pageSize.getWidth() - (this.MARGIN_LEFT + 30);
-
-      const lines = pdf.splitTextToSize(
-        this.safe(r.description),
-        maxWidth
-      );
-
-      pdf.text(lines, this.MARGIN_LEFT + 10, y);
-      y += lines.length * this.LINE_HEIGHT + 5;
-    });
-
-    return y;
-  }
-
-  private addUseCasesSection(pdf: jsPDF, cases: UseCase[], y: number): number {
-
-    if (!cases.length) return y;
-
-    y = this.addSection(pdf, 'Casos de Uso', '', y);
-
-    cases.forEach((c, i) => {
-
-      y = this.checkPageBreak(pdf, y, 25);
-
-      pdf.setFont('helvetica', 'bold');
-
-      pdf.text(this.safe(`${i + 1}. ${c.useCase}`), this.MARGIN_LEFT + 5, y);
-      y += this.LINE_HEIGHT;
-
-      pdf.setFont('helvetica', 'normal');
-
-      pdf.text(
-        this.safe(`Actores: ${c.actors?.join(', ')}`),
-        this.MARGIN_LEFT + 10,
-        y
-      );
-      y += this.LINE_HEIGHT;
-
-      const maxWidth =
-        pdf.internal.pageSize.getWidth() - (this.MARGIN_LEFT + 30);
-
-      const descLines = pdf.splitTextToSize(
-        this.safe(c.description),
-        maxWidth
-      );
-
-      pdf.text(descLines, this.MARGIN_LEFT + 10, y);
-      y += descLines.length * this.LINE_HEIGHT + 5;
-    });
-
-    return y;
-  }
-
-  private addConstraintsSection(pdf: jsPDF, cons: Constraint[], y: number): number {
-
-    if (!cons.length) return y;
-
-    y = this.addSection(pdf, 'Restricciones', '', y);
-
-    cons.forEach(c => {
-
-      y = this.checkPageBreak(pdf, y, 20);
-
-      pdf.setFont('helvetica', 'bold');
-
-      pdf.text(
-        this.safe(`${c.constraintId} (${c.type})`),
-        this.MARGIN_LEFT + 5,
-        y
-      );
-      y += this.LINE_HEIGHT;
-
-      pdf.setFont('helvetica', 'normal');
-
-
-      const maxWidth =
-        pdf.internal.pageSize.getWidth() - (this.MARGIN_LEFT + 30);
-
-      const lines = pdf.splitTextToSize(
-        this.safe(c.description),
-        maxWidth
-      );
-
-      pdf.text(lines, this.MARGIN_LEFT + 10, y);
-      y += lines.length * this.LINE_HEIGHT + 5;
-    });
-
-    return y;
-  }
-
-  private checkPageBreak(pdf: jsPDF, y: number, needed: number): number {
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    if (y + needed > pageHeight - this.BOTTOM_MARGIN) {
-      pdf.addPage();
-      return this.MARGIN_TOP;
+  private apiUrl = 'http://localhost:8000/api/srs';
+
+  constructor(private http: HttpClient) { }
+
+  /**
+   * Crea un documento SRS en el backend y genera PDF
+   */
+  async generateSRSPdf(srsData: SRSDocument, proyectoId: number): Promise<void> {
+    try {
+      // 1. Preparar datos para enviar al backend
+      const payload = {
+        proyecto_id: proyectoId,
+        nombre_documento: srsData.projectName || 'SRS sin nombre',
+        introduccion: srsData.introduction || '',
+        stakeholders: srsData.stakeholders || [],
+        usuarios: srsData.users || [],
+        requerimientos_funcionales: srsData.functionalRequirements || [],
+        requerimientos_no_funcionales: srsData.nonFunctionalRequirements || [],
+        casos_uso: srsData.useCases || [],
+        restricciones: srsData.constraints || []
+      };
+
+      console.log('Enviando SRS al backend:', payload);
+
+      // 2. Crear SRS en el backend
+      const response: any = await this.http.post(`${this.apiUrl}/`, payload).toPromise();
+
+      if (response && response.data && response.data.id_srs) {
+        const srsId = response.data.id_srs;
+        console.log('SRS creado exitosamente con ID:', srsId);
+
+        // 3. Generar y descargar PDF
+        setTimeout(() => {
+          const pdfUrl = `${this.apiUrl}/generar-pdf/${srsId}?proyecto_id=${proyectoId}`;
+          console.log('Descargando PDF desde:', pdfUrl);
+          window.open(pdfUrl, '_blank');
+        }, 500);
+
+        alert('✅ SRS creado exitosamente. El PDF se descargará en breve.');
+      } else {
+        throw new Error('Respuesta inválida del servidor');
+      }
+    } catch (error: any) {
+      console.error('❌ Error al generar SRS:', error);
+      const errorMessage = error?.error?.detail || error?.message || 'Error desconocido';
+      alert(`❌ Error al generar SRS: ${errorMessage}`);
     }
-    return y;
+  }
+
+  /**
+   * Obtiene todos los SRS de un proyecto
+   */
+  getSrsByProyecto(proyectoId: number) {
+    return this.http.get(`${this.apiUrl}/proyecto/${proyectoId}`);
+  }
+
+  /**
+   * Obtiene un SRS específico
+   */
+  getSrsById(srsId: number) {
+    return this.http.get(`${this.apiUrl}/${srsId}`);
+  }
+
+  /**
+   * Actualiza un SRS
+   */
+  updateSrs(srsId: number, data: any) {
+    return this.http.put(`${this.apiUrl}/${srsId}`, data);
+  }
+
+  /**
+   * Elimina un SRS
+   */
+  deleteSrs(srsId: number) {
+    return this.http.delete(`${this.apiUrl}/${srsId}`);
+  }
+
+  /**
+   * Descarga el PDF de un SRS
+   */
+  downloadPdf(srsId: number, proyectoId: number) {
+    const pdfUrl = `${this.apiUrl}/generar-pdf/${srsId}?proyecto_id=${proyectoId}`;
+    window.open(pdfUrl, '_blank');
   }
 }

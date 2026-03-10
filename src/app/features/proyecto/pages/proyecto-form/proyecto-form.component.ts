@@ -231,6 +231,44 @@ export class ProyectoFormComponent implements OnInit {
   }
 
   // ─────────────────────────────────────────────
+  // GENERAR SRS ← NUEVO MÉTODO
+  // ─────────────────────────────────────────────
+
+  /**
+   * Abre el generador de SRS para el proyecto actual
+   */
+  abrirGeneradorSRS(): void {
+  console.log('🔄 [PROYECTO-FORM] Abriendo generador de SRS...');
+  
+  // El proyectoId viene del proyectoActivoSvc
+  const proyectoId = this.proyectoActivoSvc.proyectoId;
+  
+  console.log('📌 [PROYECTO-FORM] proyectoId actual:', proyectoId);
+  console.log('📌 [PROYECTO-FORM] Tipo:', typeof proyectoId);
+  
+  if (!proyectoId) {
+    console.error('❌ [PROYECTO-FORM] No hay proyectoId');
+    alert('❌ Por favor, selecciona un proyecto primero');
+    return;
+  }
+
+    // Convertir a número si es necesario
+  const idParaGuardar = Number(proyectoId);
+  console.log('💾 [PROYECTO-FORM] Guardando en sessionStorage:', idParaGuardar);
+  sessionStorage.setItem('proyectoActualId', idParaGuardar.toString());
+  
+  // Verificar que se guardó correctamente
+  const verificacion = sessionStorage.getItem('proyectoActualId');
+  console.log('✓ [PROYECTO-FORM] Verificación en sessionStorage:', verificacion);
+
+  // Navegar a SRS
+  console.log('🔗 [PROYECTO-FORM] Navegando a /srs');
+  this.router.navigate(['/srs']);
+
+  console.log('✓ [PROYECTO-FORM] Navegación iniciada');
+}
+
+  // ─────────────────────────────────────────────
   // VALIDACIÓN
   // ─────────────────────────────────────────────
 

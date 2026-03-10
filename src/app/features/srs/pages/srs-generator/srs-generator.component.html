@@ -5,17 +5,40 @@
     <p>Especificación de Requerimientos del Software</p>
   </div>
 
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoadingProject" class="loading-box">
+    <div class="spinner"></div>
+    <p>Cargando datos del proyecto...</p>
+  </div>
+
+  <!-- Indicador de Proyecto Actual -->
+  <div class="project-info" *ngIf="proyectoId && !isLoadingProject">
+    <div class="project-status">
+      <div>
+        <p class="project-label">📁 Proyecto Actual</p>
+        <p class="project-id">{{ proyectoNombre }} ({{ proyectoCodigo }})</p>
+      </div>
+      <div class="status-badge">✓ Conectado</div>
+    </div>
+  </div>
+
+  <!-- Advertencia si no hay proyecto -->
+  <div *ngIf="!proyectoId" class="warning-box">
+    ⚠️ <strong>Atención:</strong> Navega a SRS con un ID de proyecto en la URL (ej: /srs/3)
+  </div>
+
   <!-- Project Info -->
   <div class="project-info">
     <div class="info-field">
-      <label for="projectName">Nombre del Proyecto:</label>
+      <label for="projectName">Nombre del Documento SRS:</label>
       <input 
         type="text" 
         id="projectName" 
         [(ngModel)]="srsData.projectName" 
-        placeholder="Ingresa el nombre del proyecto"
+        placeholder="Ej: SRS v1.0 - Sistema de Gestión"
         class="input-field"
       />
+      <small class="input-helper">Este nombre se usará para el documento y el archivo PDF</small>
     </div>
   </div>
 
@@ -80,7 +103,7 @@
       <h2>Introducción</h2>
       <textarea 
         [(ngModel)]="srsData.introduction"
-        placeholder="Describe la introducción del proyecto..."
+        placeholder="Describe la introducción del proyecto (objetivo, alcance, contexto, etc.)..."
         class="textarea-field"
         rows="8"
       ></textarea>
@@ -89,28 +112,28 @@
     <!-- Stakeholders Tab -->
     <div *ngIf="activeTab === 'stakeholders'" class="tab-content">
       <h2>Stakeholders</h2>
-      <button (click)="addStakeholder()" class="add-btn">Agregar Stakeholder</button>
+      <button (click)="addStakeholder()" class="add-btn">+ Agregar Stakeholder</button>
       
       <div *ngFor="let stakeholder of srsData.stakeholders; let i = index" class="item-card">
         <div class="item-header">
-          <h4>Stakeholder {{ i + 1 }}</h4>
+          <h4>Stakeholder {{ i + 1 }}: {{ stakeholder.name || 'Sin nombre' }}</h4>
           <button (click)="removeStakeholder(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
           <input 
             [(ngModel)]="stakeholder.name" 
-            placeholder="Nombre"
+            placeholder="Nombre (ej: Cliente, Usuario)"
             class="input-field"
           />
           <input 
             [(ngModel)]="stakeholder.role" 
-            placeholder="Rol"
+            placeholder="Rol (ej: Sponsor, Analista)"
             class="input-field"
           />
         </div>
         <textarea 
           [(ngModel)]="stakeholder.responsibility"
-          placeholder="Responsabilidad"
+          placeholder="Responsabilidad (qué espera del proyecto)"
           class="textarea-field"
           rows="3"
         ></textarea>
@@ -119,29 +142,29 @@
 
     <!-- Users Tab -->
     <div *ngIf="activeTab === 'users'" class="tab-content">
-      <h2>Usuarios</h2>
-      <button (click)="addUser()" class="add-btn">Agregar Usuario</button>
+      <h2>Usuarios del Sistema</h2>
+      <button (click)="addUser()" class="add-btn">+ Agregar Usuario</button>
       
       <div *ngFor="let user of srsData.users; let i = index" class="item-card">
         <div class="item-header">
-          <h4>Usuario {{ i + 1 }}</h4>
+          <h4>Usuario {{ i + 1 }}: {{ user.userType || 'Sin tipo' }}</h4>
           <button (click)="removeUser(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
           <input 
             [(ngModel)]="user.userId" 
-            placeholder="ID del Usuario"
+            placeholder="ID del Usuario (ej: USR-001)"
             class="input-field"
           />
           <input 
             [(ngModel)]="user.userType" 
-            placeholder="Tipo de Usuario"
+            placeholder="Tipo de Usuario (ej: Admin, Cliente)"
             class="input-field"
           />
         </div>
         <textarea 
           [(ngModel)]="user.description"
-          placeholder="Descripción"
+          placeholder="Descripción del usuario y sus necesidades"
           class="textarea-field"
           rows="3"
         ></textarea>
@@ -151,11 +174,11 @@
     <!-- Functional Requirements Tab -->
     <div *ngIf="activeTab === 'rf'" class="tab-content">
       <h2>Requerimientos Funcionales (RF)</h2>
-      <button (click)="addFunctionalRequirement()" class="add-btn">Agregar RF</button>
+      <button (click)="addFunctionalRequirement()" class="add-btn">+ Agregar RF</button>
       
       <div *ngFor="let req of srsData.functionalRequirements; let i = index" class="item-card">
         <div class="item-header">
-          <h4>RF {{ i + 1 }}</h4>
+          <h4>{{ req.rfId || 'RF-' + (i + 1) }}: {{ req.description.substring(0, 30) || 'Sin descripción' }}...</h4>
           <button (click)="removeFunctionalRequirement(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
@@ -167,16 +190,17 @@
         </div>
         <textarea 
           [(ngModel)]="req.description"
-          placeholder="Descripción"
+          placeholder="Descripción detallada del requerimiento funcional"
           class="textarea-field"
           rows="3"
         ></textarea>
         <div class="form-group">
+          <label class="field-label">Prioridad:</label>
           <select [(ngModel)]="req.priority" class="select-field full-width">
-            <option value="Baja">Baja</option>
-            <option value="Media">Media</option>
-            <option value="Alta">Alta</option>
-            <option value="Crítica">Crítica</option>
+            <option value="Baja">🔵 Baja</option>
+            <option value="Media">🟡 Media</option>
+            <option value="Alta">🔴 Alta</option>
+            <option value="Crítica">⚫ Crítica</option>
           </select>
         </div>
       </div>
@@ -185,11 +209,11 @@
     <!-- Non-Functional Requirements Tab -->
     <div *ngIf="activeTab === 'rnf'" class="tab-content">
       <h2>Requerimientos No Funcionales (RNF)</h2>
-      <button (click)="addNonFunctionalRequirement()" class="add-btn">Agregar RNF</button>
+      <button (click)="addNonFunctionalRequirement()" class="add-btn">+ Agregar RNF</button>
       
       <div *ngFor="let req of srsData.nonFunctionalRequirements; let i = index" class="item-card">
         <div class="item-header">
-          <h4>RNF {{ i + 1 }}</h4>
+          <h4>{{ req.rnfId || 'RNF-' + (i + 1) }}: {{ req.category || 'Sin categoría' }}</h4>
           <button (click)="removeNonFunctionalRequirement(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
@@ -200,13 +224,13 @@
           />
           <input 
             [(ngModel)]="req.category" 
-            placeholder="Categoría"
+            placeholder="Categoría (ej: Performance, Seguridad)"
             class="input-field"
           />
         </div>
         <textarea 
           [(ngModel)]="req.description"
-          placeholder="Descripción"
+          placeholder="Descripción del requerimiento no funcional"
           class="textarea-field"
           rows="3"
         ></textarea>
@@ -216,17 +240,17 @@
     <!-- Use Cases Tab -->
     <div *ngIf="activeTab === 'usecases'" class="tab-content">
       <h2>Casos de Uso</h2>
-      <button (click)="addUseCase()" class="add-btn">Agregar Caso de Uso</button>
+      <button (click)="addUseCase()" class="add-btn">+ Agregar Caso de Uso</button>
       
       <div *ngFor="let useCase of srsData.useCases; let i = index" class="item-card">
         <div class="item-header">
-          <h4>Caso de Uso {{ i + 1 }}</h4>
+          <h4>Caso de Uso {{ i + 1 }}: {{ useCase.useCase || 'Sin nombre' }}</h4>
           <button (click)="removeUseCase(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
           <input 
             [(ngModel)]="useCase.useCase" 
-            placeholder="Nombre del caso de uso"
+            placeholder="Nombre del caso de uso (ej: Registrar Usuario)"
             class="input-field full-width"
           />
         </div>
@@ -234,38 +258,38 @@
           <input 
             [value]="useCase.actors.join(', ')"
             (change)="updateActors(i, $event)"
-            placeholder="Actores (separados por comas)"
+            placeholder="Actores involucrados (separados por comas, ej: Usuario,Admin,Sistema)"
             class="input-field full-width"
           />
         </div>
         <textarea 
           [(ngModel)]="useCase.description"
-          placeholder="Descripción"
+          placeholder="Descripción del caso de uso"
           class="textarea-field"
           rows="3"
         ></textarea>
         
-        <label class="section-label">Pasos:</label>
+        <label class="section-label">Pasos del Flujo Principal:</label>
         <div *ngFor="let step of useCase.steps; let j = index" class="step-item">
           <input 
             [(ngModel)]="useCase.steps[j]"
-            placeholder="Paso {{ j + 1 }}"
+            placeholder="Paso {{ j + 1 }} (ej: El usuario ingresa las credenciales)"
             class="input-field"
           />
           <button (click)="removeStep(i, j)" class="remove-step-btn" title="Eliminar paso">×</button>
         </div>
-        <button (click)="addStep(i)" class="add-step-btn">Agregar Paso</button>
+        <button (click)="addStep(i)" class="add-step-btn">+ Agregar Paso</button>
       </div>
     </div>
 
     <!-- Constraints Tab -->
     <div *ngIf="activeTab === 'constraints'" class="tab-content">
-      <h2>Restricciones</h2>
-      <button (click)="addConstraint()" class="add-btn">Agregar Restricción</button>
+      <h2>Restricciones y Limitaciones</h2>
+      <button (click)="addConstraint()" class="add-btn">+ Agregar Restricción</button>
       
       <div *ngFor="let constraint of srsData.constraints; let i = index" class="item-card">
         <div class="item-header">
-          <h4>Restricción {{ i + 1 }}</h4>
+          <h4>{{ constraint.constraintId || 'C-' + (i + 1) }}: {{ constraint.type || 'Sin tipo' }}</h4>
           <button (click)="removeConstraint(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
@@ -276,13 +300,13 @@
           />
           <input 
             [(ngModel)]="constraint.type" 
-            placeholder="Tipo"
+            placeholder="Tipo (ej: Técnica, Regulatoria, Temporal)"
             class="input-field"
           />
         </div>
         <textarea 
           [(ngModel)]="constraint.description"
-          placeholder="Descripción"
+          placeholder="Descripción de la restricción"
           class="textarea-field"
           rows="3"
         ></textarea>
@@ -292,8 +316,12 @@
 
   <!-- Action Buttons -->
   <div class="action-buttons">
-    <button (click)="generatePDF()" class="generate-btn">
-      Generar PDF
+    <button 
+      (click)="generatePDF()" 
+      class="generate-btn"
+      [disabled]="!proyectoId || isLoading"
+    >
+      {{ isLoading ? '⏳ Generando PDF...' : '📄 Generar PDF' }}
     </button>
   </div>
 </div>

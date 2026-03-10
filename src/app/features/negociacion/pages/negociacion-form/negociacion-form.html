@@ -2,6 +2,19 @@
   <h2 class="form-title">Negociación y Priorización</h2>
   <p class="form-subtitle">Determinar qué requerimientos se implementarán primero</p>
 
+  <!-- Spinner de carga -->
+  <div *ngIf="cargando" class="flex justify-center items-center py-4xl">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div class="alert alert-error" *ngIf="errorMsg">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM1 10C1 5.03 5.03 1 10 1C14.97 1 19 5.03 19 10C19 14.97 14.97 19 10 19C5.03 19 1 14.97 1 10ZM10.5 5H9.5V12H10.5V5ZM10 13C9.45 13 9 13.45 9 14C9 14.55 9.45 15 10 15C10.55 15 11 14.55 11 14C11 13.45 10.55 13 10 13Z" fill="currentColor"/>
+    </svg>
+    <span>{{ errorMsg }}</span>
+  </div>
+
   <!-- Mensaje de éxito -->
   <div class="alert alert-success" *ngIf="showSuccess">
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -11,7 +24,7 @@
   </div>
 
   <!-- Información -->
-  <div class="alert alert-info mb-lg">
+  <div class="alert alert-info mb-lg" *ngIf="!cargando">
     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
       <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
     </svg>
@@ -22,32 +35,33 @@
   </div>
 
   <!-- Estadísticas rápidas -->
-  <div class="stats-grid mb-lg">
+  <div class="stats-grid mb-lg" *ngIf="!cargando">
     <div class="stat-card">
-      <div class="stat-number">{{ requerimientos.length }}</div>
-      <div class="stat-label">Total Requerimientos</div>
+      <div class="stat-number">{{ negociaciones.length }}</div>
+      <div class="stat-label">Total Negociados</div>
     </div>
     <div class="stat-card stat-high">
-      <div class="stat-number">{{ getRequerimientosPorPrioridad('Alta').length }}</div>
+      <div class="stat-number">{{ getNegociacionesPorPrioridad('Alta').length }}</div>
       <div class="stat-label">Prioridad Alta</div>
     </div>
     <div class="stat-card stat-medium">
-      <div class="stat-number">{{ getRequerimientosPorPrioridad('Media').length }}</div>
+      <div class="stat-number">{{ getNegociacionesPorPrioridad('Media').length }}</div>
       <div class="stat-label">Prioridad Media</div>
     </div>
     <div class="stat-card stat-success">
-      <div class="stat-number">{{ getRequerimientosAceptados().length }}</div>
+      <div class="stat-number">{{ getNegociacionesAceptadas().length }}</div>
       <div class="stat-label">Aceptados</div>
     </div>
   </div>
 
-  <!-- Botón para agregar requerimiento -->
-  <div class="mb-lg flex justify-between items-center">
-    <h3 class="text-xl font-semibold">Lista de Requerimientos</h3>
+  <!-- Botón para agregar -->
+  <div class="mb-lg flex justify-between items-center" *ngIf="!cargando">
+    <h3 class="text-xl font-semibold">Lista de Requerimientos Negociados</h3>
     <button 
       type="button" 
       class="btn btn-primary"
       (click)="showAddForm = !showAddForm"
+      [disabled]="getRFsDisponibles().length === 0"
     >
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 5v14M5 12h14"/>
@@ -56,33 +70,24 @@
     </button>
   </div>
 
-  <!-- Formulario para agregar requerimiento -->
-  <div class="card mb-lg" *ngIf="showAddForm">
+  <!-- Formulario para agregar -->
+  <div class="card mb-lg" *ngIf="showAddForm && !cargando">
     <div class="card-body">
-      <h4 class="card-title">Nuevo Requerimiento</h4>
+      <h4 class="card-title">Agregar Requerimiento a Negociación</h4>
       
       <div class="form-group">
-        <label class="form-label" for="nombre">Nombre del Requerimiento*</label>
-        <input 
-          type="text" 
-          id="nombre"
-          name="nombre"
-          [(ngModel)]="nuevoRequerimiento.nombre"
-          class="form-input"
-          placeholder="Ej: Sistema de autenticación de usuarios"
-        />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="descripcion">Descripción*</label>
-        <textarea 
-          id="descripcion"
-          name="descripcion"
-          [(ngModel)]="nuevoRequerimiento.descripcion"
-          class="form-textarea"
-          placeholder="Describe el requerimiento..."
-          rows="3"
-        ></textarea>
+        <label class="form-label" for="rf-select">Requerimiento Funcional*</label>
+        <select 
+          id="rf-select"
+          name="rf_id"
+          [(ngModel)]="nuevoRequerimiento.rf_id"
+          class="form-select"
+        >
+          <option value="" disabled>Selecciona un requerimiento</option>
+          <option *ngFor="let rf of getRFsDisponibles()" [value]="rf.id_req">
+            {{ rf.codigo }} - {{ rf.descripcion }}
+          </option>
+        </select>
       </div>
 
       <div class="form-group">
@@ -93,11 +98,22 @@
           [(ngModel)]="nuevoRequerimiento.prioridad"
           class="form-select"
         >
-          <option value="" disabled>Selecciona prioridad</option>
           <option value="Alta">Alta</option>
           <option value="Media">Media</option>
           <option value="Baja">Baja</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="observaciones">Observaciones</label>
+        <textarea 
+          id="observaciones"
+          name="observaciones"
+          [(ngModel)]="nuevoRequerimiento.observaciones"
+          class="form-textarea"
+          placeholder="Agregar comentarios sobre la negociación..."
+          rows="3"
+        ></textarea>
       </div>
 
       <div class="form-group">
@@ -115,15 +131,17 @@
         <button 
           type="button" 
           class="btn btn-primary"
-          (click)="agregarRequerimiento()"
-          [disabled]="!isNuevoRequerimientoValid()"
+          (click)="agregarNegociacion()"
+          [disabled]="!isNuevoRequerimientoValid() || guardando"
         >
-          Agregar
+          <span *ngIf="!guardando">Agregar</span>
+          <mat-spinner *ngIf="guardando" diameter="16"></mat-spinner>
         </button>
         <button 
           type="button" 
           class="btn btn-ghost"
-          (click)="showAddForm = false; resetNuevoRequerimiento()"
+          (click)="showAddForm = false; resetFormulario()"
+          [disabled]="guardando"
         >
           Cancelar
         </button>
@@ -131,35 +149,39 @@
     </div>
   </div>
 
-  <!-- Tabla de requerimientos -->
-  <div class="card" *ngIf="requerimientos.length > 0">
+  <!-- Tabla de negociaciones -->
+  <div class="card" *ngIf="negociaciones.length > 0 && !cargando">
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
+            <th class="table-th">Código</th>
             <th class="table-th">Requerimiento</th>
             <th class="table-th">Prioridad</th>
             <th class="table-th text-center">Aceptado</th>
+            <th class="table-th">Observaciones</th>
             <th class="table-th text-center">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let req of requerimientos" class="table-row">
+          <tr *ngFor="let neg of negociaciones" class="table-row">
+            <td class="table-td">
+              <span class="font-medium">{{ neg.rf_codigo }}</span>
+            </td>
             <td class="table-td">
               <div class="req-info">
-                <div class="req-name">{{ req.nombre }}</div>
-                <div class="req-desc">{{ req.descripcion }}</div>
+                <div class="req-name">{{ neg.rf_descripcion }}</div>
               </div>
             </td>
             <td class="table-td">
               <select 
-                [(ngModel)]="req.prioridad"
-                (change)="actualizarPrioridad(req.id!, req.prioridad)"
+                [(ngModel)]="neg.prioridad"
+                (change)="actualizarPrioridad(neg)"
                 class="priority-select"
                 [ngClass]="{
-                  'priority-high': req.prioridad === 'Alta',
-                  'priority-medium': req.prioridad === 'Media',
-                  'priority-low': req.prioridad === 'Baja'
+                  'priority-high': neg.prioridad === 'Alta',
+                  'priority-medium': neg.prioridad === 'Media',
+                  'priority-low': neg.prioridad === 'Baja'
                 }"
               >
                 <option value="Alta">Alta</option>
@@ -171,17 +193,26 @@
               <label class="checkbox-container">
                 <input 
                   type="checkbox"
-                  [(ngModel)]="req.aceptado"
-                  (change)="actualizarAceptado(req.id!, req.aceptado)"
+                  [(ngModel)]="neg.aceptado"
+                  (change)="actualizarAceptado(neg)"
                   class="checkbox"
                 />
               </label>
+            </td>
+            <td class="table-td">
+              <input 
+                type="text"
+                [(ngModel)]="neg.observaciones"
+                (blur)="actualizarObservaciones(neg)"
+                class="form-input form-input-sm"
+                placeholder="Agregar observación..."
+              />
             </td>
             <td class="table-td text-center">
               <button 
                 type="button"
                 class="btn-icon btn-danger"
-                (click)="eliminarRequerimiento(req.id!)"
+                (click)="eliminarNegociacion(neg.id!)"
                 title="Eliminar"
               >
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,24 +227,30 @@
   </div>
 
   <!-- Estado vacío -->
-  <div class="empty-state" *ngIf="requerimientos.length === 0">
+  <div class="empty-state" *ngIf="negociaciones.length === 0 && !cargando && !showAddForm">
     <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1">
       <rect x="8" y="8" width="48" height="48" rx="4"/>
       <path d="M8 20h48M20 8v48M28 28h8M28 36h8"/>
     </svg>
-    <h3>No hay requerimientos</h3>
-    <p>Agrega el primer requerimiento para comenzar la negociación</p>
+    <h3>No hay negociaciones</h3>
+    <p *ngIf="getRFsDisponibles().length > 0">
+      Agrega el primer requerimiento para comenzar la negociación
+    </p>
+    <p *ngIf="getRFsDisponibles().length === 0">
+      Todos los requerimientos funcionales ya han sido agregados a la negociación
+    </p>
     <button 
       type="button" 
       class="btn btn-primary"
       (click)="showAddForm = true"
+      *ngIf="getRFsDisponibles().length > 0"
     >
       Agregar Requerimiento
     </button>
   </div>
 
   <!-- Botones de acción -->
-  <div class="actions-bar" *ngIf="requerimientos.length > 0">
+  <div class="actions-bar" *ngIf="negociaciones.length > 0 && !cargando">
     <button 
       type="button" 
       class="btn btn-outline"
