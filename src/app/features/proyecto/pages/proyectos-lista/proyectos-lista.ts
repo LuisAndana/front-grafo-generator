@@ -1,4 +1,4 @@
-// src/app/features/proyectos/pages/proyectos-lista/proyectos-lista.ts
+// src/app/features/proyecto/pages/proyectos-lista/proyectos-lista.ts
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -109,8 +109,15 @@ export class ProyectosLista implements OnInit {
 
   formValido(): boolean {
     const f = this.form;
-    return !!(f.nombre && f.codigo && f.descripcion_problema &&
-              f.objetivo_general && f.fecha_inicio && f.analista_responsable);
+    // Validar que todos los campos cumplan con requisitos mínimos
+    return !!(
+      f.nombre && f.nombre.length >= 3 &&
+      f.codigo && f.codigo.length >= 2 &&
+      f.descripcion_problema && f.descripcion_problema.length >= 10 &&
+      f.objetivo_general && f.objetivo_general.length >= 10 &&
+      f.fecha_inicio &&
+      f.analista_responsable && f.analista_responsable.length >= 3
+    );
   }
 
   limpiarForm(): void {
@@ -118,6 +125,99 @@ export class ProyectosLista implements OnInit {
       nombre: '', codigo: '', descripcion_problema: '',
       objetivo_general: '', fecha_inicio: '', analista_responsable: '',
     };
+  }
+
+  // ════════════════════════════════════════════
+  // VALIDACIÓN DE CAMPOS ESPECÍFICOS
+  // ════════════════════════════════════════════
+
+  /**
+   * Verifica si un campo es inválido
+   */
+  isFieldInvalid(fieldName: string): boolean {
+    const value = this.form[fieldName as keyof typeof this.form];
+    
+    switch (fieldName) {
+      case 'nombre':
+        return value.length > 0 && value.length < 3;
+      case 'codigo':
+        return value.length > 0 && value.length < 2;
+      case 'descripcion_problema':
+        return value.length > 0 && value.length < 10;
+      case 'objetivo_general':
+        return value.length > 0 && value.length < 10;
+      case 'analista_responsable':
+        return value.length > 0 && value.length < 3;
+      case 'fecha_inicio':
+        return !value;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Retorna el mensaje de error para un campo
+   */
+  getErrorMessage(fieldName: string): string {
+    const value = this.form[fieldName as keyof typeof this.form];
+    
+    if (!value) return '';
+
+    switch (fieldName) {
+      case 'nombre':
+        return `Mínimo 3 caracteres (tienes ${value.length})`;
+      case 'codigo':
+        return `Mínimo 2 caracteres (tienes ${value.length})`;
+      case 'descripcion_problema':
+        return `Mínimo 10 caracteres (tienes ${value.length})`;
+      case 'objetivo_general':
+        return `Mínimo 10 caracteres (tienes ${value.length})`;
+      case 'analista_responsable':
+        return `Mínimo 3 caracteres (tienes ${value.length})`;
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Calcula el porcentaje de avance para la barra de progreso
+   */
+  getFieldProgress(fieldName: string): number {
+    const value = this.form[fieldName as keyof typeof this.form];
+    if (!value) return 0;
+
+    let minLength = 0;
+    switch (fieldName) {
+      case 'descripcion_problema':
+      case 'objetivo_general':
+        minLength = 10;
+        break;
+      case 'nombre':
+        minLength = 3;
+        break;
+      case 'codigo':
+        minLength = 2;
+        break;
+      case 'analista_responsable':
+        minLength = 3;
+        break;
+    }
+
+    return Math.min((value.length / minLength) * 100, 100);
+  }
+
+  /**
+   * Retorna la clase CSS para el campo según su estado
+   */
+  getFieldClass(fieldName: string): string {
+    if (this.isFieldInvalid(fieldName)) {
+      return 'form-input-error';
+    }
+    const value = this.form[fieldName as keyof typeof this.form];
+    if (value && !this.isFieldInvalid(fieldName)) {
+      return 'form-input-valid';
+    }
+    return '';
   }
 
   // ════════════════════════════════════════════

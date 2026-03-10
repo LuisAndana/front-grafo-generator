@@ -1,7 +1,7 @@
 <!-- src/app/features/proyectos/pages/proyectos-lista/proyectos-lista.html -->
 <div class="pl-page">
 
-  <!-- ─── HEADER ──────────────────────────────────── -->
+  <!-- ─── HEADER ──────────────────────────────── -->
   <div class="pl-header">
     <div>
       <h1 class="pl-title">Mis Proyectos</h1>
@@ -13,19 +13,19 @@
     </button>
   </div>
 
-  <!-- ─── ERROR ──────────────────────────────────── -->
+  <!-- ─── ERROR ──────────────────────────────── -->
   <div *ngIf="error" class="pl-error">
     {{ error }}
     <button (click)="error = ''">✕</button>
   </div>
 
-  <!-- ─── LOADING ─────────────────────────────────── -->
+  <!-- ─── LOADING ─────────────────────────────── -->
   <div *ngIf="cargando" class="pl-loading">
     <div class="spinner"></div>
     <p>Cargando proyectos...</p>
   </div>
 
-  <!-- ─── GRID DE CARDS ───────────────────────────── -->
+  <!-- ─── GRID DE CARDS ───────────────────────── -->
   <div *ngIf="!cargando" class="pl-grid">
 
     <!-- Card de cada proyecto -->
@@ -102,53 +102,166 @@
 <div *ngIf="mostrarForm" class="modal-overlay" (click)="cerrarForm()">
   <div class="modal" (click)="$event.stopPropagation()">
 
+    <!-- ─── MODAL HEADER ─── -->
     <div class="modal-header">
-      <h2>Nuevo Proyecto</h2>
-      <button class="modal-close" (click)="cerrarForm()">✕</button>
+      <div class="modal-header-content">
+        <div class="modal-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Crear Nuevo Proyecto</h2>
+          <p class="modal-subtitle">Completa los datos básicos del proyecto</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="cerrarForm()" aria-label="Cerrar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
+    <!-- ─── MODAL BODY ─── -->
     <div class="modal-body">
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nombre *</label>
-          <input [(ngModel)]="form.nombre" placeholder="Ej: Sistema de Gestión Académica">
-        </div>
-        <div class="form-group">
-          <label>Código *</label>
-          <input [(ngModel)]="form.codigo" placeholder="Ej: SGA-2025">
+      <!-- SECCIÓN 1: Información Básica -->
+      <div class="modal-section">
+        <h3 class="section-title">Información Básica</h3>
+
+        <div class="form-grid-2">
+          <!-- Nombre -->
+          <div class="form-group">
+            <label class="form-label">Nombre del Proyecto *</label>
+            <input 
+              type="text"
+              [(ngModel)]="form.nombre" 
+              placeholder="Ej: Sistema de Gestión Académica"
+              class="form-control"
+              [class.form-control-error]="isFieldInvalid('nombre')"
+              [class.form-control-success]="form.nombre && !isFieldInvalid('nombre')">
+            <div class="form-hint" *ngIf="!isFieldInvalid('nombre')">
+              Mínimo 3 caracteres
+            </div>
+            <div class="form-error" *ngIf="isFieldInvalid('nombre')">
+              {{ getErrorMessage('nombre') }}
+            </div>
+          </div>
+
+          <!-- Código -->
+          <div class="form-group">
+            <label class="form-label">Código *</label>
+            <input 
+              type="text"
+              [(ngModel)]="form.codigo" 
+              placeholder="Ej: SGA-2025"
+              class="form-control"
+              [class.form-control-error]="isFieldInvalid('codigo')"
+              [class.form-control-success]="form.codigo && !isFieldInvalid('codigo')">
+            <div class="form-hint" *ngIf="!isFieldInvalid('codigo')">
+              Identificador único
+            </div>
+            <div class="form-error" *ngIf="isFieldInvalid('codigo')">
+              {{ getErrorMessage('codigo') }}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Descripción del Problema *</label>
-        <textarea [(ngModel)]="form.descripcion_problema" rows="3"
-          placeholder="¿Qué problema resuelve este sistema?"></textarea>
-      </div>
+      <!-- SECCIÓN 2: Descripción -->
+      <div class="modal-section">
+        <h3 class="section-title">Descripción</h3>
 
-      <div class="form-group">
-        <label>Objetivo General *</label>
-        <textarea [(ngModel)]="form.objetivo_general" rows="3"
-          placeholder="¿Cuál es el objetivo principal del sistema?"></textarea>
-      </div>
-
-      <div class="form-row">
+        <!-- Descripción del Problema -->
         <div class="form-group">
-          <label>Fecha de Inicio *</label>
-          <input type="date" [(ngModel)]="form.fecha_inicio">
+          <label class="form-label">Descripción del Problema *</label>
+          <textarea 
+            [(ngModel)]="form.descripcion_problema" 
+            placeholder="Describe detalladamente el problema que este sistema resuelve..."
+            class="form-control form-textarea"
+            [class.form-control-error]="isFieldInvalid('descripcion_problema')"
+            [class.form-control-success]="form.descripcion_problema && !isFieldInvalid('descripcion_problema')"
+            rows="3">
+          </textarea>
+          
+          <div class="form-char-count">
+            <span class="char-count-text">{{ form.descripcion_problema.length }}/10 caracteres (mínimo)</span>
+          </div>
+          
+          <div class="form-error" *ngIf="isFieldInvalid('descripcion_problema')">
+            {{ getErrorMessage('descripcion_problema') }}
+          </div>
         </div>
+
+        <!-- Objetivo General -->
         <div class="form-group">
-          <label>Analista Responsable *</label>
-          <input [(ngModel)]="form.analista_responsable" placeholder="Nombre del analista">
+          <label class="form-label">Objetivo General *</label>
+          <textarea 
+            [(ngModel)]="form.objetivo_general" 
+            placeholder="¿Cuál es el objetivo principal del sistema? Sé específico y conciso..."
+            class="form-control form-textarea"
+            [class.form-control-error]="isFieldInvalid('objetivo_general')"
+            [class.form-control-success]="form.objetivo_general && !isFieldInvalid('objetivo_general')"
+            rows="3">
+          </textarea>
+          
+          <div class="form-char-count">
+            <span class="char-count-text">{{ form.objetivo_general.length }}/10 caracteres (mínimo)</span>
+          </div>
+          
+          <div class="form-error" *ngIf="isFieldInvalid('objetivo_general')">
+            {{ getErrorMessage('objetivo_general') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: Detalles -->
+      <div class="modal-section">
+        <h3 class="section-title">Detalles</h3>
+
+        <div class="form-grid-2">
+          <!-- Fecha de Inicio -->
+          <div class="form-group">
+            <label class="form-label">Fecha de Inicio *</label>
+            <input 
+              type="date" 
+              [(ngModel)]="form.fecha_inicio"
+              class="form-control"
+              [class.form-control-success]="form.fecha_inicio">
+            <div class="form-hint">Selecciona la fecha de inicio</div>
+          </div>
+
+          <!-- Analista Responsable -->
+          <div class="form-group">
+            <label class="form-label">Analista Responsable *</label>
+            <input 
+              type="text"
+              [(ngModel)]="form.analista_responsable" 
+              placeholder="Nombre completo"
+              class="form-control"
+              [class.form-control-error]="isFieldInvalid('analista_responsable')"
+              [class.form-control-success]="form.analista_responsable && !isFieldInvalid('analista_responsable')">
+            <div class="form-hint" *ngIf="!isFieldInvalid('analista_responsable')">
+              Mínimo 3 caracteres
+            </div>
+            <div class="form-error" *ngIf="isFieldInvalid('analista_responsable')">
+              {{ getErrorMessage('analista_responsable') }}
+            </div>
+          </div>
         </div>
       </div>
 
     </div>
 
+    <!-- ─── MODAL FOOTER ─── -->
     <div class="modal-footer">
-      <button class="btn-cancelar" (click)="cerrarForm()" [disabled]="guardando">Cancelar</button>
-      <button class="btn-guardar" (click)="crear()" [disabled]="!formValido() || guardando">
-        {{ guardando ? 'Guardando...' : 'Crear Proyecto' }}
+      <button class="btn-secondary" (click)="cerrarForm()" [disabled]="guardando">
+        Cancelar
+      </button>
+      <button class="btn-primary" (click)="crear()" [disabled]="!formValido() || guardando">
+        {{ guardando ? 'Creando...' : '+ Crear Proyecto' }}
       </button>
     </div>
 
@@ -162,15 +275,26 @@
 <div *ngIf="proyectoAEliminar" class="modal-overlay" (click)="cancelarEliminar()">
   <div class="modal modal-sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Eliminar Proyecto</h2>
+      <div class="modal-header-content">
+        <div class="modal-icon modal-icon-danger">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Eliminar Proyecto</h2>
+        </div>
+      </div>
     </div>
     <div class="modal-body">
-      <p>¿Estás seguro de eliminar <strong>{{ proyectoAEliminar.nombre }}</strong>?</p>
-      <p class="text-warn">Esta acción eliminará todos los datos asociados y no se puede deshacer.</p>
+      <p class="modal-text">¿Estás seguro de que deseas eliminar <strong>{{ proyectoAEliminar.nombre }}</strong>?</p>
+      <p class="modal-text-warn">Esta acción eliminará todos los datos asociados y no se puede deshacer.</p>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" (click)="cancelarEliminar()">Cancelar</button>
-      <button class="btn-eliminar" (click)="eliminar()">Sí, eliminar</button>
+      <button class="btn-secondary" (click)="cancelarEliminar()">Cancelar</button>
+      <button class="btn-danger" (click)="eliminar()">
+        Sí, eliminar
+      </button>
     </div>
   </div>
 </div>

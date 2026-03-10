@@ -242,10 +242,64 @@ export class ProyectoFormComponent implements OnInit {
   getErrorMessage(fieldName: string): string {
     const control = this.proyectoForm.get(fieldName);
     if (!control?.errors) return '';
-    if (control.hasError('required'))   return 'Este campo es obligatorio';
-    if (control.hasError('minlength'))  return `Mínimo ${control.getError('minlength').requiredLength} caracteres`;
-    if (control.hasError('maxlength'))  return `Máximo ${control.getError('maxlength').requiredLength} caracteres`;
+
+    if (control.hasError('required')) {
+      return 'Este campo es obligatorio';
+    }
+
+    if (control.hasError('minlength')) {
+      const minLength = control.getError('minlength').requiredLength;
+      const currentLength = control.value ? control.value.length : 0;
+      return `Mínimo ${minLength} caracteres (tienes ${currentLength})`;
+    }
+
+    if (control.hasError('maxlength')) {
+      return `Máximo ${control.getError('maxlength').requiredLength} caracteres`;
+    }
+
     return 'Campo inválido';
+  }
+
+  /**
+   * Retorna el texto de ayuda contextual para campos específicos
+   */
+  getHelpText(fieldName: string): string {
+    const control = this.proyectoForm.get(fieldName);
+    const currentLength = control?.value ? String(control.value).length : 0;
+
+    const helpTexts: Record<string, string> = {
+      'nombre': 'Nombre único y descriptivo del proyecto',
+      'codigo': 'Identificador único del proyecto (no se puede repetir)',
+      'descripcion_problema': `Describe el problema (${currentLength}/10 caracteres mínimo)`,
+      'objetivo_general': `¿Cuál es el objetivo principal? (${currentLength}/10 caracteres mínimo)`,
+      'fecha_inicio': 'Selecciona la fecha de inicio del proyecto',
+      'analista_responsable': 'Nombre completo del analista responsable'
+    };
+
+    return helpTexts[fieldName] || '';
+  }
+
+  /**
+   * Obtiene el porcentaje de avance en la validación de un campo
+   */
+  getFieldProgress(fieldName: string): number {
+    const control = this.proyectoForm.get(fieldName);
+    if (!control?.value) return 0;
+
+    const value = String(control.value);
+    let minLength = 0;
+
+    if (fieldName === 'descripcion_problema' || fieldName === 'objetivo_general') {
+      minLength = 10;
+    } else if (fieldName === 'nombre') {
+      minLength = 3;
+    } else if (fieldName === 'codigo') {
+      minLength = 2;
+    } else if (fieldName === 'analista_responsable') {
+      minLength = 3;
+    }
+
+    return Math.min((value.length / minLength) * 100, 100);
   }
 
   private marcarCamposInvalidos(): void {

@@ -43,13 +43,13 @@
   </div>
 
   <!-- Mensajes de estado -->
-  <div class="form-alert form-alert-success" *ngIf="successMessage">
+  <div class="form-message message-success" *ngIf="successMessage">
     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <polyline points="20 6 9 17 4 12"/>
     </svg>
     {{ successMessage }}
   </div>
-  <div class="form-alert form-alert-error" *ngIf="errorMessage">
+  <div class="form-message message-error" *ngIf="errorMessage">
     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
     </svg>
@@ -70,15 +70,17 @@
           <div class="form-group">
             <label class="form-label" for="nombre">Nombre del Proyecto *</label>
             <input id="nombre" type="text" formControlName="nombre" class="form-input"
-              placeholder="Ej: Sistema de Gestión de Inventario"/>
-            <div class="form-help">Nombre único y descriptivo del proyecto</div>
+              placeholder="Ej: Sistema de Gestión de Inventario"
+              (focus)="proyectoForm.get('nombre')?.markAsTouched()"/>
+            <div class="form-help">{{ getHelpText('nombre') }}</div>
             <div class="form-error" *ngIf="isFieldInvalid('nombre')">{{ getErrorMessage('nombre') }}</div>
           </div>
           <div class="form-group">
             <label class="form-label" for="codigo">Código del Proyecto *</label>
             <input id="codigo" type="text" formControlName="codigo" class="form-input"
-              placeholder="Ej: PROJ-2025-001"/>
-            <div class="form-help">Identificador único del proyecto (no se puede repetir)</div>
+              placeholder="Ej: PROJ-2025-001"
+              (focus)="proyectoForm.get('codigo')?.markAsTouched()"/>
+            <div class="form-help">{{ getHelpText('codigo') }}</div>
             <div class="form-error" *ngIf="isFieldInvalid('codigo')">{{ getErrorMessage('codigo') }}</div>
           </div>
         </div>
@@ -91,17 +93,79 @@
             <span class="section-number">02</span>
             Descripción y Objetivos
           </h3>
+
+          <!-- Descripción del Problema -->
           <div class="form-group">
-            <label class="form-label" for="descripcion_problema">Descripción del Problema *</label>
-            <textarea id="descripcion_problema" formControlName="descripcion_problema" class="form-input"
-              rows="4" placeholder="Describe el problema que este proyecto busca resolver..."></textarea>
-            <div class="form-error" *ngIf="isFieldInvalid('descripcion_problema')">{{ getErrorMessage('descripcion_problema') }}</div>
+            <label class="form-label" for="descripcion_problema">
+              Descripción del Problema *
+            </label>
+            <textarea 
+              id="descripcion_problema" 
+              formControlName="descripcion_problema" 
+              class="form-input"
+              [class.form-input-warning]="isFieldInvalid('descripcion_problema')"
+              rows="4" 
+              placeholder="Describe detalladamente el problema que este proyecto busca resolver..."
+              (focus)="proyectoForm.get('descripcion_problema')?.markAsTouched()"
+              (input)="proyectoForm.get('descripcion_problema')?.updateValueAndValidity()">
+            </textarea>
+            
+            <!-- Indicador de caracteres -->
+            <div class="char-counter">
+              <span class="counter-text">
+                {{ proyectoForm.get('descripcion_problema')?.value?.length || 0 }}/10 caracteres (mínimo)
+              </span>
+              <div class="counter-bar">
+                <div class="counter-fill" 
+                  [style.width.%]="getFieldProgress('descripcion_problema')"
+                  [class.counter-fill-success]="(proyectoForm.get('descripcion_problema')?.value?.length || 0) >= 10">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-error" *ngIf="isFieldInvalid('descripcion_problema')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+              </svg>
+              {{ getErrorMessage('descripcion_problema') }}
+            </div>
           </div>
+
+          <!-- Objetivo General -->
           <div class="form-group">
-            <label class="form-label" for="objetivo_general">Objetivo General *</label>
-            <textarea id="objetivo_general" formControlName="objetivo_general" class="form-input"
-              rows="4" placeholder="¿Cuál es el objetivo principal del sistema o solución?"></textarea>
-            <div class="form-error" *ngIf="isFieldInvalid('objetivo_general')">{{ getErrorMessage('objetivo_general') }}</div>
+            <label class="form-label" for="objetivo_general">
+              Objetivo General *
+            </label>
+            <textarea 
+              id="objetivo_general" 
+              formControlName="objetivo_general" 
+              class="form-input"
+              [class.form-input-warning]="isFieldInvalid('objetivo_general')"
+              rows="4" 
+              placeholder="¿Cuál es el objetivo principal del sistema o solución? Sé específico..."
+              (focus)="proyectoForm.get('objetivo_general')?.markAsTouched()"
+              (input)="proyectoForm.get('objetivo_general')?.updateValueAndValidity()">
+            </textarea>
+            
+            <!-- Indicador de caracteres -->
+            <div class="char-counter">
+              <span class="counter-text">
+                {{ proyectoForm.get('objetivo_general')?.value?.length || 0 }}/10 caracteres (mínimo)
+              </span>
+              <div class="counter-bar">
+                <div class="counter-fill" 
+                  [style.width.%]="getFieldProgress('objetivo_general')"
+                  [class.counter-fill-success]="(proyectoForm.get('objetivo_general')?.value?.length || 0) >= 10">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-error" *ngIf="isFieldInvalid('objetivo_general')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+              </svg>
+              {{ getErrorMessage('objetivo_general') }}
+            </div>
           </div>
         </div>
       </div>
@@ -115,13 +179,17 @@
           </h3>
           <div class="form-group">
             <label class="form-label" for="fecha_inicio">Fecha de Inicio *</label>
-            <input id="fecha_inicio" type="date" formControlName="fecha_inicio" class="form-input"/>
+            <input id="fecha_inicio" type="date" formControlName="fecha_inicio" class="form-input"
+              (focus)="proyectoForm.get('fecha_inicio')?.markAsTouched()"/>
+            <div class="form-help">{{ getHelpText('fecha_inicio') }}</div>
             <div class="form-error" *ngIf="isFieldInvalid('fecha_inicio')">{{ getErrorMessage('fecha_inicio') }}</div>
           </div>
           <div class="form-group">
             <label class="form-label" for="analista_responsable">Analista Responsable *</label>
             <input id="analista_responsable" type="text" formControlName="analista_responsable" class="form-input"
-              placeholder="Nombre completo del analista responsable"/>
+              placeholder="Nombre completo del analista responsable"
+              (focus)="proyectoForm.get('analista_responsable')?.markAsTouched()"/>
+            <div class="form-help">{{ getHelpText('analista_responsable') }}</div>
             <div class="form-error" *ngIf="isFieldInvalid('analista_responsable')">{{ getErrorMessage('analista_responsable') }}</div>
           </div>
         </div>
@@ -163,15 +231,22 @@
   <!-- Info card -->
   <div class="form-info">
     <div class="info-card">
-      <div class="info-icon">
+      <div class="info-icon info-icon-info">
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="10" cy="10" r="9"/><path d="M10 14v-4M10 6h.01"/>
         </svg>
       </div>
       <div class="info-content">
         <h4>{{ modoEdicion ? 'Editando proyecto activo' : 'Información importante' }}</h4>
-        <p *ngIf="!modoEdicion">Todos los campos marcados con (*) son obligatorios. Al guardar, serás redirigido a la sección de Stakeholders.</p>
-        <p *ngIf="modoEdicion">Estás editando el proyecto actualmente seleccionado. Los cambios se guardarán inmediatamente al hacer clic en "Guardar Cambios".</p>
+        <p *ngIf="!modoEdicion">
+          Todos los campos marcados con (*) son obligatorios. 
+          Los campos de descripción requieren <strong>mínimo 10 caracteres</strong>. 
+          Al guardar, serás redirigido a la sección de Stakeholders.
+        </p>
+        <p *ngIf="modoEdicion">
+          Estás editando el proyecto actualmente seleccionado. 
+          Los cambios se guardarán inmediatamente al hacer clic en "Guardar Cambios".
+        </p>
       </div>
     </div>
   </div>

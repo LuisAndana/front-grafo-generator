@@ -233,7 +233,7 @@
    ============================================ */
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-row {
@@ -262,7 +262,7 @@
   border-radius: 0.375rem;
   background-color: white;
   color: #171717;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
 
 .form-input::placeholder,
@@ -290,6 +290,55 @@
   line-height: 1.5;
 }
 
+/* Input con advertencia (validación pendiente) */
+.form-input-warning,
+.form-textarea-warning {
+  border-color: #f59e0b;
+  background-color: #fffbeb;
+}
+
+.form-input-warning:focus,
+.form-textarea-warning:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+/* CONTADOR DE CARACTERES */
+
+.char-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  gap: 1rem;
+}
+
+.counter-text {
+  font-size: 0.75rem;
+  color: #737373;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.counter-bar {
+  flex: 1;
+  height: 4px;
+  background-color: #e5e5e5;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.counter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b 0%, #f59e0b 100%);
+  border-radius: 999px;
+  transition: width 200ms ease, background 200ms ease;
+}
+
+.counter-fill-success {
+  background: linear-gradient(90deg, #10b981 0%, #10b981 100%);
+}
+
 /* TEXTOS DE AYUDA Y ERROR */
 
 .form-help {
@@ -300,11 +349,19 @@
 }
 
 .form-error {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.875rem;
   color: #ef4444;
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
   font-weight: 500;
+}
+
+.form-error svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
 }
 
 /* ============================================
@@ -326,6 +383,12 @@
   background-color: #d1fae5;
   border-left-color: #10b981;
   color: #065f46;
+}
+
+.message-error {
+  background-color: #fee2e2;
+  border-left-color: #ef4444;
+  color: #991b1b;
 }
 
 .form-message svg {
@@ -412,6 +475,18 @@
   cursor: not-allowed;
 }
 
+/* Ghost Button */
+.btn-ghost {
+  background-color: transparent;
+  color: #737373;
+  border: none;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: #171717;
+  background-color: #f5f5f5;
+}
+
 /* ============================================
    TARJETA DE INFORMACIÓN
    ============================================ */
@@ -457,6 +532,10 @@
   color: #1e3a8a;
   margin: 0;
   line-height: 1.5;
+}
+
+.info-content strong {
+  font-weight: 700;
 }
 
 /* ============================================
@@ -529,6 +608,11 @@
     height: 36px;
     font-size: 0.875rem;
   }
+
+  .char-counter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ============================================
@@ -556,13 +640,3 @@
     transform: translateY(0);
   }
 }
-
-
-/* Agregar al proyecto-form.component.css existente */
-
-/* Mensaje de error API */
-.message-error {
-  background-color: #fee2e2;
-  border-left-color: #ef4444;
-  color: #991b1b;
-} 
