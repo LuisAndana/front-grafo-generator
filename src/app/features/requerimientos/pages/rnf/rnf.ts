@@ -1,5 +1,5 @@
 // src/app/features/requerimientos/pages/rnf/rnf.ts
-import { Component, Inject, PLATFORM_ID, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -64,9 +64,11 @@ export class Rnf implements OnInit {
     this.proyectoId = this.proyectoActivoSvc.proyectoId;
     
     if (this.proyectoId) {
+      console.log(`✅ Proyecto activo: ${this.proyectoId}`);
       this.cargarRNFs();
     } else {
-      console.warn('No hay proyecto activo');
+      console.warn('❌ No hay proyecto activo');
+      this.errorMsg = 'No hay proyecto seleccionado. Por favor, selecciona un proyecto.';
     }
   }
 
@@ -74,18 +76,36 @@ export class Rnf implements OnInit {
    * Carga todos los RNF del proyecto actual
    */
   cargarRNFs(): void {
-    if (!this.proyectoId) return;
+    if (!this.proyectoId) {
+      this.errorMsg = 'No hay proyecto activo';
+      return;
+    }
 
     this.cargando = true;
+    this.errorMsg = '';
+    console.log(`🔄 Cargando RNFs para proyecto: ${this.proyectoId}`);
+
     this.rnfService.listar(this.proyectoId).subscribe({
       next: (data: RNF[]) => {
+        console.log(`✅ RNFs cargados: ${data.length}`);
         this.rnfList = [...data];
         this.cargando = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error cargando RNFs:', err);
-        this.errorMsg = err?.error?.detail || 'Error al cargar los requerimientos';
+        console.error('❌ Error cargando RNFs:', err);
+        
+        // Mensajes de error específicos
+        if (err.status === 401) {
+          this.errorMsg = 'No autorizado. Por favor, inicia sesión de nuevo.';
+        } else if (err.status === 404) {
+          this.errorMsg = 'Proyecto no encontrado.';
+        } else if (err.status === 0) {
+          this.errorMsg = 'No se puede conectar al servidor. ¿Está corriendo en http://localhost:8000?';
+        } else {
+          this.errorMsg = err?.error?.detail || 'Error al cargar los requerimientos';
+        }
+        
         this.cargando = false;
         this.cdr.detectChanges();
       }
@@ -98,26 +118,31 @@ export class Rnf implements OnInit {
    */
   agregar(): void {
     if (!this.tipo.trim() || !this.descripcion.trim()) {
-      alert('Completa todos los campos obligatorios');
+      alert('⚠️ Completa todos los campos obligatorios (Tipo y Descripción)');
       return;
     }
 
     if (!this.proyectoId) {
-      alert('No hay proyecto activo');
+      alert('❌ No hay proyecto activo. Por favor, selecciona un proyecto.');
       return;
     }
 
     this.guardando = true;
     this.errorMsg = '';
+    console.log(`📝 Guardando RNF para proyecto: ${this.proyectoId}`);
 
     if (this.editandoId !== null) {
       // ACTUALIZAR
+      console.log(`🔄 Actualizando RNF: ${this.editandoId}`);
+      
       this.rnfService.actualizar(this.editandoId, {
         tipo: this.tipo,
         descripcion: this.descripcion,
         metrica: this.metrica || undefined,
       }).subscribe({
         next: (rnfActualizado) => {
+          console.log(`✅ RNF actualizado: ${rnfActualizado.codigo}`);
+          
           // Actualizar en la lista
           const index = this.rnfList.findIndex(r => r.id_rnf === this.editandoId);
           if (index !== -1) {
@@ -129,28 +154,56 @@ export class Rnf implements OnInit {
           this.cdr.detectChanges();
         },
         error: (err) => {
+          console.error('❌ Error al actualizar:', err);
           this.guardando = false;
-          this.errorMsg = err?.error?.detail || 'Error al actualizar';
+          
+          if (err.status === 401) {
+            this.errorMsg = 'No autorizado.';
+          } else if (err.status === 404) {
+            this.errorMsg = 'RNF no encontrado.';
+          } else {
+            this.errorMsg = err?.error?.detail || 'Error al actualizar';
+          }
+          
           this.cdr.detectChanges();
         }
       });
     } else {
       // CREAR
-      this.rnfService.crear({
+      console.log(`✨ Creando nuevo RNF para proyecto: ${this.proyectoId}`);
+      
+      const payload = {
         proyecto_id: this.proyectoId,
         tipo: this.tipo,
         descripcion: this.descripcion,
         metrica: this.metrica || undefined,
-      }).subscribe({
+      };
+      
+      console.log(`📦 Payload enviado:`, payload);
+
+      this.rnfService.crear(payload).subscribe({
         next: (nuevoRNF) => {
+          console.log(`✅ RNF creado: ${nuevoRNF.codigo}`);
           this.rnfList = [...this.rnfList, nuevoRNF];
           this.guardando = false;
           this.limpiar();
           this.cdr.detectChanges();
         },
         error: (err) => {
+          console.error('❌ Error al crear:', err);
           this.guardando = false;
-          this.errorMsg = err?.error?.detail || 'Error al crear el RNF';
+          
+          if (err.status === 401) {
+            this.errorMsg = 'No autorizado. Por favor, inicia sesión.';
+          } else if (err.status === 422) {
+            this.errorMsg = 'Datos inválidos. Verifica que todos los campos sean correctos.';
+            console.error('Detalles del error 422:', err.error);
+          } else if (err.status === 0) {
+            this.errorMsg = 'No se puede conectar al servidor.';
+          } else {
+            this.errorMsg = err?.error?.detail || 'Error al crear el RNF';
+          }
+          
           this.cdr.detectChanges();
         }
       });
@@ -161,6 +214,8 @@ export class Rnf implements OnInit {
    * Editar un RNF
    */
   editar(rnf: RNF): void {
+    console.log(`✏️ Editando RNF: ${rnf.codigo}`);
+    
     this.editandoId = rnf.id_rnf;
     this.tipo = rnf.tipo;
     this.descripcion = rnf.descripcion;
@@ -175,14 +230,25 @@ export class Rnf implements OnInit {
       return;
     }
 
+    console.log(`🗑️ Eliminando RNF: ${rnf.codigo}`);
+
     this.rnfService.eliminar(rnf.id_rnf).subscribe({
       next: () => {
+        console.log(`✅ RNF eliminado: ${rnf.codigo}`);
         this.rnfList = this.rnfList.filter(r => r.id_rnf !== rnf.id_rnf);
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error eliminando RNF:', err);
-        this.errorMsg = err?.error?.detail || 'Error al eliminar';
+        console.error('❌ Error eliminando RNF:', err);
+        
+        if (err.status === 401) {
+          this.errorMsg = 'No autorizado.';
+        } else if (err.status === 404) {
+          this.errorMsg = 'RNF no encontrado.';
+        } else {
+          this.errorMsg = err?.error?.detail || 'Error al eliminar';
+        }
+        
         this.cdr.detectChanges();
       }
     });

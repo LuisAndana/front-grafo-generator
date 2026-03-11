@@ -1,13 +1,32 @@
 <!-- src/app/shared/components/sidebar/sidebar.component.html -->
-<aside class="sidebar" [class.open]="isOpen">
+
+<!-- ── BOTÓN HAMBURGUESA (MÓVIL/TABLET) ──────────────────────────── -->
+<button 
+  class="hamburger-btn" 
+  [class.open]="isOpen" 
+  (click)="toggleSidebar()" 
+  [attr.aria-label]="isOpen ? 'Cerrar menú' : 'Abrir menú'"
+  type="button">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<!-- ── OVERLAY (cierra el sidebar al hacer clic) ──────────────────── -->
+<div *ngIf="isOpen" class="overlay" (click)="closeSidebarOnOverlay()"></div>
+
+<!-- ── SIDEBAR DESLIZANTE ────────────────────────────────────────── -->
+<aside class="sidebar" [class.open]="isOpen" role="navigation" aria-label="Menú de navegación">
   <nav class="sidebar-nav">
 
     <!-- ── PROYECTO ACTIVO ────────────────────────────────────────── -->
     <div *ngIf="proyectoActivo" class="proyecto-activo-box">
       <div class="proyecto-activo-label">PROYECTO ACTIVO</div>
-      <div class="proyecto-activo-nombre">{{ proyectoActivo.nombre }}</div>
+      <div class="proyecto-activo-nombre" [title]="proyectoActivo.nombre">
+        {{ proyectoActivo.nombre }}
+      </div>
       <span class="proyecto-activo-codigo">{{ proyectoActivo.codigo }}</span>
-      <button class="btn-cambiar" (click)="pedirSalir()">
+      <button class="btn-cambiar" (click)="pedirSalir()" type="button" title="Cambiar de proyecto">
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
           <polyline points="16 17 21 12 16 7"/>
@@ -54,13 +73,13 @@
 </aside>
 
 <!-- ── MODAL CONFIRMAR SALIR ──────────────────────────────────────── -->
-<div *ngIf="mostrarConfirmSalir" class="confirm-overlay">
-  <div class="confirm-modal">
-    <h3>¿Salir del proyecto?</h3>
+<div *ngIf="mostrarConfirmSalir" class="confirm-overlay" (click)="cancelarSalir()" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="confirm-modal" (click)="$event.stopPropagation()">
+    <h3 id="confirm-title">¿Salir del proyecto?</h3>
     <p>Volverás al listado de proyectos. Los datos guardados no se perderán.</p>
     <div class="confirm-btns">
-      <button class="confirm-btn-cancelar" (click)="cancelarSalir()">Quedarme</button>
-      <button class="confirm-btn-salir"    (click)="confirmarSalir()">Sí, salir</button>
+      <button class="confirm-btn-cancelar" (click)="cancelarSalir()" type="button">Quedarme</button>
+      <button class="confirm-btn-salir" (click)="confirmarSalir()" type="button">Sí, salir</button>
     </div>
   </div>
 </div>

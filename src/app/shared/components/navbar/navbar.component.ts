@@ -1,116 +1,107 @@
-import { Component, OnInit, OnDestroy, HostListener, Input, Output, EventEmitter, Inject, PLATFORM_ID } from '@angular/core';
+// src/app/shared/components/navbar/navbar.component.ts
+
+import { Component, Output, EventEmitter, Input, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService, UserResponse } from '../../../core/services/auth.service';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent implements OnInit, OnDestroy {
-  @Input() sidebarOpen = true;
-  @Input() usuario: UserResponse | null = null;
+export class NavbarComponent {
   @Output() toggleSidebar = new EventEmitter<void>();
+  @Input() sidebarOpen = false;
+  @Input() usuario: UserResponse | null = null;
 
-  showUserMenu = false;
+  showDropdown = false;
   showLogoutConfirm = false;
-  private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {
-    // Solo acceder a localStorage en el navegador
-    if (isPlatformBrowser(this.platformId)) {
-      const usuarioStr = localStorage.getItem('srs_usuario');
-      if (usuarioStr) {
-        try {
-          this.usuario = JSON.parse(usuarioStr);
-        } catch {
-          // silencioso
-        }
-      }
-    }
-  }
+  ) {}
 
-  ngOnInit() {
-    if (!this.usuario) {
-      this.authService.user$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((usuario: UserResponse | null) => {
-          this.usuario = usuario;
-        });
-    }
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.user-menu') && this.showUserMenu) {
-      this.showUserMenu = false;
-    }
-  }
-
-  toggleMenu(event?: Event) {
-    event?.stopPropagation();
+  /**
+   * Toggle del menú hamburguesa en navbar (mobile)
+   */
+  toggleMenuMobile(): void {
     this.toggleSidebar.emit();
   }
 
-  toggleUserMenu(event: Event) {
+  /**
+   * Toggle del menú hamburguesa
+   */
+  toggleMenu(event: Event): void {
     event.stopPropagation();
-    event.preventDefault();
-    this.showUserMenu = !this.showUserMenu;
+    this.sidebarOpen = !this.sidebarOpen;
+    this.toggleSidebar.emit();
   }
 
-  closeUserMenu() {
-    this.showUserMenu = false;
+  /**
+   * Toggle del dropdown de usuario
+   */
+  toggleDropdown(event: Event): void {
+    event.stopPropagation();
+    this.showDropdown = !this.showDropdown;
   }
 
-  openLogoutConfirm() {
+  /**
+   * Cierra el dropdown cuando se hace clic fuera
+   */
+  @HostListener('document:click', ['$event'])
+  closeDropdown(event: Event): void {
+    if (this.showDropdown) {
+      this.showDropdown = false;
+    }
+  }
+
+  /**
+   * Obtiene las iniciales del nombre del usuario
+   * @param nombre Nombre completo del usuario
+   * @returns Iniciales en mayúscula
+   */
+  getInitials(nombre: string): string {
+    if (!nombre) return '?';
+    
+    const palabras = nombre.trim().split(' ');
+    let iniciales = '';
+    
+    for (let i = 0; i < Math.min(2, palabras.length); i++) {
+      if (palabras[i].length > 0) {
+        iniciales += palabras[i].charAt(0).toUpperCase();
+      }
+    }
+    
+    return iniciales || '?';
+  }
+
+  /**
+   * Pide confirmación para logout
+   */
+  pedirLogout(): void {
+    this.showDropdown = false;
     this.showLogoutConfirm = true;
   }
 
-  closeLogoutConfirm() {
+  /**
+   * Cancela el logout
+   */
+  cancelarLogout(): void {
     this.showLogoutConfirm = false;
   }
 
-  confirmLogout() {
-    this.logout();
-  }
-
-  logout() {
+  /**
+   * Confirma y ejecuta el logout
+   */
+  confirmarLogout(): void {
+    this.showLogoutConfirm = false;
     this.authService.logout();
-    this.closeUserMenu();
-    this.closeLogoutConfirm();
-  }
-
-  irABienvenida() {
     this.router.navigate(['/bienvenida']);
-  }
-
-  getInitials(): string {
-    if (!this.usuario) return 'U';
-    // El backend devuelve username, no nombre/apellido
-    return this.usuario.username?.charAt(0).toUpperCase() || 'U';
-  }
-
-  getRolFormatted(): string {
-    return 'Analista';
-  }
-
-  getNombreUsuario(): string {
-    return this.usuario?.username || 'Usuario';
   }
 }

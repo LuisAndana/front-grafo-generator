@@ -29,13 +29,7 @@
   <div *ngIf="!cargando" class="pl-grid">
 
     <!-- Card de cada proyecto -->
-    <div
-      *ngFor="let p of proyectos"
-      class="pl-card"
-      (click)="entrar(p)"
-      role="button"
-      tabindex="0"
-      (keydown.enter)="entrar(p)">
+    <div *ngFor="let p of proyectos" class="pl-card">
 
       <!-- Banda de color superior -->
       <div class="pl-card-band" [style.background]="colorCard(p.nombre)"></div>
@@ -81,10 +75,11 @@
         </span>
       </div>
 
-      <!-- ✅ NUEVO: BOTONES DE ACCIONES -->
+      <!-- BOTONES DE ACCIONES - REDISEÑADOS -->
       <div class="pl-card-actions">
-        <button class="pl-card-action-btn pl-action-enter" 
-          (click)="entrar(p); $event.stopPropagation()"
+        <button 
+          class="pl-card-action-btn pl-action-enter" 
+          (click)="entrar(p)"
           title="Entrar al proyecto">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -92,12 +87,15 @@
           Entrar
         </button>
         
-        <button class="pl-card-action-btn pl-action-srs" 
+        <button 
+          class="pl-card-action-btn pl-action-srs" 
           (click)="abrirGeneradorSRS(p, $event)"
           title="Generar SRS">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V10z"/>
             <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="19" x2="12" y2="12"/>
+            <line x1="9" y1="16" x2="15" y2="16"/>
           </svg>
           SRS
         </button>

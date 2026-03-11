@@ -134,7 +134,7 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
     // Cargar requerimientos funcionales
     this.cargarRequerimientosFuncionales();
     
-    // Cargar requerimientos no funcionales
+    // Cargar requerimientos no funcionales ← DESDE /rnf/
     this.cargarRequerimientosNoFuncionales();
     
     // Cargar casos de uso
@@ -182,7 +182,7 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga stakeholders del proyecto CON /api/
+   * Carga stakeholders del proyecto
    */
   private cargarStakeholders(): void {
     if (!this.proyectoId) return;
@@ -212,7 +212,7 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga usuarios del sistema CON /api/
+   * Carga usuarios del sistema
    */
   private cargarUsuarios(): void {
     if (!this.proyectoId) return;
@@ -242,7 +242,7 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga requerimientos funcionales CON /api/
+   * Carga requerimientos funcionales
    */
   private cargarRequerimientosFuncionales(): void {
     if (!this.proyectoId) return;
@@ -257,7 +257,7 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
         const rf = Array.isArray(response) ? response : response?.data || [];
         
         this.srsData.functionalRequirements = rf.map((r: any) => ({
-          rfId: r.rf_id || r.rfId || r.id_req || r.id || '',
+          rfId: r.rf_id || r.rfId || r.id_req || r.codigo || r.id || '',
           description: r.descripcion || r.description || r.nombre || '',
           priority: r.prioridad || r.priority || 'Media'
         }));
@@ -273,12 +273,13 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga requerimientos no funcionales CON /api/
+   * Carga requerimientos no funcionales DESDE /rnf/
+   * ✅ CORREGIDO para usar el endpoint correcto
    */
   private cargarRequerimientosNoFuncionales(): void {
     if (!this.proyectoId) return;
 
-    const apiUrl = `http://localhost:8000/api/requerimientos-no-funcionales/?proyecto_id=${this.proyectoId}`;
+    const apiUrl = `http://localhost:8000/rnf/?proyecto_id=${this.proyectoId}`;
     console.log('📥 [SRS-GENERATOR] Cargando RNF desde:', apiUrl);
 
     this.http.get<any>(apiUrl).subscribe(
@@ -287,23 +288,34 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
         
         const rnf = Array.isArray(response) ? response : response?.data || [];
         
+        // Mapear los RNF del backend al formato del SRS
         this.srsData.nonFunctionalRequirements = rnf.map((r: any) => ({
-          rnfId: r.rnf_id || r.rnfId || r.id_rnf || r.id || '',
-          category: r.categoria || r.category || r.tipo || '',
+          rnfId: r.codigo || r.rnfId || r.id_rnf || r.id || '',  // El backend devuelve "codigo"
+          category: r.tipo || r.category || r.categoria || '',    // El backend devuelve "tipo"
           description: r.descripcion || r.description || r.nombre || ''
         }));
 
         console.log('✓ [SRS-GENERATOR] RNF mapeados:', this.srsData.nonFunctionalRequirements);
+        
+        // Log detallado para debugging
+        if (this.srsData.nonFunctionalRequirements.length > 0) {
+          console.log('📊 [SRS-GENERATOR] Primer RNF mapeado:');
+          console.log('  - ID:', this.srsData.nonFunctionalRequirements[0].rnfId);
+          console.log('  - Categoría:', this.srsData.nonFunctionalRequirements[0].category);
+          console.log('  - Descripción:', this.srsData.nonFunctionalRequirements[0].description);
+        }
       },
       (error) => {
         console.error('⚠️ [SRS-GENERATOR] Error al cargar RNF:', error);
         console.error('  URL intentada:', apiUrl);
+        console.error('  Status:', error.status);
+        // No es crítico, continúa sin RNF
       }
     );
   }
 
   /**
-   * Carga casos de uso CON /api/
+   * Carga casos de uso
    */
   private cargarCasosDeUso(): void {
     if (!this.proyectoId) return;
@@ -334,7 +346,7 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga restricciones/observaciones CON /api/
+   * Carga restricciones/observaciones
    */
   private cargarRestricciones(): void {
     if (!this.proyectoId) return;

@@ -1,4 +1,6 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+// src/app/app.ts
+
+import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
@@ -11,63 +13,9 @@ import { filter } from 'rxjs/operators';
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterModule, NavbarComponent, SidebarComponent],
-  template: `
-    <div class="app-layout">
-      <app-navbar 
-        *ngIf="!isWelcomePage"
-        (toggleSidebar)="toggleSidebar()"
-        [sidebarOpen]="sidebarOpen"
-        [usuario]="usuario">
-      </app-navbar>
-      
-      <div class="app-body">
-        <app-sidebar 
-          *ngIf="!isWelcomePage"
-          [isOpen]="sidebarOpen"
-          (closeSidebar)="closeSidebar()">
-        </app-sidebar>
-        
-        <main class="app-main">
-          <router-outlet></router-outlet>
-        </main>
-      </div>
-    </div>
-  `,
-  styles: [`
-    :host {
-      --header-height: 64px;
-    }
-
-    .app-layout {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      background: var(--bg-color, #f5f5f5);
-    }
-
-    .app-body {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-      padding-top: 64px;
-      gap: 0;
-    }
-
-    .app-main {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 0;
-      width: 100%;
-    }
-
-    @media (max-width: 768px) {
-      .app-body {
-        position: relative;
-      }
-    }
-  `]
+  templateUrl: './app.html',
+  styleUrls: ['./app.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class App implements OnInit {
   usuario: UserResponse | null = null;
@@ -77,6 +25,7 @@ export class App implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (isPlatformBrowser(this.platformId)) {
@@ -93,25 +42,30 @@ export class App implements OnInit {
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
         this.isWelcomePage = event.url === '/bienvenida';
+        this.cdr.markForCheck();
       });
 
-    // ← CORREGIDO: usuario$ → user$, tipo explícito
+    // Obtener usuario actual
     this.authService.user$.subscribe((usuario: UserResponse | null) => {
       this.usuario = usuario;
       if (!usuario) {
         this.sidebarOpen = false;
       }
+      this.cdr.markForCheck();
     });
 
+    // Listener para cambios de tamaño
     if (isPlatformBrowser(this.platformId)) {
       window.addEventListener('resize', () => this.detectarTamanioPantalla());
     }
   }
 
+  /**
+   * Verifica y limpia datos de autenticación inválidos
+   */
   private verificarYLimpiarStorageInvalido() {
-    // Solo se llama cuando isPlatformBrowser ya fue verificado
-    const token         = localStorage.getItem('srs_token');
-    const usuario       = localStorage.getItem('srs_usuario');
+    const token = localStorage.getItem('srs_token');
+    const usuario = localStorage.getItem('srs_usuario');
     const authenticated = localStorage.getItem('srs_authenticated');
 
     if ((token && !usuario) || (authenticated === 'true' && (!token || !usuario))) {
@@ -119,25 +73,42 @@ export class App implements OnInit {
     }
   }
 
+  /**
+   * Limpia los datos de autenticación
+   */
   private limpiarAuthData() {
     localStorage.removeItem('srs_token');
     localStorage.removeItem('srs_usuario');
     localStorage.removeItem('srs_authenticated');
   }
 
+  /**
+   * Detecta el tamaño de pantalla y ajusta el sidebar
+   */
   detectarTamanioPantalla() {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.sidebarOpen = window.innerWidth > 768;
+    
+    const isDesktop = window.innerWidth > 1024;
+    this.sidebarOpen = isDesktop;  // Desktop: siempre abierto. Mobile: cerrado pero existe
+    this.cdr.markForCheck();
   }
 
+  /**
+   * Toggle del sidebar
+   */
   toggleSidebar() {
     this.sidebarOpen = !this.sidebarOpen;
+    this.cdr.markForCheck();
   }
 
+  /**
+   * Cierra el sidebar (en móvil)
+   */
   closeSidebar() {
     if (!isPlatformBrowser(this.platformId)) return;
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 1024) {
       this.sidebarOpen = false;
+      this.cdr.markForCheck();
     }
   }
 }

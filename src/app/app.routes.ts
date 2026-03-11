@@ -83,6 +83,13 @@ export const routes: Routes = [
         .then(m => m.RequerimientosRoutingModule)
   },
   {
+    path: 'rnf',
+    canActivate: [authGuard, proyectoGuard],
+    loadComponent: () =>
+      import('./features/requerimientos/pages/rnf/rnf')
+        .then(m => m.Rnf)
+  },
+  {
     path: 'observacion',
     canActivate: [authGuard, proyectoGuard],
     loadComponent: () =>

@@ -36,54 +36,59 @@ export interface RNFResumen {
   providedIn: 'root'
 })
 export class RequerimientoNoFuncionalService {
-
-  private apiUrl = 'http://localhost:8000/api/rnf';
+  private apiUrl = 'http://localhost:8000/rnf';
 
   constructor(private http: HttpClient) { }
 
   /**
-   * Obtiene resumen de RNF de un proyecto
+   * Listar todos los RNF de un proyecto
+   * GET /rnf/?proyecto_id=1
    */
-  getResumen(proyecto_id: number): Observable<RNFResumen> {
-    return this.http.get<RNFResumen>(`${this.apiUrl}/resumen`, {
-      params: new HttpParams().set('proyecto_id', proyecto_id)
-    });
+  listar(proyectoId: number): Observable<RNF[]> {
+    const params = new HttpParams().set('proyecto_id', proyectoId.toString());
+    return this.http.get<RNF[]>(`${this.apiUrl}/`, { params });
   }
 
   /**
-   * Crea un nuevo RNF
+   * Obtener un RNF específico
+   * GET /rnf/{rnf_id}
+   */
+  obtener(rnfId: number): Observable<RNF> {
+    return this.http.get<RNF>(`${this.apiUrl}/${rnfId}`);
+  }
+
+  /**
+   * Crear un nuevo RNF
+   * POST /rnf/
+   * Body: { proyecto_id, tipo, descripcion, metrica }
    */
   crear(data: RNFCreate): Observable<RNF> {
     return this.http.post<RNF>(`${this.apiUrl}/`, data);
   }
 
   /**
-   * Lista todos los RNF de un proyecto
+   * Actualizar un RNF
+   * PUT /rnf/{rnf_id}
+   * Body: { tipo, descripcion, metrica }
    */
-  listar(proyecto_id: number): Observable<RNF[]> {
-    return this.http.get<RNF[]>(`${this.apiUrl}/`, {
-      params: new HttpParams().set('proyecto_id', proyecto_id)
-    });
+  actualizar(rnfId: number, data: RNFUpdate): Observable<RNF> {
+    return this.http.put<RNF>(`${this.apiUrl}/${rnfId}`, data);
   }
 
   /**
-   * Obtiene un RNF específico
+   * Eliminar un RNF
+   * DELETE /rnf/{rnf_id}
    */
-  obtener(rnf_id: number): Observable<RNF> {
-    return this.http.get<RNF>(`${this.apiUrl}/${rnf_id}`);
+  eliminar(rnfId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${rnfId}`);
   }
 
   /**
-   * Actualiza un RNF
+   * Obtener resumen de RNF de un proyecto
+   * GET /rnf/resumen?proyecto_id=1
    */
-  actualizar(rnf_id: number, data: RNFUpdate): Observable<RNF> {
-    return this.http.put<RNF>(`${this.apiUrl}/${rnf_id}`, data);
-  }
-
-  /**
-   * Elimina un RNF
-   */
-  eliminar(rnf_id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${rnf_id}`);
+  obtenerResumen(proyectoId: number): Observable<RNFResumen> {
+    const params = new HttpParams().set('proyecto_id', proyectoId.toString());
+    return this.http.get<RNFResumen>(`${this.apiUrl}/resumen`, { params });
   }
 }

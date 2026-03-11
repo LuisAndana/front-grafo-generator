@@ -15,7 +15,7 @@
   <div class="project-info" *ngIf="proyectoId && !isLoadingProject">
     <div class="project-status">
       <div>
-        <p class="project-label">📁 Proyecto Actual</p>
+        <p class="project-label"> Proyecto Actual</p>
         <p class="project-id">{{ proyectoNombre }} ({{ proyectoCodigo }})</p>
       </div>
       <div class="status-badge">✓ Conectado</div>
@@ -321,7 +321,7 @@
       class="generate-btn"
       [disabled]="!proyectoId || isLoading"
     >
-      {{ isLoading ? '⏳ Generando PDF...' : '📄 Generar PDF' }}
+      {{ isLoading ? ' Generando PDF...' : ' Generar PDF' }}
     </button>
   </div>
 </div>

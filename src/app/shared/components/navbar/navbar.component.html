@@ -1,165 +1,112 @@
-<nav class="navbar" role="navigation" aria-label="Barra de navegación principal">
-  <div class="navbar-container">
-    <!-- Botón Hamburguesa -->
-    
+<!-- src/app/shared/components/navbar/navbar.component.html -->
 
-    <!-- Brand / Logo -->
-    <a routerLink="/proyecto" class="navbar-brand" title="Ir a Proyecto">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" class="logo" aria-hidden="true">
-        <rect x="4" y="4" width="24" height="24" rx="3" stroke="currentColor" stroke-width="2"/>
-        <circle cx="12" cy="12" r="2" fill="currentColor"/>
-        <circle cx="20" cy="12" r="2" fill="currentColor"/>
-        <circle cx="12" cy="20" r="2" fill="currentColor"/>
-        <circle cx="20" cy="20" r="2" fill="currentColor"/>
-        <path d="M12 12L20 20M20 12L12 20" stroke="currentColor" stroke-width="1.5"/>
+<nav class="navbar">
+  <div class="navbar-container">
+    
+    <!-- ── HAMBURGER BUTTON (MÓVIL) ─────────────────────────────── -->
+    <button 
+      class="hamburger-btn-navbar" 
+      type="button"
+      [attr.aria-label]="'Abrir menú'"
+      (click)="toggleMenuMobile()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <!-- ── BRAND / LOGO ────────────────────────────────────────── -->
+    <a class="navbar-brand" href="/" title="SRS Manager">
+      <svg class="logo" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="9" y1="9" x2="15" y2="9"/>
+        <line x1="9" y1="15" x2="15" y2="15"/>
       </svg>
       <span class="brand-text">SRS Manager</span>
     </a>
 
-    <!-- Spacer -->
-    <div class="spacer" aria-hidden="true"></div>
+    <!-- ── SPACER (empuja todo a la derecha) ──────────────────── -->
+    <div class="spacer"></div>
 
-    <!-- User Menu -->
-    <div class="navbar-menu">
+    <!-- ── MENÚ DE USUARIO ─────────────────────────────────────── -->
+    <div class="navbar-menu" *ngIf="usuario">
       <div class="user-menu">
-        <!-- Si hay usuario, mostrar el avatar -->
         <button 
-          *ngIf="usuario"
-          class="profile-button" 
-          (click)="toggleUserMenu($event)"
-          [class.active]="showUserMenu"
+          class="profile-button"
+          [class.active]="showDropdown"
+          (click)="toggleDropdown($event)"
           type="button"
-          [attr.aria-label]="'Menú de perfil de ' + getNombreUsuario()"
-          aria-haspopup="true"
-          [attr.aria-expanded]="showUserMenu"
-          title="Menú de perfil">
-          <div class="profile-avatar">
-            {{ getInitials() }}
+          [attr.aria-expanded]="showDropdown">
+          <div class="profile-avatar" [title]="usuario.email">
+            {{ getInitials(usuario.email) }}
           </div>
         </button>
 
-        <!-- Dropdown Menu -->
-        <div 
-          class="dropdown-menu" 
-          *ngIf="showUserMenu && usuario"
-          role="menu">
-          
-          <!-- User Info Header -->
+        <!-- ── DROPDOWN MENU ────────────────────────────────────── -->
+        <div class="dropdown-menu" *ngIf="showDropdown" (click)="$event.stopPropagation()">
           <div class="dropdown-header">
             <div class="dropdown-user-info">
               <div class="dropdown-avatar">
-                {{ getInitials() }}
+                {{ getInitials(usuario.email) }}
               </div>
               <div class="dropdown-user-details">
-                <div class="dropdown-name">{{ getNombreUsuario() }}</div>
+                <div class="dropdown-name">{{ usuario.email }}</div>
                 <div class="dropdown-email">{{ usuario.email }}</div>
               </div>
             </div>
           </div>
 
-          <div class="dropdown-divider" aria-hidden="true"></div>
+          <div class="dropdown-divider"></div>
 
-          <!-- Menu Items -->
-          <a 
-            routerLink="/perfil" 
-            class="dropdown-item" 
-            (click)="closeUserMenu()"
-            routerLinkActive="active"
-            role="menuitem"
-            title="Ver mi perfil">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <a class="dropdown-item" href="/perfil" title="Ver perfil">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
             <span>Mi Perfil</span>
           </a>
 
-          <a 
-            routerLink="/usuarios" 
-            class="dropdown-item" 
-            (click)="closeUserMenu()"
-            routerLinkActive="active"
-            role="menuitem"
-            title="Gestionar usuarios">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          <a class="dropdown-item" href="/configuracion" title="Configuración">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="1"/>
+              <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/>
             </svg>
-            <span>Gestionar Usuarios</span>
+            <span>Configuración</span>
           </a>
 
-          <div class="dropdown-divider" aria-hidden="true"></div>
+          <div class="dropdown-divider"></div>
 
-          <!-- Logout Button -->
           <button 
             class="dropdown-item dropdown-item-danger" 
-            (click)="openLogoutConfirm()"
-            type="button"
-            role="menuitem"
-            title="Cerrar sesión">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
+            (click)="pedirLogout()"
+            type="button">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/>
             </svg>
-            <span>Cerrar Sesión</span>
+            <span>Cerrar sesión</span>
           </button>
         </div>
-
-        <!-- Si NO hay usuario, mostrar botón de Login -->
-        <button 
-          *ngIf="!usuario"
-          class="logout-btn"
-          (click)="irABienvenida()"
-          type="button"
-          title="Iniciar sesión">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          <span>Login</span>
-        </button>
       </div>
     </div>
+
   </div>
 </nav>
 
-<!-- MODAL DE CONFIRMACIÓN DE LOGOUT -->
-<div 
-  class="logout-modal-overlay"
-  *ngIf="showLogoutConfirm"
-  (click)="closeLogoutConfirm()"
-  role="dialog"
-  aria-labelledby="logout-dialog-title"
-  aria-modal="true">
-  
-  <div 
-    class="logout-modal"
-    (click)="$event.stopPropagation()">
-    
+<!-- ── MODAL DE CONFIRMACIÓN LOGOUT ──────────────────────────────── -->
+<div *ngIf="showLogoutConfirm" class="logout-modal-overlay" (click)="cancelarLogout()">
+  <div class="logout-modal" (click)="$event.stopPropagation()">
     <div class="logout-modal-header">
-      <h2 id="logout-dialog-title">¿Cerrar Sesión?</h2>
+      <h2>¿Cerrar sesión?</h2>
     </div>
-
     <div class="logout-modal-content">
       <p>¿Estás seguro de que deseas cerrar sesión?</p>
-      <p class="logout-modal-subtitle">Deberás iniciar sesión nuevamente para acceder a tu cuenta.</p>
+      <p class="logout-modal-subtitle">Necesitarás volver a iniciar sesión para acceder nuevamente.</p>
     </div>
-
     <div class="logout-modal-footer">
-      <button 
-        class="logout-modal-btn logout-modal-btn-cancel"
-        (click)="closeLogoutConfirm()"
-        type="button">
+      <button class="logout-modal-btn logout-modal-btn-cancel" (click)="cancelarLogout()" type="button">
         Cancelar
       </button>
-      <button 
-        class="logout-modal-btn logout-modal-btn-confirm"
-        (click)="confirmLogout()"
-        type="button">
-        Sí, Cerrar Sesión
+      <button class="logout-modal-btn logout-modal-btn-confirm" (click)="confirmarLogout()" type="button">
+        Cerrar sesión
       </button>
     </div>
   </div>

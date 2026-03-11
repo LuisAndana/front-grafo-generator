@@ -1,77 +1,132 @@
 <!-- src/app/features/requerimientos/pages/rnf/rnf.html -->
 <div class="container">
 
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- HEADER -->
+  <!-- ════════════════════════════════════════════════ -->
+  
   <h2>
     <mat-icon>security</mat-icon>
     Requerimientos No Funcionales
   </h2>
 
-  <!-- ─── RESUMEN ────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- RESUMEN -->
+  <!-- ════════════════════════════════════════════════ -->
+  
   <div class="resumen">
     <div class="box">
-      <strong>Total</strong><br>
-      {{ total }}
+      <strong>Total</strong>
+      <div>{{ total }}</div>
     </div>
   </div>
 
-  <!-- ─── SPINNER DE CARGA ────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- LOADING STATE -->
+  <!-- ════════════════════════════════════════════════ -->
+  
   <div *ngIf="cargando" class="spinner-wrap">
     <mat-spinner diameter="40"></mat-spinner>
-    <p>Cargando requerimientos...</p>
+    <p>Cargando requerimientos no funcionales...</p>
   </div>
 
-  <!-- ─── MENSAJE DE ERROR ────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- ERROR MESSAGE -->
+  <!-- ════════════════════════════════════════════════ -->
+  
   <div *ngIf="errorMsg && !cargando" class="error-message">
-    <mat-icon>error</mat-icon>
-    {{ errorMsg }}
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMsg }}</span>
   </div>
 
-  <!-- ─── FORMULARIO ────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- FORMULARIO -->
+  <!-- ════════════════════════════════════════════════ -->
+  
   <mat-card class="form-card" *ngIf="!cargando">
 
     <h3 class="form-title">
-      {{ editandoId ? 'Editar Requerimiento No Funcional' : 'Nuevo Requerimiento No Funcional' }}
+      {{ editandoId ? ' Editar Requerimiento' : ' Nuevo Requerimiento No Funcional' }}
     </h3>
 
+    <!-- Campos del Formulario -->
     <div class="form-grid">
 
+      <!-- Tipo -->
       <mat-form-field appearance="outline">
-        <mat-label>Tipo</mat-label>
+        <mat-label>Tipo *</mat-label>
         <mat-select [(ngModel)]="tipo" required>
-          <mat-option value="Seguridad">Seguridad</mat-option>
-          <mat-option value="Rendimiento">Rendimiento</mat-option>
-          <mat-option value="Usabilidad">Usabilidad</mat-option>
-          <mat-option value="Compatibilidad">Compatibilidad</mat-option>
-          <mat-option value="Otro">Otro</mat-option>
+          <mat-option value="">-- Selecciona un tipo --</mat-option>
+          <mat-option value="Seguridad"> Seguridad</mat-option>
+          <mat-option value="Rendimiento"> Rendimiento</mat-option>
+          <mat-option value="Usabilidad"> Usabilidad</mat-option>
+          <mat-option value="Compatibilidad"> Compatibilidad</mat-option>
+          <mat-option value="Escalabilidad"> Escalabilidad</mat-option>
+          <mat-option value="Mantenibilidad"> Mantenibilidad</mat-option>
+          <mat-option value="Confiabilidad"> Confiabilidad</mat-option>
+          <mat-option value="Otro"> Otro</mat-option>
         </mat-select>
+        <mat-hint>Selecciona la categoría del requerimiento</mat-hint>
       </mat-form-field>
 
+      <!-- Descripción -->
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Descripción</mat-label>
-        <textarea matInput [(ngModel)]="descripcion" rows="2" required
-                  placeholder="Ej: El sistema debe soportar al menos 1000 usuarios concurrentes"></textarea>
+        <mat-label>Descripción *</mat-label>
+        <textarea 
+          matInput 
+          [(ngModel)]="descripcion" 
+          rows="2" 
+          required
+          placeholder="Ej: El sistema debe soportar al menos 1000 usuarios concurrentes">
+        </textarea>
+        <mat-hint>Describe detalladamente el requerimiento</mat-hint>
       </mat-form-field>
 
+      <!-- Métrica -->
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Métrica</mat-label>
-        <input matInput [(ngModel)]="metrica"
-               placeholder="Ej: Tiempo respuesta ≤ 2 segundos">
+        <mat-label>Métrica (Opcional)</mat-label>
+        <input 
+          matInput 
+          [(ngModel)]="metrica"
+          placeholder="Ej: Tiempo de respuesta ≤ 2 segundos">
+        <mat-hint>Define cómo se medirá el cumplimiento</mat-hint>
       </mat-form-field>
 
     </div>
 
+    <!-- Botones -->
     <div class="botones">
 
-      <button mat-raised-button color="primary"
-              (click)="agregar()"
-              [disabled]="guardando">
-        <mat-spinner *ngIf="guardando" diameter="16" class="inline-spinner"></mat-spinner>
-        <mat-icon *ngIf="!guardando">{{ editandoId ? 'save' : 'add' }}</mat-icon>
+      <button 
+        mat-raised-button 
+        color="primary"
+        (click)="agregar()"
+        [disabled]="guardando">
+        <mat-spinner 
+          *ngIf="guardando" 
+          diameter="16" 
+          class="inline-spinner">
+        </mat-spinner>
+        <mat-icon *ngIf="!guardando">
+          {{ editandoId ? 'save' : 'add_circle' }}
+        </mat-icon>
         {{ editandoId ? 'Actualizar RNF' : 'Registrar RNF' }}
       </button>
 
-      <button mat-stroked-button color="warn" (click)="cancelarEdicion()">
-        <mat-icon>clear</mat-icon>
+      <button 
+        mat-stroked-button 
+        color="warn" 
+        (click)="cancelarEdicion()"
+        *ngIf="editandoId">
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
+
+      <button 
+        mat-stroked-button
+        (click)="limpiar()"
+        *ngIf="!editandoId && (tipo || descripcion)">
+        <mat-icon>refresh</mat-icon>
         Limpiar
       </button>
 
@@ -79,68 +134,95 @@
 
   </mat-card>
 
-  <!-- ─── TABLA ──────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- TABLA DE RNF -->
+  <!-- ════════════════════════════════════════════════ -->
+  
   <mat-card *ngIf="!cargando && rnfList.length > 0">
 
-    <table mat-table [dataSource]="rnfList" class="mat-elevation-z2 full-width">
+    <div style="overflow-x: auto;">
+      <table mat-table [dataSource]="rnfList">
 
-      <!-- Código -->
-      <ng-container matColumnDef="codigo">
-        <th mat-header-cell *matHeaderCellDef>Código</th>
-        <td mat-cell *matCellDef="let r">
-          <strong>{{ r.codigo }}</strong>
-        </td>
-      </ng-container>
+        <!-- Columna: Código -->
+        <ng-container matColumnDef="codigo">
+          <th mat-header-cell *matHeaderCellDef>Código</th>
+          <td mat-cell *matCellDef="let r">
+            <strong style="color: var(--primary-color);">{{ r.codigo }}</strong>
+          </td>
+        </ng-container>
 
-      <!-- Tipo -->
-      <ng-container matColumnDef="tipo">
-        <th mat-header-cell *matHeaderCellDef>Tipo</th>
-        <td mat-cell *matCellDef="let r">
-          {{ r.tipo }}
-        </td>
-      </ng-container>
+        <!-- Columna: Tipo -->
+        <ng-container matColumnDef="tipo">
+          <th mat-header-cell *matHeaderCellDef>Tipo</th>
+          <td mat-cell *matCellDef="let r">
+            <span style="display: inline-block; background: var(--primary-light); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">
+              {{ r.tipo }}
+            </span>
+          </td>
+        </ng-container>
 
-      <!-- Descripción -->
-      <ng-container matColumnDef="descripcion">
-        <th mat-header-cell *matHeaderCellDef>Descripción</th>
-        <td mat-cell *matCellDef="let r">
-          {{ r.descripcion }}
-        </td>
-      </ng-container>
+        <!-- Columna: Descripción -->
+        <ng-container matColumnDef="descripcion">
+          <th mat-header-cell *matHeaderCellDef>Descripción</th>
+          <td mat-cell *matCellDef="let r">
+            {{ r.descripcion }}
+          </td>
+        </ng-container>
 
-      <!-- Métrica -->
-      <ng-container matColumnDef="metrica">
-        <th mat-header-cell *matHeaderCellDef>Métrica</th>
-        <td mat-cell *matCellDef="let r">
-          {{ r.metrica || '—' }}
-        </td>
-      </ng-container>
+        <!-- Columna: Métrica -->
+        <ng-container matColumnDef="metrica">
+          <th mat-header-cell *matHeaderCellDef>Métrica</th>
+          <td mat-cell *matCellDef="let r">
+            {{ r.metrica || '—' }}
+          </td>
+        </ng-container>
 
-      <!-- Acciones -->
-      <ng-container matColumnDef="acciones">
-        <th mat-header-cell *matHeaderCellDef>Acciones</th>
-        <td mat-cell *matCellDef="let r">
-          <button mat-icon-button color="primary" (click)="editar(r)" title="Editar">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="eliminar(r)" title="Eliminar">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
+        <!-- Columna: Acciones -->
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let r">
+            <button 
+              mat-icon-button 
+              color="primary" 
+              (click)="editar(r)" 
+              matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              color="warn" 
+              (click)="eliminar(r)" 
+              matTooltip="Eliminar">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
-      <tr mat-row *matRowDef="let row; columns: columnas;"
-          [class.row-editando]="row.id_rnf === editandoId"></tr>
+        <!-- Header row -->
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
 
-    </table>
+        <!-- Data rows -->
+        <tr 
+          mat-row 
+          *matRowDef="let row; columns: columnas;"
+          [class.row-editando]="row.id_rnf === editandoId">
+        </tr>
+
+      </table>
+    </div>
 
   </mat-card>
 
-  <!-- ─── EMPTY STATE ────────────────────────── -->
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- EMPTY STATE -->
+  <!-- ════════════════════════════════════════════════ -->
+  
   <div *ngIf="!cargando && rnfList.length === 0" class="empty-state">
     <mat-icon>inbox</mat-icon>
-    <p>Aún no hay requerimientos no funcionales. ¡Agrega el primero!</p>
+    <p>Aún no hay requerimientos no funcionales registrados.</p>
+    <p style="margin-top: 8px; font-size: 0.9rem; color: var(--neutral-500);">
+      ¡Agrega el primero completando el formulario arriba!
+    </p>
   </div>
 
 </div>
