@@ -144,30 +144,37 @@
     <div *ngIf="activeTab === 'users'" class="tab-content">
       <h2>Usuarios del Sistema</h2>
       <button (click)="addUser()" class="add-btn">+ Agregar Usuario</button>
-      
+
       <div *ngFor="let user of srsData.users; let i = index" class="item-card">
         <div class="item-header">
-          <h4>Usuario {{ i + 1 }}: {{ user.userType || 'Sin tipo' }}</h4>
+          <h4>
+            Usuario {{ i + 1 }}: {{ user.userType || 'Sin tipo' }}
+            <span *ngIf="!user.backendId" class="badge-new">Nuevo</span>
+          </h4>
           <button (click)="removeUser(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
-          <input 
-            [(ngModel)]="user.userId" 
-            placeholder="ID del Usuario (ej: USR-001)"
-            class="input-field"
-          />
-          <input 
-            [(ngModel)]="user.userType" 
+          <input
+            [(ngModel)]="user.userType"
             placeholder="Tipo de Usuario (ej: Admin, Cliente)"
             class="input-field"
           />
+          <input
+            [(ngModel)]="user.description"
+            placeholder="Descripción del usuario y sus necesidades"
+            class="input-field"
+          />
         </div>
-        <textarea 
-          [(ngModel)]="user.description"
-          placeholder="Descripción del usuario y sus necesidades"
-          class="textarea-field"
-          rows="3"
-        ></textarea>
+        <div class="item-actions">
+          <button
+            (click)="guardarUsuario(i)"
+            class="save-btn"
+            [disabled]="savingUsers[i]"
+          >
+            {{ savingUsers[i] ? 'Guardando...' : (user.backendId ? 'Actualizar' : 'Guardar') }}
+          </button>
+          <span *ngIf="userMessages[i]" class="item-message">{{ userMessages[i] }}</span>
+        </div>
       </div>
     </div>
 
@@ -241,37 +248,40 @@
     <div *ngIf="activeTab === 'usecases'" class="tab-content">
       <h2>Casos de Uso</h2>
       <button (click)="addUseCase()" class="add-btn">+ Agregar Caso de Uso</button>
-      
+
       <div *ngFor="let useCase of srsData.useCases; let i = index" class="item-card">
         <div class="item-header">
-          <h4>Caso de Uso {{ i + 1 }}: {{ useCase.useCase || 'Sin nombre' }}</h4>
+          <h4>
+            Caso de Uso {{ i + 1 }}: {{ useCase.useCase || 'Sin nombre' }}
+            <span *ngIf="!useCase.backendId" class="badge-new">Nuevo</span>
+          </h4>
           <button (click)="removeUseCase(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
-          <input 
-            [(ngModel)]="useCase.useCase" 
+          <input
+            [(ngModel)]="useCase.useCase"
             placeholder="Nombre del caso de uso (ej: Registrar Usuario)"
             class="input-field full-width"
           />
         </div>
         <div class="form-group">
-          <input 
+          <input
             [value]="useCase.actors.join(', ')"
             (change)="updateActors(i, $event)"
             placeholder="Actores involucrados (separados por comas, ej: Usuario,Admin,Sistema)"
             class="input-field full-width"
           />
         </div>
-        <textarea 
+        <textarea
           [(ngModel)]="useCase.description"
           placeholder="Descripción del caso de uso"
           class="textarea-field"
           rows="3"
         ></textarea>
-        
+
         <label class="section-label">Pasos del Flujo Principal:</label>
         <div *ngFor="let step of useCase.steps; let j = index" class="step-item">
-          <input 
+          <input
             [(ngModel)]="useCase.steps[j]"
             placeholder="Paso {{ j + 1 }} (ej: El usuario ingresa las credenciales)"
             class="input-field"
@@ -279,6 +289,17 @@
           <button (click)="removeStep(i, j)" class="remove-step-btn" title="Eliminar paso">×</button>
         </div>
         <button (click)="addStep(i)" class="add-step-btn">+ Agregar Paso</button>
+
+        <div class="item-actions">
+          <button
+            (click)="guardarCasoDeUso(i)"
+            class="save-btn"
+            [disabled]="savingUseCases[i]"
+          >
+            {{ savingUseCases[i] ? 'Guardando...' : (useCase.backendId ? 'Actualizar' : 'Guardar') }}
+          </button>
+          <span *ngIf="useCaseMessages[i]" class="item-message">{{ useCaseMessages[i] }}</span>
+        </div>
       </div>
     </div>
 
@@ -286,30 +307,43 @@
     <div *ngIf="activeTab === 'constraints'" class="tab-content">
       <h2>Restricciones y Limitaciones</h2>
       <button (click)="addConstraint()" class="add-btn">+ Agregar Restricción</button>
-      
+
       <div *ngFor="let constraint of srsData.constraints; let i = index" class="item-card">
         <div class="item-header">
-          <h4>{{ constraint.constraintId || 'C-' + (i + 1) }}: {{ constraint.type || 'Sin tipo' }}</h4>
+          <h4>
+            {{ constraint.constraintId || 'C-' + (i + 1) }}: {{ constraint.type || 'Sin tipo' }}
+            <span *ngIf="!constraint.backendId" class="badge-new">Nuevo</span>
+          </h4>
           <button (click)="removeConstraint(i)" class="remove-btn" title="Eliminar">×</button>
         </div>
         <div class="form-group">
-          <input 
-            [(ngModel)]="constraint.constraintId" 
-            placeholder="ID (ej: C-001)"
+          <input
+            [(ngModel)]="constraint.constraintId"
+            placeholder="Código (ej: C-001)"
             class="input-field"
           />
-          <input 
-            [(ngModel)]="constraint.type" 
+          <input
+            [(ngModel)]="constraint.type"
             placeholder="Tipo (ej: Técnica, Regulatoria, Temporal)"
             class="input-field"
           />
         </div>
-        <textarea 
+        <textarea
           [(ngModel)]="constraint.description"
           placeholder="Descripción de la restricción"
           class="textarea-field"
           rows="3"
         ></textarea>
+        <div class="item-actions">
+          <button
+            (click)="guardarRestriccion(i)"
+            class="save-btn"
+            [disabled]="savingConstraints[i]"
+          >
+            {{ savingConstraints[i] ? 'Guardando...' : (constraint.backendId ? 'Actualizar' : 'Guardar') }}
+          </button>
+          <span *ngIf="constraintMessages[i]" class="item-message">{{ constraintMessages[i] }}</span>
+        </div>
       </div>
     </div>
   </div>
