@@ -9,6 +9,7 @@ export interface Stakeholder {
 }
 
 export interface User {
+  backendId?: number;
   userId: string;
   userType: string;
   description: string;
@@ -27,6 +28,7 @@ export interface NonFunctionalRequirement {
 }
 
 export interface UseCase {
+  backendId?: number;
   useCase: string;
   actors: string[];
   description: string;
@@ -34,6 +36,7 @@ export interface UseCase {
 }
 
 export interface Constraint {
+  backendId?: number;
   constraintId: string;
   description: string;
   type: string;

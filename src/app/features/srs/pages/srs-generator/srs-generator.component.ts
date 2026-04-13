@@ -36,6 +36,18 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
   isLoadingProject: boolean = false;
   private subscriptions = new Subscription();
 
+  // Estados de guardado por ítem
+  savingUsers: boolean[] = [];
+  savingUseCases: boolean[] = [];
+  savingConstraints: boolean[] = [];
+
+  // Mensajes de éxito/error por ítem
+  userMessages: string[] = [];
+  useCaseMessages: string[] = [];
+  constraintMessages: string[] = [];
+
+  private readonly BASE_URL = 'http://localhost:8000';
+
   constructor(
     private srsService: SrsGeneratorService,
     private route: ActivatedRoute,
@@ -227,10 +239,13 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
         const usuarios = Array.isArray(response) ? response : response?.data || [];
         
         this.srsData.users = usuarios.map((u: any) => ({
-          userId: u.id_tipo_usuario || u.userId || u.id || '',
+          backendId: u.id_tipo_usuario || u.id || undefined,
+          userId: String(u.id_tipo_usuario || u.id || ''),
           userType: u.tipo || u.userType || '',
           description: u.descripcion || u.description || ''
         }));
+        this.savingUsers = this.srsData.users.map(() => false);
+        this.userMessages = this.srsData.users.map(() => '');
 
         console.log('✓ [SRS-GENERATOR] Usuarios mapeados:', this.srsData.users);
       },
@@ -330,11 +345,14 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
         const casosDeUso = Array.isArray(response) ? response : response?.data || [];
         
         this.srsData.useCases = casosDeUso.map((c: any) => ({
+          backendId: c.id_caso_uso || c.id || undefined,
           useCase: c.nombre || c.useCase || '',
           actors: c.actores ? (Array.isArray(c.actores) ? c.actores : [c.actores]) : [],
           description: c.descripcion || c.description || '',
           steps: c.pasos ? (Array.isArray(c.pasos) ? c.pasos : [c.pasos]) : []
         }));
+        this.savingUseCases = this.srsData.useCases.map(() => false);
+        this.useCaseMessages = this.srsData.useCases.map(() => '');
 
         console.log('✓ [SRS-GENERATOR] Casos de uso mapeados:', this.srsData.useCases);
       },
@@ -346,69 +364,51 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga restricciones/observaciones
+   * Carga restricciones desde /api/restricciones/
    */
   private cargarRestricciones(): void {
     if (!this.proyectoId) return;
 
-    const apiUrl = `http://localhost:8000/api/observaciones/?proyecto_id=${this.proyectoId}`;
+    const apiUrl = `${this.BASE_URL}/api/restricciones/?proyecto_id=${this.proyectoId}`;
     console.log('📥 [SRS-GENERATOR] Cargando restricciones desde:', apiUrl);
 
     this.http.get<any>(apiUrl).subscribe(
       (response) => {
         console.log('✓ [SRS-GENERATOR] ✓ Restricciones cargadas:', response);
-        
+
         const restricciones = Array.isArray(response) ? response : response?.data || [];
-        
+
         this.srsData.constraints = restricciones.map((r: any) => ({
-          constraintId: r.id_observacion || r.constraintId || r.id || '',
+          backendId: r.id_restriccion || r.id || undefined,
+          constraintId: r.codigo || r.constraintId || String(r.id_restriccion || r.id || ''),
           type: r.tipo || r.type || 'Restricción',
           description: r.descripcion || r.description || ''
         }));
+        this.savingConstraints = this.srsData.constraints.map(() => false);
+        this.constraintMessages = this.srsData.constraints.map(() => '');
 
         console.log('✓ [SRS-GENERATOR] Restricciones mapeadas:', this.srsData.constraints);
       },
       (error) => {
         console.error('⚠️ [SRS-GENERATOR] Error al cargar restricciones:', error);
-        console.error('  URL intentada:', apiUrl);
       }
     );
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // MÉTODOS AUXILIARES
+  // MÉTODOS AUXILIARES - STAKEHOLDERS (solo local, se envían al generar PDF)
   // ════════════════════════════════════════════════════════════════════════════
 
   addStakeholder(): void {
-    this.srsData.stakeholders.push({
-      name: '',
-      role: '',
-      responsibility: ''
-    });
+    this.srsData.stakeholders.push({ name: '', role: '', responsibility: '' });
   }
 
   removeStakeholder(index: number): void {
     this.srsData.stakeholders.splice(index, 1);
   }
 
-  addUser(): void {
-    this.srsData.users.push({
-      userId: '',
-      userType: '',
-      description: ''
-    });
-  }
-
-  removeUser(index: number): void {
-    this.srsData.users.splice(index, 1);
-  }
-
   addFunctionalRequirement(): void {
-    this.srsData.functionalRequirements.push({
-      rfId: '',
-      description: '',
-      priority: 'Media'
-    });
+    this.srsData.functionalRequirements.push({ rfId: '', description: '', priority: 'Media' });
   }
 
   removeFunctionalRequirement(index: number): void {
@@ -416,28 +416,176 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
   }
 
   addNonFunctionalRequirement(): void {
-    this.srsData.nonFunctionalRequirements.push({
-      rnfId: '',
-      category: '',
-      description: ''
-    });
+    this.srsData.nonFunctionalRequirements.push({ rnfId: '', category: '', description: '' });
   }
 
   removeNonFunctionalRequirement(index: number): void {
     this.srsData.nonFunctionalRequirements.splice(index, 1);
   }
 
-  addUseCase(): void {
-    this.srsData.useCases.push({
-      useCase: '',
-      actors: [],
-      description: '',
-      steps: []
-    });
+  // ════════════════════════════════════════════════════════════════════════════
+  // USUARIOS DEL SISTEMA — CRUD con backend
+  // ════════════════════════════════════════════════════════════════════════════
+
+  addUser(): void {
+    this.srsData.users.push({ backendId: undefined, userId: '', userType: '', description: '' });
+    this.savingUsers.push(false);
+    this.userMessages.push('');
   }
 
-  removeUseCase(index: number): void {
-    this.srsData.useCases.splice(index, 1);
+  guardarUsuario(i: number): void {
+    if (!this.proyectoId) return;
+    const user = this.srsData.users[i];
+
+    if (!user.userType.trim()) {
+      this.userMessages[i] = '⚠️ El tipo de usuario es requerido';
+      return;
+    }
+
+    this.savingUsers[i] = true;
+    this.userMessages[i] = '';
+
+    const payload = {
+      proyecto_id: this.proyectoId,
+      tipo: user.userType,
+      descripcion: user.description
+    };
+
+    if (user.backendId) {
+      this.http.put<any>(`${this.BASE_URL}/tipo-usuario/${user.backendId}`, payload).subscribe({
+        next: () => {
+          this.savingUsers[i] = false;
+          this.userMessages[i] = '✓ Guardado';
+          setTimeout(() => { this.userMessages[i] = ''; }, 2000);
+        },
+        error: (err) => {
+          this.savingUsers[i] = false;
+          this.userMessages[i] = '❌ Error al guardar';
+          console.error('Error PUT usuario:', err);
+        }
+      });
+    } else {
+      this.http.post<any>(`${this.BASE_URL}/tipo-usuario/`, payload).subscribe({
+        next: (response) => {
+          const created = response?.data || response;
+          this.srsData.users[i].backendId = created.id_tipo_usuario || created.id;
+          this.srsData.users[i].userId = String(created.id_tipo_usuario || created.id || '');
+          this.savingUsers[i] = false;
+          this.userMessages[i] = '✓ Creado';
+          setTimeout(() => { this.userMessages[i] = ''; }, 2000);
+        },
+        error: (err) => {
+          this.savingUsers[i] = false;
+          this.userMessages[i] = '❌ Error al crear';
+          console.error('Error POST usuario:', err);
+        }
+      });
+    }
+  }
+
+  removeUser(i: number): void {
+    const user = this.srsData.users[i];
+
+    const removeLocal = () => {
+      this.srsData.users.splice(i, 1);
+      this.savingUsers.splice(i, 1);
+      this.userMessages.splice(i, 1);
+    };
+
+    if (user.backendId) {
+      this.http.delete(`${this.BASE_URL}/tipo-usuario/${user.backendId}`).subscribe({
+        next: () => removeLocal(),
+        error: (err) => {
+          console.error('Error DELETE usuario:', err);
+          removeLocal();
+        }
+      });
+    } else {
+      removeLocal();
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // CASOS DE USO — CRUD con backend
+  // ════════════════════════════════════════════════════════════════════════════
+
+  addUseCase(): void {
+    this.srsData.useCases.push({ backendId: undefined, useCase: '', actors: [], description: '', steps: [] });
+    this.savingUseCases.push(false);
+    this.useCaseMessages.push('');
+  }
+
+  guardarCasoDeUso(i: number): void {
+    if (!this.proyectoId) return;
+    const uc = this.srsData.useCases[i];
+
+    if (!uc.useCase.trim()) {
+      this.useCaseMessages[i] = '⚠️ El nombre del caso de uso es requerido';
+      return;
+    }
+
+    this.savingUseCases[i] = true;
+    this.useCaseMessages[i] = '';
+
+    const payload = {
+      proyecto_id: this.proyectoId,
+      nombre: uc.useCase,
+      actores: uc.actors,
+      descripcion: uc.description,
+      pasos: uc.steps
+    };
+
+    if (uc.backendId) {
+      this.http.put<any>(`${this.BASE_URL}/api/casos-uso/${uc.backendId}`, payload).subscribe({
+        next: () => {
+          this.savingUseCases[i] = false;
+          this.useCaseMessages[i] = '✓ Guardado';
+          setTimeout(() => { this.useCaseMessages[i] = ''; }, 2000);
+        },
+        error: (err) => {
+          this.savingUseCases[i] = false;
+          this.useCaseMessages[i] = '❌ Error al guardar';
+          console.error('Error PUT caso de uso:', err);
+        }
+      });
+    } else {
+      this.http.post<any>(`${this.BASE_URL}/api/casos-uso/`, payload).subscribe({
+        next: (response) => {
+          const created = response?.data || response;
+          this.srsData.useCases[i].backendId = created.id_caso_uso || created.id;
+          this.savingUseCases[i] = false;
+          this.useCaseMessages[i] = '✓ Creado';
+          setTimeout(() => { this.useCaseMessages[i] = ''; }, 2000);
+        },
+        error: (err) => {
+          this.savingUseCases[i] = false;
+          this.useCaseMessages[i] = '❌ Error al crear';
+          console.error('Error POST caso de uso:', err);
+        }
+      });
+    }
+  }
+
+  removeUseCase(i: number): void {
+    const uc = this.srsData.useCases[i];
+
+    const removeLocal = () => {
+      this.srsData.useCases.splice(i, 1);
+      this.savingUseCases.splice(i, 1);
+      this.useCaseMessages.splice(i, 1);
+    };
+
+    if (uc.backendId) {
+      this.http.delete(`${this.BASE_URL}/api/casos-uso/${uc.backendId}`).subscribe({
+        next: () => removeLocal(),
+        error: (err) => {
+          console.error('Error DELETE caso de uso:', err);
+          removeLocal();
+        }
+      });
+    } else {
+      removeLocal();
+    }
   }
 
   addStep(useCaseIndex: number): void {
@@ -456,16 +604,87 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
       .filter((actor: string) => actor.length > 0);
   }
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // RESTRICCIONES — CRUD con backend
+  // ════════════════════════════════════════════════════════════════════════════
+
   addConstraint(): void {
-    this.srsData.constraints.push({
-      constraintId: '',
-      type: '',
-      description: ''
-    });
+    this.srsData.constraints.push({ backendId: undefined, constraintId: '', type: '', description: '' });
+    this.savingConstraints.push(false);
+    this.constraintMessages.push('');
   }
 
-  removeConstraint(index: number): void {
-    this.srsData.constraints.splice(index, 1);
+  guardarRestriccion(i: number): void {
+    if (!this.proyectoId) return;
+    const c = this.srsData.constraints[i];
+
+    if (!c.type.trim() && !c.description.trim()) {
+      this.constraintMessages[i] = '⚠️ Ingresa al menos el tipo o la descripción';
+      return;
+    }
+
+    this.savingConstraints[i] = true;
+    this.constraintMessages[i] = '';
+
+    const payload = {
+      proyecto_id: this.proyectoId,
+      codigo: c.constraintId,
+      tipo: c.type,
+      descripcion: c.description
+    };
+
+    if (c.backendId) {
+      this.http.put<any>(`${this.BASE_URL}/api/restricciones/${c.backendId}`, payload).subscribe({
+        next: () => {
+          this.savingConstraints[i] = false;
+          this.constraintMessages[i] = '✓ Guardado';
+          setTimeout(() => { this.constraintMessages[i] = ''; }, 2000);
+        },
+        error: (err) => {
+          this.savingConstraints[i] = false;
+          this.constraintMessages[i] = '❌ Error al guardar';
+          console.error('Error PUT restricción:', err);
+        }
+      });
+    } else {
+      this.http.post<any>(`${this.BASE_URL}/api/restricciones/`, payload).subscribe({
+        next: (response) => {
+          const created = response?.data || response;
+          this.srsData.constraints[i].backendId = created.id_restriccion || created.id;
+          this.srsData.constraints[i].constraintId = created.codigo || String(created.id_restriccion || created.id || '');
+          this.savingConstraints[i] = false;
+          this.constraintMessages[i] = '✓ Creado';
+          setTimeout(() => { this.constraintMessages[i] = ''; }, 2000);
+        },
+        error: (err) => {
+          this.savingConstraints[i] = false;
+          this.constraintMessages[i] = '❌ Error al crear';
+          console.error('Error POST restricción:', err);
+        }
+      });
+    }
+  }
+
+  removeConstraint(i: number): void {
+    const c = this.srsData.constraints[i];
+
+    const removeLocal = () => {
+      this.srsData.constraints.splice(i, 1);
+      this.savingConstraints.splice(i, 1);
+      this.constraintMessages.splice(i, 1);
+    };
+
+    if (c.backendId) {
+      this.http.delete(`${this.BASE_URL}/api/restricciones/${c.backendId}`).subscribe({
+        next: () => removeLocal(),
+        error: (err) => {
+          console.error('Error DELETE restricción:', err);
+          removeLocal();
+        }
+      });
+    } else {
+      removeLocal();
+    }
   }
 
   // ════════════════════════════════════════════════════════════════════════════
