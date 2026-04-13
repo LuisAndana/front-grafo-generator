@@ -10,71 +10,85 @@
     </p>
   </div>
 
-  <div class="card shadow-lg">
+  <!-- LOADING -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner-val"></div>
+    <p>Cargando validación...</p>
+  </div>
 
-    <!-- PROGRESO -->
+  <!-- ALERTA SIN PROYECTO -->
+  <div *ngIf="!proyectoId && !isLoading" class="alert alert-warning mb-lg">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    Selecciona un proyecto para gestionar su validación.
+  </div>
+
+  <!-- MENSAJES GLOBALES -->
+  <div *ngIf="successMsg" class="alert alert-success mb-lg fade-in">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    {{ successMsg }}
+  </div>
+
+  <div *ngIf="errorMsg" class="alert alert-error mb-lg fade-in">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ errorMsg }}
+  </div>
+
+  <div class="card shadow-lg" *ngIf="!isLoading && proyectoId">
+
+    <!-- ESTADO DEL DOCUMENTO -->
     <div class="card-header bg-gray">
       <div class="flex justify-between items-center">
         <span class="text-sm font-medium">Estado del Documento</span>
-
-        <span *ngIf="aprobado"
-              class="badge badge-success">
-          ✔ Validado
-        </span>
-
-        <span *ngIf="!aprobado"
-              class="badge badge-warning">
-          Pendiente
-        </span>
+        <span *ngIf="aprobado" class="badge badge-success">✔ Validado</span>
+        <span *ngIf="!aprobado" class="badge badge-warning">Pendiente</span>
       </div>
     </div>
 
     <div class="card-body">
 
-      <!-- ========================= -->
-      <!-- CHECKLIST COMO TARJETAS -->
-      <!-- ========================= -->
-
+      <!-- CHECKLIST -->
       <div class="mb-lg">
-
         <h3 class="font-semibold mb-md">Checklist de Revisión</h3>
 
         <div class="grid grid-cols-2 gap-md">
 
-          <div class="check-card"
-               [class.check-active]="checklist.rf">
+          <div class="check-card" [class.check-active]="checklist.rf">
             <label class="flex items-center gap-sm cursor-pointer">
               <input type="checkbox" [(ngModel)]="checklist.rf">
               Requerimientos Funcionales
             </label>
           </div>
 
-          <div class="check-card"
-               [class.check-active]="checklist.rnf">
+          <div class="check-card" [class.check-active]="checklist.rnf">
             <label class="flex items-center gap-sm cursor-pointer">
               <input type="checkbox" [(ngModel)]="checklist.rnf">
               Requerimientos No Funcionales
             </label>
           </div>
 
-          <div class="check-card"
-               [class.check-active]="checklist.casosUso">
+          <div class="check-card" [class.check-active]="checklist.casosUso">
             <label class="flex items-center gap-sm cursor-pointer">
               <input type="checkbox" [(ngModel)]="checklist.casosUso">
               Casos de Uso
             </label>
           </div>
 
-          <div class="check-card"
-               [class.check-active]="checklist.restricciones">
+          <div class="check-card" [class.check-active]="checklist.restricciones">
             <label class="flex items-center gap-sm cursor-pointer">
               <input type="checkbox" [(ngModel)]="checklist.restricciones">
               Restricciones
             </label>
           </div>
 
-          <div class="check-card col-span-2"
-               [class.check-active]="checklist.prioridades">
+          <div class="check-card col-span-2" [class.check-active]="checklist.prioridades">
             <label class="flex items-center gap-sm cursor-pointer">
               <input type="checkbox" [(ngModel)]="checklist.prioridades">
               Priorización Definida
@@ -84,10 +98,7 @@
         </div>
       </div>
 
-      <!-- ========================= -->
       <!-- OBSERVACIONES -->
-      <!-- ========================= -->
-
       <div class="form-group">
         <label class="form-label">Observaciones del Cliente</label>
         <textarea
@@ -97,16 +108,11 @@
         </textarea>
       </div>
 
-      <!-- ========================= -->
       <!-- DATOS DE APROBACIÓN -->
-      <!-- ========================= -->
-
       <div class="border-t mt-lg pt-lg">
-
         <h3 class="font-semibold mb-md">Datos de Aprobación</h3>
 
         <div class="grid grid-cols-2 gap-lg">
-
           <div class="form-group">
             <label class="form-label">Nombre del Aprobador</label>
             <input
@@ -123,7 +129,6 @@
               class="form-input"
               [(ngModel)]="fecha">
           </div>
-
         </div>
 
         <div class="form-group">
@@ -134,53 +139,56 @@
             [(ngModel)]="firmaDigital"
             placeholder="Firma electrónica o token">
         </div>
-
       </div>
 
     </div>
 
-    <!-- ========================= -->
     <!-- FOOTER -->
-    <!-- ========================= -->
-
     <div class="card-footer flex justify-between items-center">
 
       <div class="flex items-center gap-md">
-
+        <!-- Reiniciar solo si ya está aprobado -->
         <button
           *ngIf="aprobado"
           class="btn btn-ghost btn-sm"
+          [disabled]="isSaving"
           (click)="limpiarValidacion()">
           Reiniciar
         </button>
 
+        <!-- Guardar borrador siempre disponible -->
+        <button
+          *ngIf="!aprobado"
+          class="btn btn-outline btn-sm"
+          [disabled]="isSaving"
+          (click)="guardarBorrador()">
+          <span *ngIf="isSaving" class="spinner-inline"></span>
+          {{ isSaving ? 'Guardando...' : 'Guardar borrador' }}
+        </button>
       </div>
 
       <button
         class="btn btn-primary btn-lg"
-        [disabled]="!validarFormulario()"
+        [disabled]="!validarFormulario() || isSaving || aprobado"
         (click)="aprobar()">
-
-        Aprobar Requerimientos
+        <span *ngIf="isSaving" class="spinner-inline spinner-inline--white"></span>
+        {{ isSaving ? 'Guardando...' : 'Aprobar Requerimientos' }}
       </button>
 
     </div>
 
   </div>
 
-  <!-- RESULTADO -->
-  <div *ngIf="aprobado"
+  <!-- RESULTADO APROBADO -->
+  <div *ngIf="aprobado && !isLoading"
        class="alert alert-success mt-lg fade-in-up shadow-sm">
-
     <strong>Generación automática activada:</strong>
-
     <ul class="mt-sm">
       <li>Tablas de Base de Datos</li>
       <li>Formularios</li>
       <li>CRUD</li>
       <li>Roles y Permisos</li>
     </ul>
-
   </div>
 
 </div>

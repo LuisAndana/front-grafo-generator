@@ -28,3 +28,65 @@ input[type="checkbox"] {
 ul {
   padding-left: 1.2rem;
 }
+
+/* ── Loading state ──────────────────────────────────────────── */
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4xl);
+  color: var(--neutral-500);
+  gap: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.spinner-val {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--neutral-200);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin-val 0.8s linear infinite;
+}
+
+@keyframes spin-val {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Spinner inline (dentro de botones) ─────────────────────── */
+
+.spinner-inline {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--neutral-300);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin-val 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.spinner-inline--white {
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+}
+
+/* ── Botón outline (Guardar borrador) ───────────────────────── */
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--info-light);
+}
+
+.btn-outline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
