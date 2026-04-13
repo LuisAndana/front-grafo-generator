@@ -131,6 +131,13 @@ export const routes: Routes = [
       import('./features/generador/generador-module')
         .then(m => m.GeneradorModule)
   },
+  {
+    path: 'artefactos',
+    canActivate: [authGuard, proyectoGuard],
+    loadComponent: () =>
+      import('./features/artefactos/pages/artefactos/artefactos.component')
+        .then(m => m.ArtefactosComponent)
+  },
 
   // ── Fallback ────────────────────────────────────────────────────────────────
   {

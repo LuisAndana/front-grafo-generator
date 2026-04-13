@@ -1,0 +1,274 @@
+<div class="artefactos-container">
+
+  <!-- ── ENCABEZADO ──────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="page-title">Artefactos del Proyecto</h1>
+        <p class="page-subtitle">Sube y gestiona diagramas, documentos y otros archivos de apoyo</p>
+      </div>
+    </div>
+
+    <!-- Badge proyecto activo -->
+    <div class="project-badge" *ngIf="proyectoNombre">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+      </svg>
+      {{ proyectoNombre }}
+    </div>
+  </div>
+
+  <!-- ── ALERTA: sin proyecto ─────────────────────────────────────────── -->
+  <div class="alert alert-warning" *ngIf="!proyectoId">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    Selecciona un proyecto para gestionar sus artefactos.
+  </div>
+
+  <!-- ── MENSAJES GLOBALES ────────────────────────────────────────────── -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    {{ successMessage }}
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ errorMessage }}
+  </div>
+
+  <!-- ── CUERPO PRINCIPAL ─────────────────────────────────────────────── -->
+  <div class="main-grid" *ngIf="proyectoId">
+
+    <!-- ══ PANEL IZQUIERDO: FORMULARIO DE SUBIDA ══════════════════════ -->
+    <div class="upload-panel">
+      <div class="panel-card">
+        <h2 class="panel-title">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Subir Artefacto
+        </h2>
+
+        <!-- Zona drag & drop -->
+        <div
+          class="drop-zone"
+          [class.drag-over]="dragOver"
+          [class.has-file]="selectedFile"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          (drop)="onDrop($event)"
+          (click)="fileInput.click()">
+
+          <input #fileInput type="file" hidden
+                 accept=".png,.jpg,.jpeg,.svg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
+                 (change)="onFileSelected($event)">
+
+          <!-- Sin archivo seleccionado -->
+          <ng-container *ngIf="!selectedFile">
+            <div class="drop-icon">
+              <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <polyline points="16 16 12 12 8 16"/>
+                <line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+              </svg>
+            </div>
+            <p class="drop-text">Arrastra un archivo aquí</p>
+            <p class="drop-hint">o haz clic para seleccionar</p>
+            <p class="drop-formats">PNG, JPG, SVG, PDF, DOC, XLS, PPT, ZIP</p>
+          </ng-container>
+
+          <!-- Con archivo seleccionado -->
+          <ng-container *ngIf="selectedFile">
+            <div class="file-preview">
+              <div class="file-preview-icon">
+                <svg *ngIf="getFileIcon(selectedFile.type) === 'image'" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <svg *ngIf="getFileIcon(selectedFile.type) === 'pdf'" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <svg *ngIf="getFileIcon(selectedFile.type) === 'file'" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                  <polyline points="13 2 13 9 20 9"/>
+                </svg>
+              </div>
+              <div class="file-preview-info">
+                <p class="file-preview-name">{{ selectedFile.name }}</p>
+                <p class="file-preview-size">{{ formatBytes(selectedFile.size) }}</p>
+              </div>
+              <button class="file-remove-btn" (click)="removeFile(); $event.stopPropagation()" title="Quitar archivo">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Campos del formulario -->
+        <div class="form-fields">
+          <div class="form-group">
+            <label class="form-label">Nombre <span class="required">*</span></label>
+            <input
+              type="text"
+              class="form-input"
+              [(ngModel)]="uploadForm.nombre"
+              placeholder="Ej: Diagrama ER v1.0"
+              maxlength="120"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Categoría <span class="required">*</span></label>
+            <select class="form-select" [(ngModel)]="uploadForm.categoria">
+              <option value="" disabled>Selecciona una categoría</option>
+              <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Descripción</label>
+            <textarea
+              class="form-textarea"
+              [(ngModel)]="uploadForm.descripcion"
+              placeholder="Breve descripción del artefacto y su utilidad para el proyecto..."
+              rows="3"
+              maxlength="500"
+            ></textarea>
+          </div>
+
+          <button
+            class="btn btn-primary btn-full"
+            (click)="subirArtefacto()"
+            [disabled]="!isFormValid || isUploading">
+            <svg *ngIf="!isUploading" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="16 16 12 12 8 16"/>
+              <line x1="12" y1="12" x2="12" y2="21"/>
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+            <span class="spinner-sm" *ngIf="isUploading"></span>
+            {{ isUploading ? 'Subiendo...' : 'Subir Artefacto' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL DERECHO: LISTA DE ARTEFACTOS ════════════════════════ -->
+    <div class="list-panel">
+
+      <!-- Resumen por categoría -->
+      <div class="summary-bar">
+        <div
+          *ngFor="let f of filtros"
+          class="summary-chip"
+          [class.active]="filtroCategoria === f"
+          (click)="setFiltro(f)">
+          {{ f }}
+          <span class="chip-count">{{ contarPorCategoria(f) }}</span>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner-lg"></div>
+        <p>Cargando artefactos...</p>
+      </div>
+
+      <!-- Lista vacía -->
+      <div class="empty-state" *ngIf="!isLoading && artefactosFiltrados.length === 0">
+        <div class="empty-icon">
+          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </div>
+        <p class="empty-title">
+          {{ filtroCategoria === 'Todos' ? 'Aún no hay artefactos' : 'Sin artefactos en esta categoría' }}
+        </p>
+        <p class="empty-hint">Sube el primer artefacto usando el formulario</p>
+      </div>
+
+      <!-- Grid de artefactos -->
+      <div class="artefactos-grid" *ngIf="!isLoading && artefactosFiltrados.length > 0">
+        <div
+          class="artefacto-card"
+          *ngFor="let art of artefactosFiltrados">
+
+          <!-- Ícono tipo archivo -->
+          <div class="art-icon" [ngClass]="'art-icon--' + getFileIcon(art.tipo_mime)">
+            <svg *ngIf="getFileIcon(art.tipo_mime) === 'image'" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <svg *ngIf="getFileIcon(art.tipo_mime) === 'pdf'" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>
+            </svg>
+            <svg *ngIf="getFileIcon(art.tipo_mime) === 'file'" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+              <polyline points="13 2 13 9 20 9"/>
+            </svg>
+          </div>
+
+          <!-- Info -->
+          <div class="art-info">
+            <p class="art-nombre">{{ art.nombre }}</p>
+            <p class="art-archivo">{{ art.nombre_archivo }}</p>
+            <p class="art-descripcion" *ngIf="art.descripcion">{{ art.descripcion }}</p>
+            <div class="art-meta">
+              <span class="categoria-badge">{{ art.categoria }}</span>
+              <span class="art-tamanio">{{ formatBytes(art.tamanio) }}</span>
+              <span class="art-fecha" *ngIf="art.created_at">
+                {{ art.created_at | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div class="art-actions">
+            <button
+              class="art-btn art-btn--download"
+              (click)="descargarArtefacto(art)"
+              title="Descargar">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <polyline points="8 17 12 21 16 17"/>
+                <line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>
+              </svg>
+            </button>
+            <button
+              class="art-btn art-btn--delete"
+              (click)="eliminarArtefacto(art)"
+              title="Eliminar">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
