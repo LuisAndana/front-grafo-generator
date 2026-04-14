@@ -1,73 +1,221 @@
 <div class="historial-container">
 
-  <!-- TÍTULO -->
+  <!-- ── ENCABEZADO ────────────────────────────────────────────────── -->
   <div class="page-header">
-    <h1>Historial de Usuario</h1>
-    <p>Registro de actividades realizadas en el sistema</p>
+    <div class="page-header-left">
+      <h1>Historial de Usuario</h1>
+      <p>Registro de actividades y respaldos del proyecto</p>
+    </div>
+
+    <div class="page-header-actions" *ngIf="proyectoId">
+      <button
+        class="btn-respaldo"
+        [disabled]="isCreatingSnapshot"
+        (click)="crearRespaldo()"
+        title="Crear respaldo completo del estado actual del proyecto">
+        <span *ngIf="isCreatingSnapshot" class="spinner-inline"></span>
+        <svg *ngIf="!isCreatingSnapshot" width="15" height="15" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        {{ isCreatingSnapshot ? 'Creando...' : 'Crear Respaldo' }}
+      </button>
+
+      <button
+        class="btn-limpiar"
+        [disabled]="isClearing || historial.length === 0"
+        (click)="pedirConfirmLimpiar()"
+        title="Limpiar todo el historial">
+        <svg width="14" height="14" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/>
+        </svg>
+        Limpiar
+      </button>
+    </div>
   </div>
 
-  <!-- LISTA -->
-  <div *ngFor="let item of historial"
-       class="historial-card"
-       (click)="toggle(item)">
+  <!-- ── ALERTAS SIN PROYECTO ──────────────────────────────────────── -->
+  <div *ngIf="!proyectoId && !isLoading" class="alert-box alert-warning">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    Selecciona un proyecto para ver su historial.
+  </div>
 
-    <!-- HEADER -->
-    <div class="card-header">
-      
-      <div class="left">
+  <!-- ── MENSAJES GLOBALES ──────────────────────────────────────────── -->
+  <div *ngIf="successMsg" class="alert-box alert-success">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    {{ successMsg }}
+  </div>
 
-        <div class="icon-box">
-        </div>
+  <div *ngIf="errorMsg" class="alert-box alert-error">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ errorMsg }}
+  </div>
 
-        <div>
-          <h3>{{ item.accion }}</h3>
-          <p class="modulo">{{ item.modulo }}</p>
-        </div>
+  <!-- ── CUERPO PRINCIPAL ───────────────────────────────────────────── -->
+  <ng-container *ngIf="proyectoId">
 
-      </div>
-
-      <div class="right">
-        <span class="fecha">{{ item.fecha | date:'medium' }}</span>
-        <span class="arrow"
-              [class.rotate]="expandedId === item.id">
-          ▾
-        </span>
-      </div>
-
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner-lg"></div>
+      <p>Cargando historial...</p>
     </div>
 
-    <!-- DETALLE -->
-    <div class="card-body"
-         *ngIf="expandedId === item.id">
+    <ng-container *ngIf="!isLoading">
 
-      <div *ngIf="item.detalles?.titulo">
-        <strong>Título:</strong> {{ item.detalles.titulo }}
+      <!-- Filtros por módulo -->
+      <div class="filtros-bar" *ngIf="historial.length > 0">
+        <button
+          *ngFor="let m of modulos"
+          class="filtro-chip"
+          [class.active]="filtroModulo === m"
+          (click)="setFiltro(m)">
+          {{ m }}
+          <span class="chip-count">{{ contarPorModulo(m) }}</span>
+        </button>
       </div>
 
-      <div *ngIf="item.detalles?.objetivo">
-        <strong>Objetivo:</strong> {{ item.detalles.objetivo }}
+      <!-- Estado vacío -->
+      <div *ngIf="historialFiltrado.length === 0" class="empty-state">
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2"
+             stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <p class="empty-title">
+          {{ historial.length === 0 ? 'Aún no hay actividad registrada' : 'Sin entradas en este módulo' }}
+        </p>
+        <p class="empty-hint">
+          {{ historial.length === 0 ? 'Las acciones del proyecto aparecerán aquí automáticamente' : 'Prueba seleccionando otro filtro' }}
+        </p>
       </div>
 
-      <div *ngIf="item.detalles?.perfil">
-        <strong>Perfil:</strong> {{ item.detalles.perfil }}
+      <!-- Lista de entradas -->
+      <div
+        *ngFor="let item of historialFiltrado"
+        class="historial-card"
+        [class.is-snapshot]="item.es_snapshot"
+        (click)="toggle(item)">
+
+        <!-- Header de la tarjeta -->
+        <div class="card-header">
+          <div class="left">
+            <!-- Barra de color por módulo -->
+            <div
+              class="icon-box"
+              [style.background]="getModuloColor(item.modulo)">
+            </div>
+
+            <div>
+              <div class="card-title-row">
+                <h3>{{ item.accion }}</h3>
+                <span *ngIf="item.es_snapshot" class="snapshot-badge">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Respaldo
+                </span>
+              </div>
+              <p class="modulo" [style.color]="getModuloColor(item.modulo)">
+                {{ item.modulo }}
+              </p>
+            </div>
+          </div>
+
+          <div class="right">
+            <span class="fecha">{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span class="arrow" [class.rotate]="isExpanded(item)">▾</span>
+          </div>
+        </div>
+
+        <!-- Detalle expandido -->
+        <div class="card-body" *ngIf="isExpanded(item)">
+
+          <!-- Snapshot: mostrar secciones del respaldo -->
+          <ng-container *ngIf="item.es_snapshot && item.detalles">
+            <div class="snapshot-sections">
+              <div *ngFor="let key of getDetallesKeys(item.detalles)" class="snapshot-section">
+                <p class="snapshot-section-title">{{ key }}</p>
+
+                <!-- Array de objetos -->
+                <ng-container *ngIf="isArray(item.detalles[key])">
+                  <p class="snapshot-count">
+                    {{ item.detalles[key].length }} registro(s)
+                  </p>
+                  <div *ngFor="let sub of item.detalles[key]; let j = index"
+                       class="snapshot-sub-item">
+                    <span class="snapshot-index">#{{ j + 1 }}</span>
+                    <span *ngFor="let subKey of getDetallesKeys(sub)" class="snapshot-field">
+                      <strong>{{ subKey }}:</strong> {{ sub[subKey] }}
+                    </span>
+                  </div>
+                </ng-container>
+
+                <!-- Objeto simple -->
+                <ng-container *ngIf="isObject(item.detalles[key])">
+                  <span *ngFor="let subKey of getDetallesKeys(item.detalles[key])"
+                        class="snapshot-field">
+                    <strong>{{ subKey }}:</strong> {{ item.detalles[key][subKey] }}
+                  </span>
+                </ng-container>
+
+                <!-- Valor primitivo -->
+                <ng-container *ngIf="!isArray(item.detalles[key]) && !isObject(item.detalles[key])">
+                  <span class="snapshot-value">{{ item.detalles[key] }}</span>
+                </ng-container>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Entrada normal: mostrar detalles clave-valor -->
+          <ng-container *ngIf="!item.es_snapshot">
+            <div *ngIf="!item.detalles" class="no-detalles">
+              Sin detalles adicionales.
+            </div>
+
+            <ng-container *ngIf="item.detalles">
+              <div *ngFor="let key of getDetallesKeys(item.detalles)" class="detalle-row">
+                <strong>{{ key }}:</strong>
+
+                <span *ngIf="!isArray(item.detalles[key]) && !isObject(item.detalles[key])">
+                  {{ item.detalles[key] }}
+                </span>
+
+                <ul *ngIf="isArray(item.detalles[key])">
+                  <li *ngFor="let v of item.detalles[key]">{{ v }}</li>
+                </ul>
+              </div>
+            </ng-container>
+          </ng-container>
+
+        </div>
       </div>
 
-      <div *ngIf="item.detalles?.totalPreguntas">
-        <strong>Total de preguntas:</strong>
-        {{ item.detalles.totalPreguntas }}
-      </div>
+    </ng-container>
+  </ng-container>
 
-      <div *ngIf="item.detalles?.preguntas?.length">
-        <strong>Preguntas:</strong>
-        <ul>
-          <li *ngFor="let p of item.detalles.preguntas">
-            {{ p.numero }} - {{ p.texto }}
-          </li>
-        </ul>
+  <!-- ── MODAL CONFIRMAR LIMPIAR ────────────────────────────────────── -->
+  <div *ngIf="mostrarConfirmLimpiar" class="confirm-overlay" (click)="cancelarLimpiar()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <h3>¿Limpiar historial?</h3>
+      <p>Se eliminarán <strong>todas</strong> las entradas incluyendo los respaldos. Esta acción no se puede deshacer.</p>
+      <div class="confirm-btns">
+        <button class="confirm-btn-cancelar" (click)="cancelarLimpiar()">Cancelar</button>
+        <button class="confirm-btn-eliminar" (click)="confirmarLimpiar()">Sí, limpiar</button>
       </div>
-
     </div>
-
   </div>
 
 </div>

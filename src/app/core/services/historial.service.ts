@@ -1,13 +1,18 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 export interface HistorialAccion {
-  id: string;
+  id_historial?: number;
+  id?: string;               // compatibilidad con código anterior
+  proyecto_id?: number;
   accion: string;
   modulo: string;
-  detalle?: any;
-  descripcion?:string;
-  fecha: Date;
+  detalles?: any;
+  es_snapshot?: boolean;
+  fecha: Date | string;
 }
 
 @Injectable({
@@ -15,69 +20,45 @@ export interface HistorialAccion {
 })
 export class HistorialService {
 
-  private storageKey = 'grafo_historial';
-  private isBrowser: boolean;
+  private readonly BASE_URL = 'http://localhost:8000';
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+  constructor(private http: HttpClient) {}
+
+  // ── Obtener historial del proyecto ────────────────────────────────────────
+
+  obtenerHistorial(proyectoId: number): Observable<HistorialAccion[]> {
+    return this.http.get<any>(`${this.BASE_URL}/api/historial/?proyecto_id=${proyectoId}`).pipe(
+      map(res => Array.isArray(res) ? res : res?.data ?? []),
+      catchError(() => of([]))
+    );
   }
 
-  obtenerHistorial(): HistorialAccion[] {
-    if (!this.isBrowser) return [];
+  // ── Registrar una acción ──────────────────────────────────────────────────
 
-    return JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+  registrarAccion(
+    proyectoId: number,
+    accion: string,
+    modulo: string,
+    detalles?: any
+  ): Observable<HistorialAccion> {
+    const payload = { proyecto_id: proyectoId, accion, modulo, detalles: detalles ?? null, es_snapshot: false };
+    return this.http.post<any>(`${this.BASE_URL}/api/historial/`, payload).pipe(
+      map(res => res?.data ?? res),
+      catchError(() => of({ accion, modulo, fecha: new Date() }))
+    );
   }
 
-  registrarAccion(accion: string, modulo: string, detalle?: any) {
+  // ── Crear snapshot/respaldo completo ──────────────────────────────────────
 
-    if (!this.isBrowser) return;
-
-    const historial = this.obtenerHistorial();
-
-    const nuevaAccion: HistorialAccion = {
-      id: crypto.randomUUID(),
-      accion,
-      modulo,
-      detalle,
-      fecha: new Date()
-    };
-
-    historial.unshift(nuevaAccion);
-
-    localStorage.setItem(this.storageKey, JSON.stringify(historial));
+  crearSnapshot(proyectoId: number): Observable<HistorialAccion> {
+    return this.http.post<any>(`${this.BASE_URL}/api/historial/snapshot/${proyectoId}`, {}).pipe(
+      map(res => res?.data ?? res)
+    );
   }
 
+  // ── Limpiar historial del proyecto ────────────────────────────────────────
 
-  limpiarHistorial() {
-    if (!this.isBrowser) return;
-
-    localStorage.removeItem(this.storageKey);
+  limpiarHistorial(proyectoId: number): Observable<any> {
+    return this.http.delete(`${this.BASE_URL}/api/historial/?proyecto_id=${proyectoId}`);
   }
-
-  private generarDescripcion(accion: string, modulo: string, detalles: any): string {
-
-  if (modulo === 'Encuesta') {
-
-    if (accion.includes('Guardó')) {
-      return `Se guardó la encuesta "${detalles.titulo || 'Sin título'}" 
-      con ${detalles.totalPreguntas || 0} preguntas 
-      dirigida al perfil "${detalles.perfil || 'No especificado'}".`;
-    }
-
-    if (accion.includes('Agregó')) {
-      return `Se agregó una nueva pregunta a la encuesta 
-      "${detalles.tituloEncuesta || 'Sin título'}".
-      Total actual: ${detalles.totalPreguntas}.`;
-    }
-
-    if (accion.includes('Eliminó')) {
-      return `Se eliminó la pregunta "${detalles.preguntaEliminada || ''}"
-      de la encuesta "${detalles.tituloEncuesta || 'Sin título'}".
-      Total restante: ${detalles.totalRestante}.`;
-    }
-  }
-
-  return accion; // fallback
-}
-
 }
