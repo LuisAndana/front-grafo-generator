@@ -163,13 +163,22 @@
         </button>
       </div>
 
-      <!-- Botón descargar aplicación completa -->
+      <!-- Botón descargar aplicación ejecutable -->
       <div *ngIf="codigoGenerado && !isGenerandoCodigo" class="descarga-app-bar">
         <div class="descarga-app-info">
-          <span class="descarga-app-icon">📦</span>
+          <span class="descarga-app-icon">🚀</span>
           <div>
-            <strong>Aplicación lista para ejecutar</strong>
-            <p>Descarga el ZIP con todos los archivos del proyecto estructurados y listos para correr.</p>
+            <strong>Descargar aplicación lista para ejecutar</strong>
+            <p>
+              ZIP con <strong>INICIAR.bat</strong> (doble clic en Windows) y
+              <strong>docker-compose.yml</strong> — instala todo solo y abre el navegador automáticamente.
+            </p>
+            <div class="descarga-badges">
+              <span class="descarga-badge">✅ Frontend Angular</span>
+              <span class="descarga-badge">✅ Backend FastAPI</span>
+              <span class="descarga-badge">✅ Base de datos MySQL</span>
+              <span class="descarga-badge">✅ Docker listo</span>
+            </div>
           </div>
         </div>
         <button class="btn-descargar-app" [disabled]="isDescargando" (click)="descargarAplicacion()">
@@ -179,7 +188,7 @@
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          {{ isDescargando ? 'Generando ZIP...' : 'Descargar Aplicación (.zip)' }}
+          {{ isDescargando ? 'Preparando ZIP...' : 'Descargar Aplicación (.zip)' }}
         </button>
       </div>
 

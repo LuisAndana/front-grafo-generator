@@ -255,7 +255,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
     return this.tiposDiagrama.filter(d => !!this.diagramas[d.key]?.codigo_mermaid).length;
   }
 
-  // ── Descarga como aplicación (ZIP) ────────────────────────────────────────
+  // ── Descarga como aplicación ejecutable (ZIP) ────────────────────────────
 
   isDescargando = false;
 
@@ -267,13 +267,10 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
       if (!parte.trim()) continue;
       const saltoLinea = parte.indexOf('\n');
       if (saltoLinea === -1) continue;
-      const ruta = parte.substring(0, saltoLinea).replace(/@@$/, '').trim();
+      const ruta     = parte.substring(0, saltoLinea).replace(/@@$/, '').trim();
       const contenido = parte.substring(saltoLinea + 1).trim();
-      if (ruta && contenido) {
-        archivos.push({ ruta, contenido });
-      }
+      if (ruta && contenido) archivos.push({ ruta, contenido });
     }
-    // Si no hay marcadores @@FILE, guardar como un único archivo
     if (archivos.length === 0 && bloque.trim()) {
       archivos.push({ ruta: '_codigo.txt', contenido: bloque.trim() });
     }
@@ -286,38 +283,33 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
 
     try {
       const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
-      const nombre = (this.proyectoNombre || 'proyecto')
-        .toLowerCase().replace(/\s+/g, '-');
-      const raiz = zip.folder(nombre)!;
+      const zip   = new JSZip();
+      const slug  = (this.proyectoNombre || 'proyecto').toLowerCase().replace(/\s+/g, '-');
+      const dbName = slug.replace(/-/g, '_');
+      const raiz  = zip.folder(slug)!;
 
-      // ── Frontend ────────────────────────────────────────────────────
+      // ── Archivos generados por IA ──────────────────────────────────
       const frontFolder = raiz.folder('frontend')!;
-      const archivosFront = this.parsearArchivos(this.codigoGenerado.frontend);
-      for (const arch of archivosFront) {
+      for (const arch of this.parsearArchivos(this.codigoGenerado.frontend)) {
         frontFolder.file(arch.ruta, arch.contenido);
       }
-      frontFolder.file('INSTRUCCIONES.md', this.readmeFrontend(nombre));
 
-      // ── Backend ─────────────────────────────────────────────────────
       const backFolder = raiz.folder('backend')!;
-      const archivosBack = this.parsearArchivos(this.codigoGenerado.backend);
-      for (const arch of archivosBack) {
+      for (const arch of this.parsearArchivos(this.codigoGenerado.backend)) {
         backFolder.file(arch.ruta, arch.contenido);
       }
-      backFolder.file('INSTRUCCIONES.md', this.readmeBackend());
+      // .env con la password estándar que usan los scripts
+      backFolder.file('.env',
+        `DATABASE_URL=mysql+pymysql://root:Admin1234!@localhost/${dbName}\nDEBUG=True\nHOST=0.0.0.0\nPORT=8000\n`
+      );
 
-      // ── Database ────────────────────────────────────────────────────
       const dbFolder = raiz.folder('database')!;
-      const archivosDb = this.parsearArchivos(this.codigoGenerado.database);
-      for (const arch of archivosDb) {
+      for (const arch of this.parsearArchivos(this.codigoGenerado.database)) {
         dbFolder.file(arch.ruta, arch.contenido);
       }
-      dbFolder.file('INSTRUCCIONES.md', this.readmeDatabase(nombre));
 
-      // ── Diagramas ───────────────────────────────────────────────────
-      const tienesDiagramas = Object.values(this.diagramas).some(d => d?.codigo_mermaid);
-      if (tienesDiagramas) {
+      // ── Diagramas ──────────────────────────────────────────────────
+      if (Object.values(this.diagramas).some(d => d?.codigo_mermaid)) {
         const diagFolder = raiz.folder('diagramas')!;
         for (const d of this.tiposDiagrama) {
           if (this.diagramas[d.key]?.codigo_mermaid) {
@@ -326,20 +318,33 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
         }
       }
 
-      // ── README raíz ─────────────────────────────────────────────────
-      raiz.file('README.md', this.readmeRaiz(nombre));
+      // ── Dockerfiles + nginx ────────────────────────────────────────
+      backFolder.file('Dockerfile', this.dockerfileBackend());
+      frontFolder.file('Dockerfile', this.dockerfileFrontend(slug));
+      frontFolder.file('nginx.conf', this.nginxConf());
 
-      // ── Generar y descargar ──────────────────────────────────────────
+      // ── docker-compose.yml ─────────────────────────────────────────
+      raiz.file('docker-compose.yml', this.dockerCompose(slug, dbName));
+
+      // ── Scripts de un clic ─────────────────────────────────────────
+      raiz.file('INICIAR.bat',   this.scriptWindows(slug, dbName));
+      raiz.file('INICIAR.sh',    this.scriptUnix(slug, dbName));
+      raiz.file('DETENER.bat',   this.scriptDetenerWindows());
+
+      // ── README principal ───────────────────────────────────────────
+      raiz.file('README.md', this.readmePrincipal(slug, dbName));
+
+      // ── Descargar ZIP ──────────────────────────────────────────────
       const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${nombre}-app.zip`;
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `${slug}-app.zip`;
       a.click();
       URL.revokeObjectURL(url);
 
-      this.successMsg = `✓ Aplicación descargada como ${nombre}-app.zip`;
-      setTimeout(() => { this.successMsg = ''; }, 5000);
+      this.successMsg = `✓ Aplicación descargada: ${slug}-app.zip — abre la carpeta y ejecuta INICIAR.bat`;
+      setTimeout(() => { this.successMsg = ''; }, 7000);
     } catch (err) {
       console.error(err);
       this.errorMsg = 'Error al generar el ZIP. Intenta de nuevo.';
@@ -349,122 +354,329 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
     }
   }
 
-  private readmeRaiz(nombre: string): string {
-    return `# ${this.proyectoNombre || nombre} — Aplicación Generada por IA
+  // ── Generadores de archivos de infraestructura ──────────────────────────
 
-Generado el ${new Date().toLocaleString('es-MX')} usando Gemini 2.5 Flash.
+  private scriptWindows(slug: string, dbName: string): string {
+    return `@echo off
+title Iniciando ${this.proyectoNombre || slug}
+color 0A & cls
 
-## Estructura del proyecto
+echo.
+echo  ============================================================
+echo    INICIANDO APLICACION: ${this.proyectoNombre || slug}
+echo  ============================================================
+echo.
+echo  Generado con Gemini AI  ^|  ${new Date().toLocaleDateString('es-MX')}
+echo.
 
-\`\`\`
-${nombre}/
-├── frontend/        → Aplicación Angular 18
-├── backend/         → API REST con FastAPI + SQLAlchemy
-├── database/        → Script SQL de la base de datos
-└── diagramas/       → Diagramas UML en formato Mermaid
-\`\`\`
+REM ── 1. Verificar Python ──────────────────────────────────────────
+python --version >nul 2>&1
+if errorlevel 1 (
+  echo [ERROR] Python no esta instalado.
+  echo Descargalo en: https://www.python.org/downloads/
+  echo Instala la version 3.10 o superior y marca "Add to PATH"
+  pause & exit /b 1
+)
 
-## Pasos para ejecutar
+REM ── 2. Verificar Node.js ─────────────────────────────────────────
+node --version >nul 2>&1
+if errorlevel 1 (
+  echo [ERROR] Node.js no esta instalado.
+  echo Descargalo en: https://nodejs.org  (version LTS recomendada)
+  pause & exit /b 1
+)
 
-### 1. Base de datos
-Sigue las instrucciones en \`database/INSTRUCCIONES.md\`
+REM ── 3. Verificar MySQL ───────────────────────────────────────────
+echo [1/4] Configurando base de datos...
+mysql -u root -pAdmin1234! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" >nul 2>&1
+if errorlevel 1 (
+  echo.
+  echo [AVISO] No se pudo conectar a MySQL automaticamente.
+  echo Abre MySQL Workbench o tu cliente favorito y ejecuta:
+  echo   database\\schema.sql
+  echo.
+  echo Luego edita backend\\.env con tu contrasena de MySQL.
+  echo.
+  pause
+) else (
+  mysql -u root -pAdmin1234! ${dbName} < database\\schema.sql >nul 2>&1
+  echo   OK - Base de datos configurada.
+)
+echo.
 
-### 2. Backend
-Sigue las instrucciones en \`backend/INSTRUCCIONES.md\`
+REM ── 4. Backend ───────────────────────────────────────────────────
+echo [2/4] Instalando dependencias del backend...
+cd backend
+if not exist venv (
+  python -m venv venv >nul 2>&1
+)
+venv\\Scripts\\pip install -r requirements.txt -q
+echo   OK - Dependencias instaladas.
+echo.
 
-### 3. Frontend
-Sigue las instrucciones en \`frontend/INSTRUCCIONES.md\`
+echo [3/4] Iniciando backend en http://localhost:8000 ...
+start "Backend - ${slug}" cmd /k "venv\\Scripts\\uvicorn main:app --reload --port 8000"
+cd ..
+timeout /t 4 /nobreak >nul
+
+REM ── 5. Frontend ──────────────────────────────────────────────────
+echo [4/4] Iniciando frontend en http://localhost:4200 ...
+cd frontend
+if not exist node_modules (
+  echo   Instalando dependencias npm (primera vez, ~1-2 min)...
+  npm install -q
+)
+start "Frontend - ${slug}" cmd /k "npx ng serve --open"
+cd ..
+
+echo.
+echo  ============================================================
+echo   Aplicacion lista! El navegador se abrira en segundos...
+echo  ============================================================
+echo.
+echo   Frontend:      http://localhost:4200
+echo   Backend API:   http://localhost:8000
+echo   API Docs:      http://localhost:8000/docs
+echo.
+echo   Para detener la aplicacion: ejecuta DETENER.bat
+echo.
 `;
   }
 
-  private readmeFrontend(nombre: string): string {
-    return `# Frontend — Angular 18
+  private scriptUnix(slug: string, dbName: string): string {
+    return `#!/bin/bash
+set -e
+echo ""
+echo "============================================================"
+echo "  INICIANDO APLICACION: ${this.proyectoNombre || slug}"
+echo "============================================================"
+echo ""
 
-## Requisitos
-- Node.js 18+
-- Angular CLI: \`npm install -g @angular/cli\`
+# ── Verificar requisitos ──────────────────────────────────────────
+command -v python3 >/dev/null 2>&1 || { echo "ERROR: Python3 no instalado. Visita https://python.org"; exit 1; }
+command -v node    >/dev/null 2>&1 || { echo "ERROR: Node.js no instalado. Visita https://nodejs.org"; exit 1; }
 
-## Instalación y ejecución
+# ── Base de datos ─────────────────────────────────────────────────
+echo "[1/4] Configurando base de datos..."
+mysql -u root -pAdmin1234! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" 2>/dev/null \\
+  && mysql -u root -pAdmin1234! ${dbName} < database/schema.sql 2>/dev/null \\
+  && echo "  OK - Base de datos configurada." \\
+  || echo "  AVISO: Ejecuta database/schema.sql manualmente en MySQL."
+echo ""
 
-\`\`\`bash
-# 1. Crear nuevo proyecto Angular
-ng new ${nombre}-frontend --standalone --routing --style=css
-
-# 2. Copiar los archivos generados dentro de src/app/
-#    Reemplaza los archivos existentes con los de esta carpeta
-
-# 3. Instalar dependencias adicionales (si aplica)
-cd ${nombre}-frontend
-npm install
-
-# 4. Ejecutar en modo desarrollo
-ng serve
-
-# La aplicación estará en http://localhost:4200
-\`\`\`
-
-## Notas
-- El frontend se conecta al backend en http://localhost:8000
-- Asegúrate de que el backend esté corriendo antes de usar la app
-`;
-  }
-
-  private readmeBackend(): string {
-    return `# Backend — FastAPI + SQLAlchemy
-
-## Requisitos
-- Python 3.10+
-
-## Instalación y ejecución
-
-\`\`\`bash
-# 1. Crear entorno virtual
-python -m venv venv
-
-# En Windows:
-venv\\Scripts\\activate
-# En Mac/Linux:
+# ── Backend ───────────────────────────────────────────────────────
+echo "[2/4] Instalando dependencias del backend..."
+cd backend
+[ ! -d venv ] && python3 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt -q
+echo "  OK"
+echo ""
 
-# 2. Instalar dependencias
-pip install -r requirements.txt
+echo "[3/4] Iniciando backend..."
+uvicorn main:app --reload --port 8000 &
+BACK_PID=$!
+cd ..
+sleep 3
 
-# 3. Configurar base de datos en .env
-# Edita el archivo .env con tus credenciales MySQL
+# ── Frontend ──────────────────────────────────────────────────────
+echo "[4/4] Iniciando frontend..."
+cd frontend
+[ ! -d node_modules ] && npm install -q
+npx ng serve --open &
+FRONT_PID=$!
+cd ..
 
-# 4. Ejecutar el servidor
-uvicorn main:app --reload --port 8000
+echo ""
+echo "============================================================"
+echo "  Aplicacion lista!"
+echo "  Frontend:    http://localhost:4200"
+echo "  Backend:     http://localhost:8000"
+echo "  API Docs:    http://localhost:8000/docs"
+echo ""
+echo "  Presiona Ctrl+C para detener."
+echo "============================================================"
 
-# La API estará en http://localhost:8000
-# Documentación interactiva: http://localhost:8000/docs
-\`\`\`
+wait $BACK_PID $FRONT_PID
 `;
   }
 
-  private readmeDatabase(nombre: string): string {
-    return `# Base de datos — MySQL
+  private scriptDetenerWindows(): string {
+    return `@echo off
+echo Deteniendo la aplicacion...
+taskkill /FI "WINDOWTITLE eq Backend*" /F >nul 2>&1
+taskkill /FI "WINDOWTITLE eq Frontend*" /F >nul 2>&1
+echo Aplicacion detenida.
+pause
+`;
+  }
 
-## Requisitos
-- MySQL 8.0+
+  private dockerCompose(slug: string, dbName: string): string {
+    return `# docker-compose.yml — Levanta toda la aplicacion con: docker compose up --build
+# Requiere: Docker Desktop instalado (https://www.docker.com/products/docker-desktop)
 
-## Instalación
+services:
 
+  database:
+    image: mysql:8.0
+    container_name: ${slug}_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Admin1234!
+      MYSQL_DATABASE: ${dbName}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pAdmin1234!"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: ${slug}_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+pymysql://root:Admin1234!@database/${dbName}
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: ${slug}_frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
+`;
+  }
+
+  private dockerfileBackend(): string {
+    return `FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+`;
+  }
+
+  private dockerfileFrontend(slug: string): string {
+    return `# Etapa 1: build Angular
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Etapa 2: servir con nginx
+FROM nginx:alpine
+COPY --from=builder /app/dist/${slug}/browser /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+`;
+  }
+
+  private nginxConf(): string {
+    return `server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Angular routing
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy al backend
+    location /api/ {
+        proxy_pass http://backend:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+`;
+  }
+
+  private readmePrincipal(slug: string, dbName: string): string {
+    const fecha = new Date().toLocaleString('es-MX');
+    return `# ${this.proyectoNombre || slug}
+> Aplicación generada automáticamente con Gemini AI — ${fecha}
+
+---
+
+## ⚡ OPCIÓN A — Un solo clic (Windows)
+
+1. Descomprime este ZIP
+2. Abre la carpeta \`${slug}\`
+3. Haz **doble clic** en \`INICIAR.bat\`
+4. Espera ~2 minutos la primera vez (instala dependencias)
+5. El navegador se abre solo en **http://localhost:4200** ✅
+
+**Requisitos previos:**
+- [Python 3.10+](https://www.python.org/downloads/) — marca ✅ "Add to PATH"
+- [Node.js LTS](https://nodejs.org)
+- MySQL corriendo en tu equipo (contraseña: \`Admin1234!\`)
+
+> Para Mac/Linux usa \`INICIAR.sh\` (ejecuta \`chmod +x INICIAR.sh && ./INICIAR.sh\`)
+
+---
+
+## 🐳 OPCIÓN B — Docker (recomendado, sin instalar Python/Node)
+
+1. Instala [Docker Desktop](https://www.docker.com/products/docker-desktop)
+2. Abre una terminal en la carpeta \`${slug}\`
+3. Ejecuta:
 \`\`\`bash
-# 1. Acceder a MySQL
-mysql -u root -p
+docker compose up --build
+\`\`\`
+4. Abre el navegador en **http://localhost:4200** ✅
 
-# 2. Ejecutar el script SQL
-source schema.sql;
+Todo conectado automáticamente: base de datos + backend + frontend.
 
-# O desde terminal:
-mysql -u root -p < schema.sql
+---
+
+## 📁 Estructura
+
+\`\`\`
+${slug}/
+├── INICIAR.bat          ← Doble clic para iniciar (Windows)
+├── INICIAR.sh           ← Iniciar en Mac/Linux
+├── DETENER.bat          ← Detener la aplicación
+├── docker-compose.yml   ← Iniciar con Docker
+├── frontend/            ← Angular 18
+├── backend/             ← FastAPI + SQLAlchemy
+├── database/            ← Script SQL (MySQL)
+└── diagramas/           ← Diagramas UML Mermaid
 \`\`\`
 
-## Conexión
-Actualiza la variable DATABASE_URL en el archivo \`backend/.env\`:
-\`\`\`
-DATABASE_URL=mysql+pymysql://root:tu_password@localhost/${nombre.replace(/-/g, '_')}
-\`\`\`
+## 🔗 URLs
+
+| Servicio       | URL                              |
+|----------------|----------------------------------|
+| Aplicación     | http://localhost:4200            |
+| API REST       | http://localhost:8000            |
+| Documentación  | http://localhost:8000/docs       |
+
+## 🛠️ Base de datos
+- **Nombre:** \`${dbName}\`
+- **Usuario:** \`root\`
+- **Contraseña:** \`Admin1234!\`
+
+Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
 `;
   }
 
