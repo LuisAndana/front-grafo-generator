@@ -357,89 +357,182 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
   // ── Generadores de archivos de infraestructura ──────────────────────────
 
   private scriptWindows(slug: string, dbName: string): string {
+    const proyecto = this.proyectoNombre || slug;
+    const fecha    = new Date().toLocaleDateString('es-MX');
     return `@echo off
-title Iniciando ${this.proyectoNombre || slug}
-color 0A & cls
+setlocal EnableDelayedExpansion
+title Iniciando ${proyecto}
+color 0A
+cls
 
 echo.
 echo  ============================================================
-echo    INICIANDO APLICACION: ${this.proyectoNombre || slug}
+echo    INICIANDO APLICACION: ${proyecto}
+echo    Generado con Gemini AI  -  ${fecha}
 echo  ============================================================
 echo.
-echo  Generado con Gemini AI  ^|  ${new Date().toLocaleDateString('es-MX')}
-echo.
 
-REM ── 1. Verificar Python ──────────────────────────────────────────
+REM ════════════════════════════════════════════════════════════
+REM  PASO 1 - Verificar Python
+REM ════════════════════════════════════════════════════════════
+echo [PASO 1/4] Verificando Python...
 python --version >nul 2>&1
 if errorlevel 1 (
-  echo [ERROR] Python no esta instalado.
-  echo Descargalo en: https://www.python.org/downloads/
-  echo Instala la version 3.10 o superior y marca "Add to PATH"
-  pause & exit /b 1
-)
-
-REM ── 2. Verificar Node.js ─────────────────────────────────────────
-node --version >nul 2>&1
-if errorlevel 1 (
-  echo [ERROR] Node.js no esta instalado.
-  echo Descargalo en: https://nodejs.org  (version LTS recomendada)
-  pause & exit /b 1
-)
-
-REM ── 3. Verificar MySQL ───────────────────────────────────────────
-echo [1/4] Configurando base de datos...
-mysql -u root -pAdmin1234! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" >nul 2>&1
-if errorlevel 1 (
+  color 0C
   echo.
-  echo [AVISO] No se pudo conectar a MySQL automaticamente.
-  echo Abre MySQL Workbench o tu cliente favorito y ejecuta:
-  echo   database\\schema.sql
+  echo  [ERROR] Python NO esta instalado o no esta en el PATH.
   echo.
-  echo Luego edita backend\\.env con tu contrasena de MySQL.
+  echo  Solucion:
+  echo    1. Ve a: https://www.python.org/downloads/
+  echo    2. Descarga Python 3.10 o superior
+  echo    3. Durante la instalacion marca: "Add Python to PATH"
+  echo    4. Cierra esta ventana y vuelve a ejecutar INICIAR.bat
   echo.
   pause
-) else (
+  exit /b 1
+)
+for /f "tokens=*" %%v in ('python --version 2^>^&1') do echo    OK - %%v encontrado
+echo.
+
+REM ════════════════════════════════════════════════════════════
+REM  PASO 2 - Verificar Node.js
+REM ════════════════════════════════════════════════════════════
+echo [PASO 2/4] Verificando Node.js...
+node --version >nul 2>&1
+if errorlevel 1 (
+  color 0C
+  echo.
+  echo  [ERROR] Node.js NO esta instalado o no esta en el PATH.
+  echo.
+  echo  Solucion:
+  echo    1. Ve a: https://nodejs.org
+  echo    2. Descarga la version LTS (recomendada)
+  echo    3. Instala con las opciones por defecto
+  echo    4. Cierra esta ventana y vuelve a ejecutar INICIAR.bat
+  echo.
+  pause
+  exit /b 1
+)
+for /f "tokens=*" %%v in ('node --version 2^>^&1') do echo    OK - Node %%v encontrado
+echo.
+
+REM ════════════════════════════════════════════════════════════
+REM  PASO 3 - Configurar base de datos
+REM ════════════════════════════════════════════════════════════
+echo [PASO 3/4] Configurando base de datos MySQL...
+echo.
+
+REM Intentar conectar con la contrasena por defecto
+mysql -u root -pAdmin1234! -e "SELECT 1;" >nul 2>&1
+if not errorlevel 1 (
+  echo    Conexion exitosa. Creando base de datos...
+  mysql -u root -pAdmin1234! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" >nul 2>&1
   mysql -u root -pAdmin1234! ${dbName} < database\\schema.sql >nul 2>&1
-  echo   OK - Base de datos configurada.
+  echo    OK - Base de datos '${dbName}' configurada.
+) else (
+  echo  [AVISO] No se pudo conectar automaticamente a MySQL.
+  echo.
+  echo  Haz esto manualmente (una sola vez):
+  echo    1. Abre MySQL Workbench o HeidiSQL
+  echo    2. Ejecuta el archivo:  database\\schema.sql
+  echo    3. Edita el archivo:    backend\\.env
+  echo       Cambia Admin1234! por tu contrasena de MySQL
+  echo.
+  echo  Cuando termines, presiona cualquier tecla para continuar...
+  pause >nul
 )
 echo.
 
-REM ── 4. Backend ───────────────────────────────────────────────────
-echo [2/4] Instalando dependencias del backend...
+REM ════════════════════════════════════════════════════════════
+REM  PASO 4a - Backend
+REM ════════════════════════════════════════════════════════════
+echo [PASO 4/4] Iniciando Backend y Frontend...
+echo.
+
+if not exist "backend\\requirements.txt" (
+  color 0E
+  echo  [AVISO] No se encontro backend\\requirements.txt
+  echo  Verifica que la carpeta backend contenga los archivos generados.
+  echo.
+)
+
 cd backend
+
 if not exist venv (
-  python -m venv venv >nul 2>&1
+  echo    Creando entorno Python (solo la primera vez)...
+  python -m venv venv
+  if errorlevel 1 (
+    color 0C
+    echo    [ERROR] Fallo al crear el entorno virtual.
+    cd ..
+    pause
+    exit /b 1
+  )
 )
-venv\\Scripts\\pip install -r requirements.txt -q
-echo   OK - Dependencias instaladas.
-echo.
 
-echo [3/4] Iniciando backend en http://localhost:8000 ...
-start "Backend - ${slug}" cmd /k "venv\\Scripts\\uvicorn main:app --reload --port 8000"
+echo    Instalando dependencias Python...
+venv\\Scripts\\pip install -r requirements.txt --quiet 2>nul
+if errorlevel 1 (
+  echo    Reintentando instalacion visible...
+  venv\\Scripts\\pip install -r requirements.txt
+)
+
+echo    Iniciando servidor backend...
+start "Backend ^| ${proyecto} ^| :8000" cmd /k "color 0B && echo Backend corriendo en http://localhost:8000 && echo Documentacion: http://localhost:8000/docs && echo. && venv\\Scripts\\uvicorn main:app --reload --port 8000"
 cd ..
-timeout /t 4 /nobreak >nul
 
-REM ── 5. Frontend ──────────────────────────────────────────────────
-echo [4/4] Iniciando frontend en http://localhost:4200 ...
+echo    Esperando que el backend arranque...
+timeout /t 5 /nobreak >nul
+
+REM ════════════════════════════════════════════════════════════
+REM  PASO 4b - Frontend
+REM ════════════════════════════════════════════════════════════
+if not exist "frontend\\package.json" (
+  color 0E
+  echo  [AVISO] No se encontro frontend\\package.json
+  echo  Verifica que la carpeta frontend contenga los archivos generados.
+  echo.
+)
+
 cd frontend
+
 if not exist node_modules (
-  echo   Instalando dependencias npm (primera vez, ~1-2 min)...
-  npm install -q
+  echo    Instalando dependencias npm (primera vez ~2 min, ten paciencia)...
+  npm install
+  if errorlevel 1 (
+    color 0C
+    echo    [ERROR] Fallo npm install.
+    cd ..
+    pause
+    exit /b 1
+  )
 )
-start "Frontend - ${slug}" cmd /k "npx ng serve --open"
+
+echo    Iniciando frontend Angular...
+start "Frontend ^| ${proyecto} ^| :4200" cmd /k "color 0A && echo Frontend corriendo en http://localhost:4200 && echo. && npx ng serve --open"
 cd ..
 
+REM ════════════════════════════════════════════════════════════
+REM  LISTO
+REM ════════════════════════════════════════════════════════════
+echo.
+color 0A
+echo  ============================================================
+echo    APLICACION INICIADA CORRECTAMENTE
+echo  ============================================================
+echo.
+echo    Frontend:      http://localhost:4200  (abre en ~30 segundos)
+echo    Backend API:   http://localhost:8000
+echo    API Docs:      http://localhost:8000/docs
+echo.
+echo    Se abriran dos ventanas: Backend y Frontend
+echo    NO las cierres mientras uses la aplicacion.
+echo.
+echo    Para detener todo: ejecuta DETENER.bat
 echo.
 echo  ============================================================
-echo   Aplicacion lista! El navegador se abrira en segundos...
-echo  ============================================================
 echo.
-echo   Frontend:      http://localhost:4200
-echo   Backend API:   http://localhost:8000
-echo   API Docs:      http://localhost:8000/docs
-echo.
-echo   Para detener la aplicacion: ejecuta DETENER.bat
-echo.
+pause
 `;
   }
 
