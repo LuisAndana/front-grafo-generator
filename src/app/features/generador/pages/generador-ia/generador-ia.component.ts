@@ -330,6 +330,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
       raiz.file('INICIAR.bat',   this.scriptWindows(slug, dbName));
       raiz.file('INICIAR.sh',    this.scriptUnix(slug, dbName));
       raiz.file('DETENER.bat',   this.scriptDetenerWindows());
+      raiz.file('setup_db.py',   this.setupDbPython(dbName));
 
       // ── README principal ───────────────────────────────────────────
       raiz.file('README.md', this.readmePrincipal(slug, dbName));
@@ -369,6 +370,7 @@ echo.
 echo  ============================================================
 echo    INICIANDO APLICACION: ${proyecto}
 echo    Generado con Gemini AI  -  ${fecha}
+echo    Script version: v3-debug (${Date.now()})
 echo  ============================================================
 echo.
 
@@ -452,69 +454,22 @@ REM ═════════════════════════�
 REM  PASO 3 - Configurar base de datos
 REM ════════════════════════════════════════════════════════════
 echo [PASO 3/4] Configurando base de datos MySQL...
-
-REM ── Localizar MySQL ─────────────────────────────────────────
-REM  Se desactiva DelayedExpansion en este bloque para evitar
-REM  que los '!' de la contrasena o rutas sean eaten por cmd.
-setlocal DisableDelayedExpansion
-
-set "MYSQL_EXE="
-where mysql >nul 2>&1
-if not errorlevel 1 set "MYSQL_EXE=mysql"
-
-if not defined MYSQL_EXE call :find_mysql_pf
-if not defined MYSQL_EXE call :find_mysql_pf86
-if not defined MYSQL_EXE if exist "C:\\xampp\\mysql\\bin\\mysql.exe" set "MYSQL_EXE=C:\\xampp\\mysql\\bin\\mysql.exe"
-if not defined MYSQL_EXE if exist "C:\\wamp64\\bin\\mysql\\mysql8.0.31\\bin\\mysql.exe" set "MYSQL_EXE=C:\\wamp64\\bin\\mysql\\mysql8.0.31\\bin\\mysql.exe"
-if not defined MYSQL_EXE goto :mysql_missing_cleanup
-
-echo    MySQL encontrado: %MYSQL_EXE%
-
-REM ── Preguntar contrasena (sin delayed expansion aqui) ───────
 echo.
-echo    Introduce la contrasena de MySQL (usuario 'root').
-echo    Si no la cambiaste deja por defecto pulsando ENTER.
-set "MYSQL_PWD=Admin1234!"
-set /p "MYSQL_PWD=    Contrasena [Admin1234!]: "
 
-REM ── Probar conexion con la contrasena recibida ─────────────
-"%MYSQL_EXE%" -u root -p%MYSQL_PWD% -e "SELECT 1;" 2>nul 1>nul
-if errorlevel 1 goto :mysql_manual_cleanup
+REM ── Delegamos TODO a Python (mucho mas robusto que batch) ───
+REM  setup_db.py se encarga de: encontrar MySQL, pedir contrasena,
+REM  crear la base de datos, cargar schema.sql y actualizar .env.
+python setup_db.py
+if errorlevel 2 (
+  echo.
+  echo    [AVISO] No se pudo configurar la base de datos automaticamente.
+  echo    El backend arrancara igual; puedes configurar MySQL manualmente.
+  echo.
+  echo    Presiona una tecla para continuar...
+  pause >nul
+)
 
-echo    Conexion exitosa. Creando base de datos '${dbName}'...
-"%MYSQL_EXE%" -u root -p%MYSQL_PWD% -e "CREATE DATABASE IF NOT EXISTS ${dbName};" 2>nul 1>nul
-if exist "database\\schema.sql" "%MYSQL_EXE%" -u root -p%MYSQL_PWD% ${dbName} < database\\schema.sql 2>nul 1>nul
-echo    OK - Base de datos '${dbName}' configurada.
-
-REM ── Actualizar backend\\.env ────────────────────────────────
-set "MYSQL_PWD_NEW=%MYSQL_PWD%"
-if exist "backend\\.env" call :update_env
-
-endlocal
 goto :db_done
-
-:find_mysql_pf
-for /d %%D in ("%ProgramFiles%\\MySQL\\MySQL Server *") do if exist "%%D\\bin\\mysql.exe" set "MYSQL_EXE=%%D\\bin\\mysql.exe"
-goto :eof
-
-:find_mysql_pf86
-set "PF86=%ProgramFiles(x86)%"
-for /d %%D in ("%PF86%\\MySQL\\MySQL Server *") do if exist "%%D\\bin\\mysql.exe" set "MYSQL_EXE=%%D\\bin\\mysql.exe"
-goto :eof
-
-:update_env
-REM  %~1 = contrasena nueva. No usar delayed expansion aqui.
-powershell -NoProfile -Command "$p=$env:MYSQL_PWD_NEW; (Get-Content 'backend\\.env') -replace 'Admin1234[!]', $p | Set-Content 'backend\\.env'" >nul 2>&1
-echo    OK - backend\\.env sincronizado con tu contrasena.
-goto :eof
-
-:mysql_missing_cleanup
-endlocal
-goto :mysql_missing
-
-:mysql_manual_cleanup
-endlocal
-goto :mysql_manual
 
 :mysql_missing
 echo    [AVISO] No se encontro MySQL en ubicaciones comunes:
@@ -702,6 +657,170 @@ taskkill /FI "WINDOWTITLE eq Backend*" /F >nul 2>&1
 taskkill /FI "WINDOWTITLE eq Frontend*" /F >nul 2>&1
 echo Aplicacion detenida.
 pause
+`;
+  }
+
+  private setupDbPython(dbName: string): string {
+    return `"""
+setup_db.py - Configura MySQL para la aplicacion generada.
+
+Busca mysql.exe en ubicaciones comunes, pide la contrasena al usuario,
+crea la base de datos, carga schema.sql y actualiza backend/.env.
+
+Codigos de salida:
+  0 = todo OK
+  2 = no se pudo configurar (el .bat mostrara un aviso y continuara)
+"""
+import os
+import sys
+import glob
+import subprocess
+from pathlib import Path
+
+DB_NAME = "${dbName}"
+DEFAULT_PWD = "Admin1234!"
+
+ROOT = Path(__file__).parent.resolve()
+
+
+def _find_mysql():
+    """Devuelve la ruta a mysql.exe o None si no se encuentra."""
+    # 1) En el PATH
+    from shutil import which
+    exe = which("mysql")
+    if exe:
+        return exe
+
+    # 2) Ubicaciones comunes en Windows
+    candidates = []
+    if os.name == "nt":
+        pf = os.environ.get("ProgramFiles", r"C:\\Program Files")
+        pf86 = os.environ.get("ProgramFiles(x86)", r"C:\\Program Files (x86)")
+        candidates += glob.glob(os.path.join(pf,   "MySQL", "MySQL Server *", "bin", "mysql.exe"))
+        candidates += glob.glob(os.path.join(pf86, "MySQL", "MySQL Server *", "bin", "mysql.exe"))
+        candidates += glob.glob(r"C:\\xampp\\mysql\\bin\\mysql.exe")
+        candidates += glob.glob(r"C:\\wamp64\\bin\\mysql\\mysql*\\bin\\mysql.exe")
+        candidates += glob.glob(r"C:\\laragon\\bin\\mysql\\mysql-*\\bin\\mysql.exe")
+    else:
+        candidates += ["/usr/bin/mysql", "/usr/local/bin/mysql", "/opt/homebrew/bin/mysql"]
+
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return None
+
+
+def _run_mysql(exe, password, sql=None, stdin_file=None, db=None):
+    """Ejecuta un comando mysql. Retorna (returncode, stdout, stderr)."""
+    cmd = [exe, "-u", "root", f"-p{password}"]
+    if db:
+        cmd.append(db)
+    if sql:
+        cmd += ["-e", sql]
+
+    stdin = None
+    if stdin_file:
+        stdin = open(stdin_file, "rb")
+
+    try:
+        result = subprocess.run(
+            cmd,
+            stdin=stdin,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        return result.returncode, result.stdout, result.stderr
+    finally:
+        if stdin:
+            stdin.close()
+
+
+def _update_env(password):
+    env_path = ROOT / "backend" / ".env"
+    if not env_path.is_file():
+        return False
+    try:
+        content = env_path.read_text(encoding="utf-8")
+        new_content = content.replace(DEFAULT_PWD, password)
+        if new_content != content:
+            env_path.write_text(new_content, encoding="utf-8")
+        return True
+    except Exception as e:
+        print(f"    [AVISO] No se pudo editar backend/.env: {e}")
+        return False
+
+
+def main():
+    print("    Buscando MySQL en el sistema...")
+    exe = _find_mysql()
+    if not exe:
+        print("    [ERROR] No se encontro mysql.exe en:")
+        print("      - PATH del sistema")
+        print("      - Program Files\\\\MySQL\\\\MySQL Server *")
+        print("      - XAMPP, WampServer, Laragon")
+        print()
+        print("    Instala MySQL Community Server:")
+        print("      https://dev.mysql.com/downloads/installer/")
+        sys.exit(2)
+
+    print(f"    MySQL encontrado: {exe}")
+    print()
+    print("    Introduce la contrasena de MySQL (usuario 'root').")
+    print(f"    Si no la cambiaste pulsa ENTER (se usara '{DEFAULT_PWD}').")
+    try:
+        password = input(f"    Contrasena [{DEFAULT_PWD}]: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        sys.exit(2)
+    if not password:
+        password = DEFAULT_PWD
+
+    # Probar conexion
+    print("    Probando conexion...")
+    rc, out, err = _run_mysql(exe, password, sql="SELECT 1;")
+    if rc != 0:
+        print("    [ERROR] No se pudo conectar a MySQL:")
+        print(f"      {err.strip() or 'codigo ' + str(rc)}")
+        print()
+        print("    Verifica que:")
+        print("      1. El servicio MySQL este corriendo (services.msc)")
+        print("      2. La contrasena de 'root' sea la que escribiste")
+        sys.exit(2)
+
+    # Crear base de datos
+    print(f"    Creando base de datos '{DB_NAME}'...")
+    rc, out, err = _run_mysql(
+        exe, password,
+        sql=f"CREATE DATABASE IF NOT EXISTS \`{DB_NAME}\` CHARACTER SET utf8mb4;",
+    )
+    if rc != 0:
+        print(f"    [AVISO] No se pudo crear la BD: {err.strip()}")
+
+    # Cargar schema.sql si existe
+    schema = ROOT / "database" / "schema.sql"
+    if schema.is_file():
+        print(f"    Cargando schema.sql en '{DB_NAME}'...")
+        rc, out, err = _run_mysql(exe, password, stdin_file=str(schema), db=DB_NAME)
+        if rc != 0:
+            print(f"    [AVISO] schema.sql devolvio errores (puede estar bien si ya existia):")
+            if err.strip():
+                print(f"      {err.strip()[:200]}")
+
+    # Actualizar backend/.env
+    if _update_env(password):
+        print("    OK - backend/.env sincronizado con tu contrasena.")
+
+    print("    OK - Base de datos lista.")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(f"    [ERROR] {e}")
+        sys.exit(2)
 `;
   }
 
