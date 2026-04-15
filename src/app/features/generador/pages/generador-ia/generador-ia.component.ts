@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ProyectoActivoService } from '../../../../core/services/proyecto-activo.service';
 import mermaid from 'mermaid';
 
@@ -21,7 +23,14 @@ interface CodigoGenerado {
 
 interface DiagramaGenerado {
   codigo_mermaid: string;
-  svg?: SafeHtml;
+}
+
+interface ContextoResumen {
+  requerimientos: number;
+  stakeholders:   number;
+  entrevistas:    number;
+  procesos:       number;
+  necesidades:    number;
 }
 
 @Component({
@@ -55,19 +64,26 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
 
   // Control para re-render de Mermaid
   private pendingRender: TipoDiagrama | null = null;
+  private pendingRenderQueue: TipoDiagrama[] = [];
 
   // Mensajes
   successMsg = '';
   errorMsg   = '';
-
-  // Copiar al portapapeles
   copiadoMsg = '';
 
+  // Contexto del proyecto (datos recopilados)
+  contextoResumen: ContextoResumen | null = null;
+  isLoadingContexto = false;
+
+  // Fechas de última generación
+  fechaCodigoGenerado: string | null = null;
+  fechasDiagramas: Partial<Record<TipoDiagrama, string>> = {};
+
   readonly tiposDiagrama: { key: TipoDiagrama; label: string; icono: string }[] = [
-    { key: 'clases',    label: 'Clases',           icono: '🔷' },
-    { key: 'secuencia', label: 'Secuencia',         icono: '🔁' },
-    { key: 'paquetes',  label: 'Paquetes',          icono: '📦' },
-    { key: 'casos_uso', label: 'Casos de Uso',      icono: '👤' },
+    { key: 'clases',    label: 'Clases',       icono: '🔷' },
+    { key: 'secuencia', label: 'Secuencia',     icono: '🔁' },
+    { key: 'paquetes',  label: 'Paquetes',      icono: '📦' },
+    { key: 'casos_uso', label: 'Casos de Uso',  icono: '👤' },
   ];
 
   readonly labelsDiagrama: Record<TipoDiagrama, string> = {
@@ -85,7 +101,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
   ) {}
 
   ngOnInit(): void {
-    this.proyectoId    = this.proyectoActivoSvc.proyectoId;
+    this.proyectoId     = this.proyectoActivoSvc.proyectoId;
     this.proyectoNombre = this.proyectoActivoSvc.proyecto?.nombre ?? '';
 
     mermaid.initialize({
@@ -94,9 +110,19 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
       securityLevel: 'loose',
       fontFamily: 'inherit'
     });
+
+    if (this.proyectoId) {
+      this.cargarDesdeStorage();
+      this.cargarContexto();
+    }
   }
 
   ngAfterViewChecked(): void {
+    // Procesar cola de renders pendientes (diagramas cargados del storage)
+    if (this.pendingRenderQueue.length > 0) {
+      const tipo = this.pendingRenderQueue.shift()!;
+      this.renderMermaid(tipo);
+    }
     if (this.pendingRender) {
       const tipo = this.pendingRender;
       this.pendingRender = null;
@@ -106,6 +132,129 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
 
   ngOnDestroy(): void {}
 
+  // ── Persistencia en localStorage ──────────────────────────────────────────
+
+  private storageKeyCode      = (id: number) => `generador_codigo_${id}`;
+  private storageKeyDiagramas = (id: number) => `generador_diagramas_${id}`;
+  private storageKeyFechas    = (id: number) => `generador_fechas_${id}`;
+
+  private cargarDesdeStorage(): void {
+    const id = this.proyectoId!;
+
+    // Cargar código generado
+    try {
+      const raw = localStorage.getItem(this.storageKeyCode(id));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        this.codigoGenerado      = parsed.codigo ?? null;
+        this.fechaCodigoGenerado = parsed.fecha  ?? null;
+      }
+    } catch { /* ignorar datos corruptos */ }
+
+    // Cargar diagramas generados
+    try {
+      const raw = localStorage.getItem(this.storageKeyDiagramas(id));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        this.diagramas = parsed;
+        // Encolar renders para todos los diagramas guardados
+        Object.keys(parsed).forEach(tipo => {
+          if (parsed[tipo]?.codigo_mermaid) {
+            this.pendingRenderQueue.push(tipo as TipoDiagrama);
+          }
+        });
+      }
+    } catch { /* ignorar */ }
+
+    // Cargar fechas de diagramas
+    try {
+      const raw = localStorage.getItem(this.storageKeyFechas(id));
+      if (raw) { this.fechasDiagramas = JSON.parse(raw); }
+    } catch { /* ignorar */ }
+  }
+
+  private guardarCodigoEnStorage(): void {
+    if (!this.proyectoId || !this.codigoGenerado) return;
+    const ahora = new Date().toLocaleString('es-MX');
+    this.fechaCodigoGenerado = ahora;
+    localStorage.setItem(
+      this.storageKeyCode(this.proyectoId),
+      JSON.stringify({ codigo: this.codigoGenerado, fecha: ahora })
+    );
+  }
+
+  private guardarDiagramaEnStorage(tipo: TipoDiagrama): void {
+    if (!this.proyectoId) return;
+    localStorage.setItem(
+      this.storageKeyDiagramas(this.proyectoId),
+      JSON.stringify(this.diagramas)
+    );
+    const ahora = new Date().toLocaleString('es-MX');
+    this.fechasDiagramas[tipo] = ahora;
+    localStorage.setItem(
+      this.storageKeyFechas(this.proyectoId),
+      JSON.stringify(this.fechasDiagramas)
+    );
+  }
+
+  limpiarStorage(): void {
+    if (!this.proyectoId) return;
+    localStorage.removeItem(this.storageKeyCode(this.proyectoId));
+    localStorage.removeItem(this.storageKeyDiagramas(this.proyectoId));
+    localStorage.removeItem(this.storageKeyFechas(this.proyectoId));
+    this.codigoGenerado      = null;
+    this.diagramas           = {};
+    this.fechaCodigoGenerado = null;
+    this.fechasDiagramas     = {};
+    this.successMsg = '✓ Datos locales eliminados correctamente';
+    setTimeout(() => { this.successMsg = ''; }, 3500);
+  }
+
+  // ── Contexto del proyecto ──────────────────────────────────────────────────
+
+  cargarContexto(): void {
+    if (!this.proyectoId) return;
+    this.isLoadingContexto = true;
+
+    forkJoin({
+      rfs: this.http
+        .get<any[]>(`${this.BASE_URL}/requerimientos-funcionales/?proyecto_id=${this.proyectoId}`)
+        .pipe(catchError(() => of([]))),
+      stakeholders: this.http
+        .get<any[]>(`${this.BASE_URL}/stakeholders/?proyecto_id=${this.proyectoId}`)
+        .pipe(catchError(() => of([]))),
+      resumen: this.http
+        .get<any>(`${this.BASE_URL}/elicitacion/resumen?proyecto_id=${this.proyectoId}`)
+        .pipe(catchError(() => of({ total_entrevistas: 0, total_procesos: 0, total_necesidades: 0 }))),
+    }).subscribe({
+      next: ({ rfs, stakeholders, resumen }) => {
+        this.contextoResumen = {
+          requerimientos: Array.isArray(rfs) ? rfs.length : 0,
+          stakeholders:   Array.isArray(stakeholders) ? stakeholders.length : 0,
+          entrevistas:    resumen?.total_entrevistas  ?? 0,
+          procesos:       resumen?.total_procesos     ?? 0,
+          necesidades:    resumen?.total_necesidades  ?? 0,
+        };
+        this.isLoadingContexto = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isLoadingContexto = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  get totalContexto(): number {
+    if (!this.contextoResumen) return 0;
+    const c = this.contextoResumen;
+    return c.requerimientos + c.stakeholders + c.entrevistas + c.procesos + c.necesidades;
+  }
+
+  get totalDiagramasGuardados(): number {
+    return this.tiposDiagrama.filter(d => !!this.diagramas[d.key]?.codigo_mermaid).length;
+  }
+
   // ── Navegación ─────────────────────────────────────────────────────────────
 
   setSeccion(s: SeccionActiva): void { this.seccionActiva = s; }
@@ -114,7 +263,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
   setTabDiagrama(t: TipoDiagrama): void {
     this.tabDiagrama = t;
     if (this.diagramas[t]?.codigo_mermaid) {
-      setTimeout(() => this.renderMermaid(t), 50);
+      setTimeout(() => this.renderMermaid(t), 80);
     }
   }
 
@@ -125,7 +274,6 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
 
     this.isGenerandoCodigo = true;
     this.errorMsg = '';
-    this.codigoGenerado = null;
 
     this.http.post<any>(`${this.BASE_URL}/api/generador/codigo/${this.proyectoId}`, {})
       .subscribe({
@@ -137,13 +285,14 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
             database: data.database ?? '-- Sin contenido generado'
           };
           this.isGenerandoCodigo = false;
-          this.successMsg = '✓ Código generado correctamente';
-          setTimeout(() => { this.successMsg = ''; }, 3500);
+          this.guardarCodigoEnStorage();
+          this.successMsg = '✓ Código generado y guardado localmente';
+          setTimeout(() => { this.successMsg = ''; }, 4000);
         },
         error: (err) => {
           this.isGenerandoCodigo = false;
           this.errorMsg = err?.error?.detail ?? 'Error al generar el código. Verifica que el backend esté configurado con la API key de Anthropic.';
-          setTimeout(() => { this.errorMsg = ''; }, 6000);
+          setTimeout(() => { this.errorMsg = ''; }, 7000);
         }
       });
   }
@@ -165,15 +314,16 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
         const codigo = data.codigo_mermaid ?? '';
         this.diagramas[tipo] = { codigo_mermaid: codigo };
         this.isGenerandoDiagrama[tipo] = false;
+        this.guardarDiagramaEnStorage(tipo);
         this.pendingRender = tipo;
         this.cdr.detectChanges();
-        this.successMsg = `✓ ${this.labelsDiagrama[tipo]} generado`;
-        setTimeout(() => { this.successMsg = ''; }, 3500);
+        this.successMsg = `✓ ${this.labelsDiagrama[tipo]} generado y guardado`;
+        setTimeout(() => { this.successMsg = ''; }, 4000);
       },
       error: (err) => {
         this.isGenerandoDiagrama[tipo] = false;
         this.errorMsg = err?.error?.detail ?? 'Error al generar el diagrama.';
-        setTimeout(() => { this.errorMsg = ''; }, 6000);
+        setTimeout(() => { this.errorMsg = ''; }, 7000);
       }
     });
   }

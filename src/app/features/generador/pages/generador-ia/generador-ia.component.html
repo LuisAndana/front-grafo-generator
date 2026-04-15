@@ -7,10 +7,17 @@
         <span class="header-icon">✨</span>
         Generador IA
       </h1>
-      <p>Genera código y diagramas UML automáticamente para <strong>{{ proyectoNombre || 'tu proyecto' }}</strong></p>
+      <p>Genera código funcional y diagramas UML para <strong>{{ proyectoNombre || 'tu proyecto' }}</strong></p>
     </div>
-    <div class="header-badge" *ngIf="proyectoId">
+    <div class="header-right" *ngIf="proyectoId">
       <span class="badge-ia">Powered by Claude AI</span>
+      <button class="btn-limpiar-storage" (click)="limpiarStorage()" title="Eliminar resultados guardados localmente">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        </svg>
+        Limpiar caché
+      </button>
     </div>
   </div>
 
@@ -40,6 +47,58 @@
 
   <ng-container *ngIf="proyectoId">
 
+    <!-- ── PANEL DE CONTEXTO ─────────────────────────────────────────── -->
+    <div class="contexto-panel">
+      <div class="contexto-header">
+        <span class="contexto-title">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Contexto disponible para la IA
+        </span>
+        <button class="btn-refresh-ctx" (click)="cargarContexto()" [disabled]="isLoadingContexto" title="Actualizar contexto">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+               [class.spinning]="isLoadingContexto">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Actualizar
+        </button>
+      </div>
+
+      <div *ngIf="isLoadingContexto" class="contexto-loading">
+        <span class="spinner-xs"></span> Cargando contexto...
+      </div>
+
+      <div *ngIf="!isLoadingContexto && contextoResumen" class="contexto-chips">
+        <div class="ctx-chip" [class.ctx-chip--empty]="contextoResumen.requerimientos === 0">
+          <span class="ctx-chip-num">{{ contextoResumen.requerimientos }}</span>
+          <span class="ctx-chip-label">Requerimientos</span>
+        </div>
+        <div class="ctx-chip" [class.ctx-chip--empty]="contextoResumen.stakeholders === 0">
+          <span class="ctx-chip-num">{{ contextoResumen.stakeholders }}</span>
+          <span class="ctx-chip-label">Stakeholders</span>
+        </div>
+        <div class="ctx-chip" [class.ctx-chip--empty]="contextoResumen.entrevistas === 0">
+          <span class="ctx-chip-num">{{ contextoResumen.entrevistas }}</span>
+          <span class="ctx-chip-label">Entrevistas</span>
+        </div>
+        <div class="ctx-chip" [class.ctx-chip--empty]="contextoResumen.procesos === 0">
+          <span class="ctx-chip-num">{{ contextoResumen.procesos }}</span>
+          <span class="ctx-chip-label">Procesos</span>
+        </div>
+        <div class="ctx-chip" [class.ctx-chip--empty]="contextoResumen.necesidades === 0">
+          <span class="ctx-chip-num">{{ contextoResumen.necesidades }}</span>
+          <span class="ctx-chip-label">Necesidades</span>
+        </div>
+        <div class="ctx-total" [class.ctx-total--warning]="totalContexto === 0">
+          <strong>{{ totalContexto }}</strong> elementos totales
+          <span *ngIf="totalContexto === 0"> — completa la información del proyecto primero</span>
+        </div>
+      </div>
+    </div>
+
     <!-- ── TABS PRINCIPALES ──────────────────────────────────────────── -->
     <div class="main-tabs">
       <button
@@ -51,6 +110,7 @@
           <polyline points="8 6 2 12 8 18"/>
         </svg>
         Código Fuente
+        <span *ngIf="codigoGenerado" class="tab-saved-badge">guardado</span>
       </button>
       <button
         class="main-tab"
@@ -61,6 +121,9 @@
           <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
         </svg>
         Diagramas UML
+        <span *ngIf="totalDiagramasGuardados > 0" class="tab-saved-badge">
+          {{ totalDiagramasGuardados }} guardado(s)
+        </span>
       </button>
     </div>
 
@@ -74,8 +137,18 @@
         <div class="gen-panel-info">
           <div class="gen-panel-icon">⚡</div>
           <div>
-            <h3>Generar Código Completo</h3>
-            <p>La IA analizará los requerimientos, SRS, actores y restricciones del proyecto para generar una arquitectura completa.</p>
+            <h3>Generar Código Funcional Completo</h3>
+            <p>
+              Claude analizará <strong>todos los datos del proyecto</strong> —requerimientos funcionales,
+              stakeholders, entrevistas, procesos y necesidades— para generar una aplicación completa
+              lista para usar.
+            </p>
+            <p *ngIf="fechaCodigoGenerado" class="gen-fecha">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Último resultado: {{ fechaCodigoGenerado }}
+            </p>
           </div>
         </div>
         <button
@@ -86,7 +159,7 @@
           <svg *ngIf="!isGenerandoCodigo" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
-          {{ isGenerandoCodigo ? 'Generando...' : 'Generar Código' }}
+          {{ isGenerandoCodigo ? 'Generando...' : (codigoGenerado ? 'Regenerar Código' : 'Generar Código') }}
         </button>
       </div>
 
@@ -145,8 +218,11 @@
       <!-- Estado vacío de código -->
       <div *ngIf="!codigoGenerado && !isGenerandoCodigo" class="empty-state">
         <div class="empty-icon">💻</div>
-        <p class="empty-title">Sin código generado</p>
-        <p class="empty-hint">Haz clic en "Generar Código" para que la IA cree el código completo de tu proyecto.</p>
+        <p class="empty-title">Sin código generado aún</p>
+        <p class="empty-hint">
+          Haz clic en "Generar Código" para que Claude cree el código funcional completo de tu proyecto
+          basándose en todos los datos que has ingresado.
+        </p>
       </div>
 
       <!-- Loading de código -->
@@ -156,7 +232,7 @@
           <div class="loading-dot"></div>
           <div class="loading-dot"></div>
         </div>
-        <p>La IA está analizando tu proyecto y generando el código...</p>
+        <p>Claude está analizando tu proyecto y generando el código...</p>
         <small>Esto puede tardar entre 30 y 60 segundos</small>
       </div>
 
@@ -190,7 +266,15 @@
               <span class="diagrama-icon-big">{{ d.icono }}</span>
               <div>
                 <h3>{{ labelsDiagrama[d.key] }}</h3>
-                <p>Generado automáticamente a partir de los datos del proyecto.</p>
+                <p *ngIf="!fechasDiagramas[d.key]">
+                  Generado automáticamente a partir de todos los datos del proyecto.
+                </p>
+                <p *ngIf="fechasDiagramas[d.key]" class="gen-fecha">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Último resultado: {{ fechasDiagramas[d.key] }}
+                </p>
               </div>
             </div>
             <button
@@ -213,12 +297,13 @@
               <div class="loading-dot"></div>
             </div>
             <p>Generando {{ labelsDiagrama[d.key] }}...</p>
+            <small>Esto puede tardar entre 20 y 40 segundos</small>
           </div>
 
           <!-- Resultado del diagrama -->
           <div *ngIf="diagramas[d.key] && !isGenerandoDiagrama[d.key]" class="diagrama-resultado">
 
-            <!-- Vista del diagrama -->
+            <!-- Vista previa del diagrama -->
             <div class="diagrama-view-panel">
               <div class="diagrama-view-header">
                 <span class="view-label">Vista previa</span>
@@ -232,7 +317,7 @@
                 </button>
               </div>
               <div class="diagrama-canvas" [id]="'mermaid-' + d.key">
-                <!-- Mermaid se renderiza aquí -->
+                <!-- Mermaid renderiza aquí -->
               </div>
             </div>
 
@@ -241,7 +326,7 @@
               <div class="diagrama-view-header">
                 <span class="view-label">Código Mermaid</span>
                 <div class="editor-actions">
-                  <button class="btn-action" (click)="copiarCodigo(diagramas[d.key]?.codigo_mermaid || '')" title="Copiar código Mermaid">
+                  <button class="btn-action" (click)="copiarCodigo(diagramas[d.key]?.codigo_mermaid || '')" title="Copiar">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -269,7 +354,9 @@
           <div *ngIf="!diagramas[d.key] && !isGenerandoDiagrama[d.key]" class="empty-state">
             <div class="empty-icon">{{ d.icono }}</div>
             <p class="empty-title">{{ labelsDiagrama[d.key] }} no generado</p>
-            <p class="empty-hint">Haz clic en "Generar" para que la IA cree este diagrama.</p>
+            <p class="empty-hint">
+              Haz clic en "Generar" para que Claude cree este diagrama a partir de los datos del proyecto.
+            </p>
           </div>
 
         </div>
