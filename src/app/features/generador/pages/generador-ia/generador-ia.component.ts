@@ -453,38 +453,69 @@ REM  PASO 3 - Configurar base de datos
 REM ════════════════════════════════════════════════════════════
 echo [PASO 3/4] Configurando base de datos MySQL...
 
-REM Verificar si el comando mysql existe
+REM ── Localizar MySQL ─────────────────────────────────────────
+set "MYSQL_EXE="
 where mysql >nul 2>&1
-if errorlevel 1 goto :mysql_missing
+if not errorlevel 1 set "MYSQL_EXE=mysql"
 
-REM Intentar conectar con la contrasena por defecto
-mysql -u root -pAdmin1234! -e "SELECT 1;" >nul 2>&1
+if not defined MYSQL_EXE (
+  for /d %%D in ("%ProgramFiles%\\MySQL\\MySQL Server *") do if exist "%%D\\bin\\mysql.exe" set "MYSQL_EXE=%%D\\bin\\mysql.exe"
+)
+if not defined MYSQL_EXE (
+  for /d %%D in ("%ProgramFiles(x86)%\\MySQL\\MySQL Server *") do if exist "%%D\\bin\\mysql.exe" set "MYSQL_EXE=%%D\\bin\\mysql.exe"
+)
+if not defined MYSQL_EXE if exist "%ProgramFiles%\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe" set "MYSQL_EXE=%ProgramFiles%\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe"
+if not defined MYSQL_EXE if exist "C:\\xampp\\mysql\\bin\\mysql.exe" set "MYSQL_EXE=C:\\xampp\\mysql\\bin\\mysql.exe"
+if not defined MYSQL_EXE if exist "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysql.exe" set "MYSQL_EXE=C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysql.exe"
+
+if not defined MYSQL_EXE goto :mysql_missing
+
+echo    MySQL encontrado: !MYSQL_EXE!
+
+REM ── Preguntar contrasena del usuario root ───────────────────
+echo.
+echo    Introduce la contrasena de MySQL (usuario 'root').
+echo    Si usas la que puso el script por defecto pulsa ENTER.
+set "MYSQL_PWD=Admin1234!"
+set /p "MYSQL_PWD=    Contrasena [Admin1234!]: "
+
+REM ── Probar conexion ─────────────────────────────────────────
+"!MYSQL_EXE!" -u root -p!MYSQL_PWD! -e "SELECT 1;" >nul 2>&1
 if errorlevel 1 goto :mysql_manual
 
 echo    Conexion exitosa. Creando base de datos...
-mysql -u root -pAdmin1234! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" >nul 2>&1
-if exist "database\\schema.sql" mysql -u root -pAdmin1234! ${dbName} < database\\schema.sql >nul 2>&1
+"!MYSQL_EXE!" -u root -p!MYSQL_PWD! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" >nul 2>&1
+if exist "database\\schema.sql" "!MYSQL_EXE!" -u root -p!MYSQL_PWD! ${dbName} < database\\schema.sql >nul 2>&1
 echo    OK - Base de datos '${dbName}' configurada.
+
+REM ── Actualizar .env del backend con la contrasena real ──────
+if exist "backend\\.env" (
+  powershell -NoProfile -Command "(Get-Content 'backend\\.env') -replace 'Admin1234!', '!MYSQL_PWD!' | Set-Content 'backend\\.env'" >nul 2>&1
+  echo    OK - backend\\.env actualizado con tu contrasena.
+)
 goto :db_done
 
 :mysql_missing
-echo    [AVISO] MySQL no esta instalado o no esta en el PATH.
-echo    Puedes continuar sin base de datos; el backend arrancara pero
-echo    algunas funciones no trabajaran hasta que instales MySQL.
+echo    [AVISO] No se encontro MySQL en ubicaciones comunes:
+echo       - PATH del sistema
+echo       - %ProgramFiles%\\MySQL\\MySQL Server X.X
+echo       - C:\\xampp\\mysql, C:\\laragon\\bin\\mysql
 echo.
-echo    Instala MySQL Community Server:  https://dev.mysql.com/downloads/installer/
+echo    El backend arrancara pero las funciones de BD fallaran.
+echo    Instala MySQL:  https://dev.mysql.com/downloads/installer/
 echo.
 echo    Presiona una tecla para continuar de todos modos...
 pause >nul
 goto :db_done
 
 :mysql_manual
-echo    [AVISO] MySQL esta instalado pero no se pudo conectar con
-echo    usuario 'root' y contrasena 'Admin1234!'.
+echo    [AVISO] MySQL se encontro pero no se pudo conectar con
+echo    usuario 'root' y la contrasena proporcionada.
 echo.
 echo    Opciones:
-echo      A) Edita backend\\.env y cambia la contrasena por la tuya
-echo      B) Carga database\\schema.sql manualmente en MySQL Workbench
+echo      A) Vuelve a ejecutar INICIAR.bat e introduce la contrasena correcta
+echo      B) Edita backend\\.env manualmente
+echo      C) Carga database\\schema.sql en MySQL Workbench
 echo.
 echo    Presiona una tecla para continuar...
 pause >nul
