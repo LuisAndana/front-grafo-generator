@@ -395,25 +395,60 @@ for /f "tokens=*" %%v in ('python --version 2^>^&1') do echo    OK - %%v encontr
 echo.
 
 REM ════════════════════════════════════════════════════════════
-REM  PASO 2 - Verificar Node.js
+REM  PASO 2 - Verificar Node.js (busca en ubicaciones comunes)
 REM ════════════════════════════════════════════════════════════
 echo [PASO 2/4] Verificando Node.js...
+
+REM Intento 1: node en el PATH
 node --version >nul 2>&1
-if errorlevel 1 (
-  color 0C
-  echo.
-  echo  [ERROR] Node.js NO esta instalado o no esta en el PATH.
-  echo.
-  echo  Solucion:
-  echo    1. Ve a: https://nodejs.org
-  echo    2. Descarga la version LTS (recomendada)
-  echo    3. Instala con las opciones por defecto
-  echo    4. Cierra esta ventana y vuelve a ejecutar INICIAR.bat
-  echo.
-  pause
-  exit /b 1
+if not errorlevel 1 goto :node_ok
+
+REM Intento 2: ubicaciones comunes de instalacion
+set "NODE_DIR="
+if exist "%ProgramFiles%\\nodejs\\node.exe"       set "NODE_DIR=%ProgramFiles%\\nodejs"
+if exist "%ProgramFiles(x86)%\\nodejs\\node.exe"  set "NODE_DIR=%ProgramFiles(x86)%\\nodejs"
+if exist "%LOCALAPPDATA%\\Programs\\node\\node.exe" set "NODE_DIR=%LOCALAPPDATA%\\Programs\\node"
+if exist "%APPDATA%\\npm\\node.exe"               set "NODE_DIR=%APPDATA%\\npm"
+
+if defined NODE_DIR (
+  echo    Node.js encontrado en: !NODE_DIR!
+  echo    Agregando al PATH de esta sesion...
+  set "PATH=!NODE_DIR!;%PATH%"
+  node --version >nul 2>&1
+  if not errorlevel 1 goto :node_ok
 )
+
+REM No se encontro Node.js en ninguna ubicacion
+color 0C
+echo.
+echo  [ERROR] Node.js NO esta instalado o no se pudo encontrar.
+echo.
+echo  Diagnostico:
+echo    - Se busco 'node' en el PATH  --- NO ENCONTRADO
+echo    - Se busco en %ProgramFiles%\\nodejs  --- NO ENCONTRADO
+echo    - Se busco en %LOCALAPPDATA%\\Programs\\node  --- NO ENCONTRADO
+echo.
+echo  Solucion paso a paso:
+echo    1. Ve a: https://nodejs.org
+echo    2. Descarga el instalador .msi de la version LTS
+echo    3. Al instalar, asegurate de que esta marcada:
+echo       "Add to PATH" (deberia estarlo por defecto)
+echo    4. IMPORTANTE: Cierra TODAS las ventanas de terminal
+echo    5. Abre una nueva ventana y escribe:  node --version
+echo       Si muestra una version, ejecuta INICIAR.bat de nuevo
+echo.
+echo  Si ya tienes Node instalado, verifica abriendo CMD y ejecutando:
+echo       where node
+echo    Si no muestra nada, reinstala Node marcando "Add to PATH"
+echo.
+pause
+exit /b 1
+
+:node_ok
 for /f "tokens=*" %%v in ('node --version 2^>^&1') do echo    OK - Node %%v encontrado
+where node | findstr /r "node.exe" >nul 2>&1 && (
+  for /f "tokens=*" %%p in ('where node') do echo    Ubicacion: %%p
+)
 echo.
 
 REM ════════════════════════════════════════════════════════════
