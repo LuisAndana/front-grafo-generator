@@ -255,6 +255,219 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
     return this.tiposDiagrama.filter(d => !!this.diagramas[d.key]?.codigo_mermaid).length;
   }
 
+  // ── Descarga como aplicación (ZIP) ────────────────────────────────────────
+
+  isDescargando = false;
+
+  /** Parsea un bloque de código en archivos individuales usando @@FILE: ruta@@ */
+  private parsearArchivos(bloque: string): { ruta: string; contenido: string }[] {
+    const archivos: { ruta: string; contenido: string }[] = [];
+    const partes = bloque.split(/@@FILE:\s*/);
+    for (const parte of partes) {
+      if (!parte.trim()) continue;
+      const saltoLinea = parte.indexOf('\n');
+      if (saltoLinea === -1) continue;
+      const ruta = parte.substring(0, saltoLinea).replace(/@@$/, '').trim();
+      const contenido = parte.substring(saltoLinea + 1).trim();
+      if (ruta && contenido) {
+        archivos.push({ ruta, contenido });
+      }
+    }
+    // Si no hay marcadores @@FILE, guardar como un único archivo
+    if (archivos.length === 0 && bloque.trim()) {
+      archivos.push({ ruta: '_codigo.txt', contenido: bloque.trim() });
+    }
+    return archivos;
+  }
+
+  async descargarAplicacion(): Promise<void> {
+    if (!this.codigoGenerado || this.isDescargando) return;
+    this.isDescargando = true;
+
+    try {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      const nombre = (this.proyectoNombre || 'proyecto')
+        .toLowerCase().replace(/\s+/g, '-');
+      const raiz = zip.folder(nombre)!;
+
+      // ── Frontend ────────────────────────────────────────────────────
+      const frontFolder = raiz.folder('frontend')!;
+      const archivosFront = this.parsearArchivos(this.codigoGenerado.frontend);
+      for (const arch of archivosFront) {
+        frontFolder.file(arch.ruta, arch.contenido);
+      }
+      frontFolder.file('INSTRUCCIONES.md', this.readmeFrontend(nombre));
+
+      // ── Backend ─────────────────────────────────────────────────────
+      const backFolder = raiz.folder('backend')!;
+      const archivosBack = this.parsearArchivos(this.codigoGenerado.backend);
+      for (const arch of archivosBack) {
+        backFolder.file(arch.ruta, arch.contenido);
+      }
+      backFolder.file('INSTRUCCIONES.md', this.readmeBackend());
+
+      // ── Database ────────────────────────────────────────────────────
+      const dbFolder = raiz.folder('database')!;
+      const archivosDb = this.parsearArchivos(this.codigoGenerado.database);
+      for (const arch of archivosDb) {
+        dbFolder.file(arch.ruta, arch.contenido);
+      }
+      dbFolder.file('INSTRUCCIONES.md', this.readmeDatabase(nombre));
+
+      // ── Diagramas ───────────────────────────────────────────────────
+      const tienesDiagramas = Object.values(this.diagramas).some(d => d?.codigo_mermaid);
+      if (tienesDiagramas) {
+        const diagFolder = raiz.folder('diagramas')!;
+        for (const d of this.tiposDiagrama) {
+          if (this.diagramas[d.key]?.codigo_mermaid) {
+            diagFolder.file(`${d.key}.mmd`, this.diagramas[d.key]!.codigo_mermaid);
+          }
+        }
+      }
+
+      // ── README raíz ─────────────────────────────────────────────────
+      raiz.file('README.md', this.readmeRaiz(nombre));
+
+      // ── Generar y descargar ──────────────────────────────────────────
+      const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${nombre}-app.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      this.successMsg = `✓ Aplicación descargada como ${nombre}-app.zip`;
+      setTimeout(() => { this.successMsg = ''; }, 5000);
+    } catch (err) {
+      console.error(err);
+      this.errorMsg = 'Error al generar el ZIP. Intenta de nuevo.';
+      setTimeout(() => { this.errorMsg = ''; }, 5000);
+    } finally {
+      this.isDescargando = false;
+    }
+  }
+
+  private readmeRaiz(nombre: string): string {
+    return `# ${this.proyectoNombre || nombre} — Aplicación Generada por IA
+
+Generado el ${new Date().toLocaleString('es-MX')} usando Gemini 2.5 Flash.
+
+## Estructura del proyecto
+
+\`\`\`
+${nombre}/
+├── frontend/        → Aplicación Angular 18
+├── backend/         → API REST con FastAPI + SQLAlchemy
+├── database/        → Script SQL de la base de datos
+└── diagramas/       → Diagramas UML en formato Mermaid
+\`\`\`
+
+## Pasos para ejecutar
+
+### 1. Base de datos
+Sigue las instrucciones en \`database/INSTRUCCIONES.md\`
+
+### 2. Backend
+Sigue las instrucciones en \`backend/INSTRUCCIONES.md\`
+
+### 3. Frontend
+Sigue las instrucciones en \`frontend/INSTRUCCIONES.md\`
+`;
+  }
+
+  private readmeFrontend(nombre: string): string {
+    return `# Frontend — Angular 18
+
+## Requisitos
+- Node.js 18+
+- Angular CLI: \`npm install -g @angular/cli\`
+
+## Instalación y ejecución
+
+\`\`\`bash
+# 1. Crear nuevo proyecto Angular
+ng new ${nombre}-frontend --standalone --routing --style=css
+
+# 2. Copiar los archivos generados dentro de src/app/
+#    Reemplaza los archivos existentes con los de esta carpeta
+
+# 3. Instalar dependencias adicionales (si aplica)
+cd ${nombre}-frontend
+npm install
+
+# 4. Ejecutar en modo desarrollo
+ng serve
+
+# La aplicación estará en http://localhost:4200
+\`\`\`
+
+## Notas
+- El frontend se conecta al backend en http://localhost:8000
+- Asegúrate de que el backend esté corriendo antes de usar la app
+`;
+  }
+
+  private readmeBackend(): string {
+    return `# Backend — FastAPI + SQLAlchemy
+
+## Requisitos
+- Python 3.10+
+
+## Instalación y ejecución
+
+\`\`\`bash
+# 1. Crear entorno virtual
+python -m venv venv
+
+# En Windows:
+venv\\Scripts\\activate
+# En Mac/Linux:
+source venv/bin/activate
+
+# 2. Instalar dependencias
+pip install -r requirements.txt
+
+# 3. Configurar base de datos en .env
+# Edita el archivo .env con tus credenciales MySQL
+
+# 4. Ejecutar el servidor
+uvicorn main:app --reload --port 8000
+
+# La API estará en http://localhost:8000
+# Documentación interactiva: http://localhost:8000/docs
+\`\`\`
+`;
+  }
+
+  private readmeDatabase(nombre: string): string {
+    return `# Base de datos — MySQL
+
+## Requisitos
+- MySQL 8.0+
+
+## Instalación
+
+\`\`\`bash
+# 1. Acceder a MySQL
+mysql -u root -p
+
+# 2. Ejecutar el script SQL
+source schema.sql;
+
+# O desde terminal:
+mysql -u root -p < schema.sql
+\`\`\`
+
+## Conexión
+Actualiza la variable DATABASE_URL en el archivo \`backend/.env\`:
+\`\`\`
+DATABASE_URL=mysql+pymysql://root:tu_password@localhost/${nombre.replace(/-/g, '_')}
+\`\`\`
+`;
+  }
+
   // ── Navegación ─────────────────────────────────────────────────────────────
 
   setSeccion(s: SeccionActiva): void { this.seccionActiva = s; }

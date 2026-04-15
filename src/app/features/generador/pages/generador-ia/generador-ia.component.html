@@ -163,6 +163,26 @@
         </button>
       </div>
 
+      <!-- Botón descargar aplicación completa -->
+      <div *ngIf="codigoGenerado && !isGenerandoCodigo" class="descarga-app-bar">
+        <div class="descarga-app-info">
+          <span class="descarga-app-icon">📦</span>
+          <div>
+            <strong>Aplicación lista para ejecutar</strong>
+            <p>Descarga el ZIP con todos los archivos del proyecto estructurados y listos para correr.</p>
+          </div>
+        </div>
+        <button class="btn-descargar-app" [disabled]="isDescargando" (click)="descargarAplicacion()">
+          <span *ngIf="isDescargando" class="spinner-inline"></span>
+          <svg *ngIf="!isDescargando" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          {{ isDescargando ? 'Generando ZIP...' : 'Descargar Aplicación (.zip)' }}
+        </button>
+      </div>
+
       <!-- Resultado de código -->
       <div *ngIf="codigoGenerado" class="codigo-resultado">
 
