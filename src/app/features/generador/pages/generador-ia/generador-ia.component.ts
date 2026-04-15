@@ -446,36 +446,50 @@ exit /b 1
 
 :node_ok
 for /f "tokens=*" %%v in ('node --version 2^>^&1') do echo    OK - Node %%v encontrado
-where node | findstr /r "node.exe" >nul 2>&1 && (
-  for /f "tokens=*" %%p in ('where node') do echo    Ubicacion: %%p
-)
 echo.
 
 REM ════════════════════════════════════════════════════════════
 REM  PASO 3 - Configurar base de datos
 REM ════════════════════════════════════════════════════════════
 echo [PASO 3/4] Configurando base de datos MySQL...
-echo.
+
+REM Verificar si el comando mysql existe
+where mysql >nul 2>&1
+if errorlevel 1 goto :mysql_missing
 
 REM Intentar conectar con la contrasena por defecto
 mysql -u root -pAdmin1234! -e "SELECT 1;" >nul 2>&1
-if not errorlevel 1 (
-  echo    Conexion exitosa. Creando base de datos...
-  mysql -u root -pAdmin1234! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" >nul 2>&1
-  mysql -u root -pAdmin1234! ${dbName} < database\\schema.sql >nul 2>&1
-  echo    OK - Base de datos '${dbName}' configurada.
-) else (
-  echo  [AVISO] No se pudo conectar automaticamente a MySQL.
-  echo.
-  echo  Haz esto manualmente (una sola vez):
-  echo    1. Abre MySQL Workbench o HeidiSQL
-  echo    2. Ejecuta el archivo:  database\\schema.sql
-  echo    3. Edita el archivo:    backend\\.env
-  echo       Cambia Admin1234! por tu contrasena de MySQL
-  echo.
-  echo  Cuando termines, presiona cualquier tecla para continuar...
-  pause >nul
-)
+if errorlevel 1 goto :mysql_manual
+
+echo    Conexion exitosa. Creando base de datos...
+mysql -u root -pAdmin1234! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" >nul 2>&1
+if exist "database\\schema.sql" mysql -u root -pAdmin1234! ${dbName} < database\\schema.sql >nul 2>&1
+echo    OK - Base de datos '${dbName}' configurada.
+goto :db_done
+
+:mysql_missing
+echo    [AVISO] MySQL no esta instalado o no esta en el PATH.
+echo    Puedes continuar sin base de datos; el backend arrancara pero
+echo    algunas funciones no trabajaran hasta que instales MySQL.
+echo.
+echo    Instala MySQL Community Server:  https://dev.mysql.com/downloads/installer/
+echo.
+echo    Presiona una tecla para continuar de todos modos...
+pause >nul
+goto :db_done
+
+:mysql_manual
+echo    [AVISO] MySQL esta instalado pero no se pudo conectar con
+echo    usuario 'root' y contrasena 'Admin1234!'.
+echo.
+echo    Opciones:
+echo      A) Edita backend\\.env y cambia la contrasena por la tuya
+echo      B) Carga database\\schema.sql manualmente en MySQL Workbench
+echo.
+echo    Presiona una tecla para continuar...
+pause >nul
+
+:db_done
 echo.
 
 REM ════════════════════════════════════════════════════════════
