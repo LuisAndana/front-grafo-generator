@@ -262,16 +262,60 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
   /** Parsea un bloque de código en archivos individuales usando @@FILE: ruta@@ */
   private parsearArchivos(bloque: string): { ruta: string; contenido: string }[] {
     const archivos: { ruta: string; contenido: string }[] = [];
-    const partes = bloque.split(/@@FILE:\s*/);
-    for (const parte of partes) {
-      if (!parte.trim()) continue;
-      const saltoLinea = parte.indexOf('\n');
-      if (saltoLinea === -1) continue;
-      const ruta     = parte.substring(0, saltoLinea).replace(/@@$/, '').trim();
-      const contenido = parte.substring(saltoLinea + 1).trim();
-      if (ruta && contenido) archivos.push({ ruta, contenido });
+
+    // ── Estrategia 1: Marcadores @@FILE: ruta@@ ──────────────────────
+    if (bloque.includes('@@FILE:')) {
+      const partes = bloque.split(/@@FILE:\s*/);
+      for (const parte of partes) {
+        if (!parte.trim()) continue;
+        const saltoLinea = parte.indexOf('\n');
+        if (saltoLinea === -1) continue;
+        const ruta      = parte.substring(0, saltoLinea).replace(/@@$/, '').trim();
+        let contenido   = parte.substring(saltoLinea + 1);
+        // Quitar fences ``` residuales al principio y al final
+        contenido = contenido.replace(/^```[a-zA-Z]*\n/, '').replace(/\n```\s*$/, '').trim();
+        if (ruta && contenido) archivos.push({ ruta, contenido });
+      }
+      if (archivos.length > 0) return archivos;
     }
-    if (archivos.length === 0 && bloque.trim()) {
+
+    // ── Estrategia 2: Bloques markdown con nombre de archivo ────────
+    //   Busca patrones como:
+    //     **archivo.py** / # archivo.py / FILE: archivo.py
+    //     seguido de ```python ... ```
+    const fenceRegex = /(?:^|\n)(?:\s*(?:\*\*|##?|\/\/|#|FILE:|File:|ARCHIVO:)?\s*([A-Za-z0-9_./\\-]+\.[a-zA-Z0-9]{1,6})[\s\S]{0,80}?\n)?\`\`\`([a-zA-Z]*)\n([\s\S]*?)\n\`\`\`/g;
+    let match: RegExpExecArray | null;
+    let contador = 0;
+    while ((match = fenceRegex.exec(bloque)) !== null) {
+      const rutaExplicita = match[1];
+      const lang          = (match[2] || '').toLowerCase();
+      const contenido     = match[3].trim();
+      if (!contenido) continue;
+
+      let ruta = rutaExplicita;
+      if (!ruta) {
+        // Heuristica: primer comentario de ruta dentro del contenido
+        const hintMatch = contenido.match(/^\s*(?:#|\/\/|--)\s*([A-Za-z0-9_./\\-]+\.[a-zA-Z0-9]{1,6})/);
+        if (hintMatch) {
+          ruta = hintMatch[1];
+        } else {
+          const ext: Record<string, string> = {
+            python: 'py', py: 'py', typescript: 'ts', ts: 'ts',
+            javascript: 'js', js: 'js', html: 'html', css: 'css',
+            sql: 'sql', json: 'json', yaml: 'yml', yml: 'yml',
+            bash: 'sh', sh: 'sh', dockerfile: 'Dockerfile',
+          };
+          const sufijo = ext[lang] || 'txt';
+          contador++;
+          ruta = sufijo === 'Dockerfile' ? 'Dockerfile' : `archivo_${contador}.${sufijo}`;
+        }
+      }
+      archivos.push({ ruta, contenido });
+    }
+    if (archivos.length > 0) return archivos;
+
+    // ── Fallback: guardar todo como un solo archivo de texto ────────
+    if (bloque.trim()) {
       archivos.push({ ruta: '_codigo.txt', contenido: bloque.trim() });
     }
     return archivos;
