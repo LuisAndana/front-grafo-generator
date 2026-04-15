@@ -375,6 +375,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
       raiz.file('INICIAR.sh',    this.scriptUnix(slug, dbName));
       raiz.file('DETENER.bat',   this.scriptDetenerWindows());
       raiz.file('setup_db.py',   this.setupDbPython(dbName));
+      raiz.file('iniciar.py',    this.iniciarPython(slug, dbName));
 
       // ── README principal ───────────────────────────────────────────
       raiz.file('README.md', this.readmePrincipal(slug, dbName));
@@ -403,9 +404,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
 
   private scriptWindows(slug: string, dbName: string): string {
     const proyecto = this.proyectoNombre || slug;
-    const fecha    = new Date().toLocaleDateString('es-MX');
     return `@echo off
-setlocal EnableDelayedExpansion
 title Iniciando ${proyecto}
 color 0A
 cls
@@ -413,223 +412,42 @@ cls
 echo.
 echo  ============================================================
 echo    INICIANDO APLICACION: ${proyecto}
-echo    Generado con Gemini AI  -  ${fecha}
-echo    Script version: v3-debug (${Date.now()})
 echo  ============================================================
 echo.
+echo  El script "iniciar.py" se encargara de todo:
+echo    - Verificar Python, Node, MySQL
+echo    - Crear entorno virtual + instalar dependencias
+echo    - Configurar base de datos
+echo    - Arrancar backend (puerto 8000) y frontend (puerto 4200)
+echo.
+echo  Si algo falla, veras el error exacto. La ventana NO se cerrara
+echo  sola. Al final tendras que pulsar una tecla.
+echo.
 
-REM ════════════════════════════════════════════════════════════
-REM  PASO 1 - Verificar Python
-REM ════════════════════════════════════════════════════════════
-echo [PASO 1/4] Verificando Python...
+REM ── Verificar Python primero (sin el, nada funciona) ────────
 python --version >nul 2>&1
 if errorlevel 1 (
   color 0C
-  echo.
-  echo  [ERROR] Python NO esta instalado o no esta en el PATH.
-  echo.
-  echo  Solucion:
-  echo    1. Ve a: https://www.python.org/downloads/
-  echo    2. Descarga Python 3.10 o superior
-  echo    3. Durante la instalacion marca: "Add Python to PATH"
-  echo    4. Cierra esta ventana y vuelve a ejecutar INICIAR.bat
+  echo  [ERROR] Python no esta instalado o no esta en el PATH.
+  echo  Descarga: https://www.python.org/downloads/  ^(marcar "Add to PATH"^)
   echo.
   pause
   exit /b 1
 )
-for /f "tokens=*" %%v in ('python --version 2^>^&1') do echo    OK - %%v encontrado
+
+REM ── Delegamos todo a Python ────────────────────────────────
+python "%~dp0iniciar.py"
+set "PY_EXIT=%errorlevel%"
+
 echo.
-
-REM ════════════════════════════════════════════════════════════
-REM  PASO 2 - Verificar Node.js (busca en ubicaciones comunes)
-REM ════════════════════════════════════════════════════════════
-echo [PASO 2/4] Verificando Node.js...
-
-REM Intento 1: node en el PATH
-node --version >nul 2>&1
-if not errorlevel 1 goto :node_ok
-
-REM Intento 2: ubicaciones comunes de instalacion
-set "NODE_DIR="
-if exist "%ProgramFiles%\\nodejs\\node.exe"       set "NODE_DIR=%ProgramFiles%\\nodejs"
-if exist "%ProgramFiles(x86)%\\nodejs\\node.exe"  set "NODE_DIR=%ProgramFiles(x86)%\\nodejs"
-if exist "%LOCALAPPDATA%\\Programs\\node\\node.exe" set "NODE_DIR=%LOCALAPPDATA%\\Programs\\node"
-if exist "%APPDATA%\\npm\\node.exe"               set "NODE_DIR=%APPDATA%\\npm"
-
-if defined NODE_DIR (
-  echo    Node.js encontrado en: !NODE_DIR!
-  echo    Agregando al PATH de esta sesion...
-  set "PATH=!NODE_DIR!;%PATH%"
-  node --version >nul 2>&1
-  if not errorlevel 1 goto :node_ok
-)
-
-REM No se encontro Node.js en ninguna ubicacion
-color 0C
-echo.
-echo  [ERROR] Node.js NO esta instalado o no se pudo encontrar.
-echo.
-echo  Diagnostico:
-echo    - Se busco 'node' en el PATH  --- NO ENCONTRADO
-echo    - Se busco en %ProgramFiles%\\nodejs  --- NO ENCONTRADO
-echo    - Se busco en %LOCALAPPDATA%\\Programs\\node  --- NO ENCONTRADO
-echo.
-echo  Solucion paso a paso:
-echo    1. Ve a: https://nodejs.org
-echo    2. Descarga el instalador .msi de la version LTS
-echo    3. Al instalar, asegurate de que esta marcada:
-echo       "Add to PATH" (deberia estarlo por defecto)
-echo    4. IMPORTANTE: Cierra TODAS las ventanas de terminal
-echo    5. Abre una nueva ventana y escribe:  node --version
-echo       Si muestra una version, ejecuta INICIAR.bat de nuevo
-echo.
-echo  Si ya tienes Node instalado, verifica abriendo CMD y ejecutando:
-echo       where node
-echo    Si no muestra nada, reinstala Node marcando "Add to PATH"
-echo.
-pause
-exit /b 1
-
-:node_ok
-for /f "tokens=*" %%v in ('node --version 2^>^&1') do echo    OK - Node %%v encontrado
-echo.
-
-REM ════════════════════════════════════════════════════════════
-REM  PASO 3 - Configurar base de datos
-REM ════════════════════════════════════════════════════════════
-echo [PASO 3/4] Configurando base de datos MySQL...
-echo.
-
-REM ── Delegamos TODO a Python (mucho mas robusto que batch) ───
-REM  setup_db.py se encarga de: encontrar MySQL, pedir contrasena,
-REM  crear la base de datos, cargar schema.sql y actualizar .env.
-python setup_db.py
-if errorlevel 2 (
-  echo.
-  echo    [AVISO] No se pudo configurar la base de datos automaticamente.
-  echo    El backend arrancara igual; puedes configurar MySQL manualmente.
-  echo.
-  echo    Presiona una tecla para continuar...
-  pause >nul
-)
-
-goto :db_done
-
-:mysql_missing
-echo    [AVISO] No se encontro MySQL en ubicaciones comunes:
-echo       - PATH del sistema
-echo       - %ProgramFiles%\\MySQL\\MySQL Server X.X
-echo       - C:\\xampp\\mysql, C:\\laragon\\bin\\mysql
-echo.
-echo    El backend arrancara pero las funciones de BD fallaran.
-echo    Instala MySQL:  https://dev.mysql.com/downloads/installer/
-echo.
-echo    Presiona una tecla para continuar de todos modos...
-pause >nul
-goto :db_done
-
-:mysql_manual
-echo    [AVISO] MySQL se encontro pero no se pudo conectar con
-echo    usuario 'root' y la contrasena proporcionada.
-echo.
-echo    Opciones:
-echo      A) Vuelve a ejecutar INICIAR.bat e introduce la contrasena correcta
-echo      B) Edita backend\\.env manualmente
-echo      C) Carga database\\schema.sql en MySQL Workbench
-echo.
-echo    Presiona una tecla para continuar...
-pause >nul
-
-:db_done
-echo.
-
-REM ════════════════════════════════════════════════════════════
-REM  PASO 4a - Backend
-REM ════════════════════════════════════════════════════════════
-echo [PASO 4/4] Iniciando Backend y Frontend...
-echo.
-
-if not exist "backend\\requirements.txt" (
-  color 0E
-  echo  [AVISO] No se encontro backend\\requirements.txt
-  echo  Verifica que la carpeta backend contenga los archivos generados.
-  echo.
-)
-
-cd backend
-
-if not exist venv (
-  echo    Creando entorno Python (solo la primera vez)...
-  python -m venv venv
-  if errorlevel 1 (
-    color 0C
-    echo    [ERROR] Fallo al crear el entorno virtual.
-    cd ..
-    pause
-    exit /b 1
-  )
-)
-
-echo    Instalando dependencias Python...
-venv\\Scripts\\pip install -r requirements.txt --quiet 2>nul
-if errorlevel 1 (
-  echo    Reintentando instalacion visible...
-  venv\\Scripts\\pip install -r requirements.txt
-)
-
-echo    Iniciando servidor backend...
-start "Backend ^| ${proyecto} ^| :8000" cmd /k "color 0B && echo Backend corriendo en http://localhost:8000 && echo Documentacion: http://localhost:8000/docs && echo. && venv\\Scripts\\uvicorn main:app --reload --port 8000"
-cd ..
-
-echo    Esperando que el backend arranque...
-timeout /t 5 /nobreak >nul
-
-REM ════════════════════════════════════════════════════════════
-REM  PASO 4b - Frontend
-REM ════════════════════════════════════════════════════════════
-if not exist "frontend\\package.json" (
-  color 0E
-  echo  [AVISO] No se encontro frontend\\package.json
-  echo  Verifica que la carpeta frontend contenga los archivos generados.
-  echo.
-)
-
-cd frontend
-
-if not exist node_modules (
-  echo    Instalando dependencias npm (primera vez ~2 min, ten paciencia)...
-  npm install
-  if errorlevel 1 (
-    color 0C
-    echo    [ERROR] Fallo npm install.
-    cd ..
-    pause
-    exit /b 1
-  )
-)
-
-echo    Iniciando frontend Angular...
-start "Frontend ^| ${proyecto} ^| :4200" cmd /k "color 0A && echo Frontend corriendo en http://localhost:4200 && echo. && npx ng serve --open"
-cd ..
-
-REM ════════════════════════════════════════════════════════════
-REM  LISTO
-REM ════════════════════════════════════════════════════════════
-echo.
-color 0A
 echo  ============================================================
-echo    APLICACION INICIADA CORRECTAMENTE
-echo  ============================================================
-echo.
-echo    Frontend:      http://localhost:4200  (abre en ~30 segundos)
-echo    Backend API:   http://localhost:8000
-echo    API Docs:      http://localhost:8000/docs
-echo.
-echo    Se abriran dos ventanas: Backend y Frontend
-echo    NO las cierres mientras uses la aplicacion.
-echo.
-echo    Para detener todo: ejecuta DETENER.bat
-echo.
+if "%PY_EXIT%"=="0" (
+  echo    FIN. Backend y Frontend corriendo en ventanas aparte.
+) else (
+  color 0C
+  echo    ERROR. iniciar.py devolvio codigo %PY_EXIT%.
+  echo    Revisa el mensaje de error arriba para saber que fallo.
+)
 echo  ============================================================
 echo.
 pause
@@ -865,6 +683,228 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"    [ERROR] {e}")
         sys.exit(2)
+`;
+  }
+
+  private iniciarPython(slug: string, dbName: string): string {
+    const proyecto = this.proyectoNombre || slug;
+    return `"""
+iniciar.py - Orquestador de arranque de la aplicacion "${proyecto}".
+
+Pasos:
+  1. Verificar que Node este instalado (Python ya fue verificado por el .bat)
+  2. Configurar la base de datos via setup_db.py
+  3. Crear venv + instalar requirements.txt
+  4. Instalar dependencias npm
+  5. Arrancar backend (puerto 8000) en una ventana nueva
+  6. Arrancar frontend (puerto 4200) en otra ventana nueva
+  7. Abrir el navegador en http://localhost:4200
+
+Cualquier error se muestra con traceback completo y el .bat conserva
+la ventana abierta gracias al pause final.
+"""
+import os
+import sys
+import time
+import shutil
+import subprocess
+import traceback
+import webbrowser
+from pathlib import Path
+
+ROOT      = Path(__file__).parent.resolve()
+BACKEND   = ROOT / "backend"
+FRONTEND  = ROOT / "frontend"
+PROJECT   = "${proyecto}"
+IS_WIN    = os.name == "nt"
+
+GREEN  = "\\033[92m" if not IS_WIN else ""
+RED    = "\\033[91m" if not IS_WIN else ""
+YELLOW = "\\033[93m" if not IS_WIN else ""
+RESET  = "\\033[0m"  if not IS_WIN else ""
+
+
+def banner(texto):
+    print()
+    print("  " + "─" * 58)
+    print(f"  {texto}")
+    print("  " + "─" * 58)
+
+
+def _find_node():
+    """Devuelve la ruta a node.exe o None."""
+    exe = shutil.which("node")
+    if exe:
+        return exe
+    if IS_WIN:
+        candidatos = [
+            os.path.join(os.environ.get("ProgramFiles", r"C:\\\\Program Files"), "nodejs", "node.exe"),
+            os.path.join(os.environ.get("ProgramFiles(x86)", r"C:\\\\Program Files (x86)"), "nodejs", "node.exe"),
+            os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "node", "node.exe"),
+        ]
+        for c in candidatos:
+            if os.path.isfile(c):
+                # Agregar al PATH de este proceso y los hijos
+                os.environ["PATH"] = os.path.dirname(c) + os.pathsep + os.environ.get("PATH", "")
+                return c
+    return None
+
+
+def paso_1_verificar_node():
+    banner("PASO 1/5 - Verificando Node.js")
+    node = _find_node()
+    if not node:
+        print("  [ERROR] Node.js no esta instalado o no esta en el PATH.")
+        print("  Descarga:  https://nodejs.org  (version LTS)")
+        sys.exit(1)
+    rc = subprocess.run([node, "--version"], capture_output=True, text=True)
+    print(f"  OK - Node {rc.stdout.strip()} en {node}")
+
+
+def paso_2_configurar_bd():
+    banner("PASO 2/5 - Configurando base de datos MySQL")
+    setup = ROOT / "setup_db.py"
+    if not setup.is_file():
+        print("  [AVISO] setup_db.py no existe; salto configuracion de BD.")
+        return
+    rc = subprocess.run([sys.executable, str(setup)], cwd=str(ROOT))
+    if rc.returncode != 0:
+        print(f"  [AVISO] setup_db.py devolvio {rc.returncode}. El backend puede")
+        print("  fallar en los endpoints que usen BD hasta que lo arregles.")
+        print("  (Presiona ENTER para continuar igualmente)")
+        try:
+            input()
+        except (EOFError, KeyboardInterrupt):
+            pass
+
+
+def paso_3_backend_deps():
+    banner("PASO 3/5 - Preparando backend (FastAPI)")
+    if not BACKEND.is_dir():
+        print(f"  [ERROR] No existe la carpeta backend/ en {ROOT}")
+        sys.exit(1)
+
+    req = BACKEND / "requirements.txt"
+    if not req.is_file():
+        print(f"  [ERROR] No se encontro backend/requirements.txt")
+        print("  La generacion del codigo con IA esta incompleta.")
+        print("  Vuelve al Generador IA y pulsa 'Generar Codigo' de nuevo.")
+        sys.exit(1)
+
+    venv = BACKEND / "venv"
+    if not venv.is_dir():
+        print("  Creando entorno virtual (solo la primera vez)...")
+        rc = subprocess.run([sys.executable, "-m", "venv", "venv"], cwd=str(BACKEND))
+        if rc.returncode != 0:
+            print("  [ERROR] Fallo al crear el venv.")
+            sys.exit(1)
+
+    pip_exe = venv / ("Scripts" if IS_WIN else "bin") / ("pip.exe" if IS_WIN else "pip")
+    print(f"  Instalando dependencias Python (puede tardar ~1 min)...")
+    rc = subprocess.run([str(pip_exe), "install", "-r", str(req)], cwd=str(BACKEND))
+    if rc.returncode != 0:
+        print("  [ERROR] Fallo pip install. Revisa el error arriba.")
+        sys.exit(1)
+    print("  OK - Backend listo.")
+
+
+def paso_4_frontend_deps():
+    banner("PASO 4/5 - Preparando frontend (Angular)")
+    if not FRONTEND.is_dir():
+        print(f"  [ERROR] No existe la carpeta frontend/ en {ROOT}")
+        sys.exit(1)
+
+    pkg = FRONTEND / "package.json"
+    if not pkg.is_file():
+        print(f"  [ERROR] No se encontro frontend/package.json")
+        print("  La generacion del codigo con IA esta incompleta.")
+        print("  Vuelve al Generador IA y pulsa 'Generar Codigo' de nuevo.")
+        sys.exit(1)
+
+    node_modules = FRONTEND / "node_modules"
+    if not node_modules.is_dir():
+        print("  Instalando dependencias npm (primera vez ~2-5 min, paciencia)...")
+        npm = shutil.which("npm") or "npm"
+        rc = subprocess.run([npm, "install"], cwd=str(FRONTEND), shell=IS_WIN)
+        if rc.returncode != 0:
+            print("  [ERROR] Fallo npm install. Revisa el error arriba.")
+            sys.exit(1)
+    print("  OK - Frontend listo.")
+
+
+def _abrir_ventana(titulo, comando_str, cwd):
+    """Abre una nueva ventana de consola que ejecuta el comando."""
+    if IS_WIN:
+        # cmd /k mantiene la ventana abierta mostrando logs en vivo
+        subprocess.Popen(
+            f'start "{titulo}" cmd /k "{comando_str}"',
+            cwd=str(cwd),
+            shell=True,
+        )
+    else:
+        # En Linux/Mac simplemente lanzamos en background
+        subprocess.Popen(comando_str, cwd=str(cwd), shell=True)
+
+
+def paso_5_arrancar():
+    banner("PASO 5/5 - Arrancando servidores")
+
+    # Backend
+    if IS_WIN:
+        uvicorn_cmd = r"venv\\\\Scripts\\\\uvicorn.exe main:app --reload --port 8000"
+    else:
+        uvicorn_cmd = "venv/bin/uvicorn main:app --reload --port 8000"
+    print("  -> Abriendo ventana Backend (puerto 8000)...")
+    _abrir_ventana(f"Backend | {PROJECT} | :8000", uvicorn_cmd, BACKEND)
+
+    print("  Esperando 5s a que el backend arranque...")
+    time.sleep(5)
+
+    # Frontend
+    ng_cmd = "npx ng serve --open" if IS_WIN else "npx ng serve --open"
+    print("  -> Abriendo ventana Frontend (puerto 4200)...")
+    _abrir_ventana(f"Frontend | {PROJECT} | :4200", ng_cmd, FRONTEND)
+
+    print("  Esperando 15s a que Angular compile...")
+    time.sleep(15)
+
+    print()
+    print("  ============================================================")
+    print(f"    APLICACION {PROJECT.upper()} INICIADA")
+    print("  ============================================================")
+    print("    Frontend:      http://localhost:4200")
+    print("    Backend API:   http://localhost:8000")
+    print("    API Docs:      http://localhost:8000/docs")
+    print("  ============================================================")
+
+    try:
+        webbrowser.open("http://localhost:4200")
+    except Exception:
+        pass
+
+
+def main():
+    print(f"  Directorio de trabajo: {ROOT}")
+    paso_1_verificar_node()
+    paso_2_configurar_bd()
+    paso_3_backend_deps()
+    paso_4_frontend_deps()
+    paso_5_arrancar()
+    print()
+    print("  Las ventanas de Backend y Frontend quedan abiertas. Para detener")
+    print("  la aplicacion cierralas (o ejecuta DETENER.bat).")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:
+        print()
+        print("  [ERROR INESPERADO]")
+        traceback.print_exc()
+        sys.exit(1)
 `;
   }
 
