@@ -291,7 +291,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
         },
         error: (err) => {
           this.isGenerandoCodigo = false;
-          this.errorMsg = err?.error?.detail ?? 'Error al generar el código. Verifica que el backend esté configurado con la API key de Anthropic.';
+          this.errorMsg = err?.error?.detail ?? 'Error al generar el código. Verifica que GOOGLE_API_KEY esté configurada en el backend.';
           setTimeout(() => { this.errorMsg = ''; }, 7000);
         }
       });
