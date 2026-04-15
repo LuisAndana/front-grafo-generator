@@ -454,46 +454,67 @@ REM ═════════════════════════�
 echo [PASO 3/4] Configurando base de datos MySQL...
 
 REM ── Localizar MySQL ─────────────────────────────────────────
+REM  Se desactiva DelayedExpansion en este bloque para evitar
+REM  que los '!' de la contrasena o rutas sean eaten por cmd.
+setlocal DisableDelayedExpansion
+
 set "MYSQL_EXE="
 where mysql >nul 2>&1
 if not errorlevel 1 set "MYSQL_EXE=mysql"
 
-if not defined MYSQL_EXE (
-  for /d %%D in ("%ProgramFiles%\\MySQL\\MySQL Server *") do if exist "%%D\\bin\\mysql.exe" set "MYSQL_EXE=%%D\\bin\\mysql.exe"
-)
-if not defined MYSQL_EXE (
-  for /d %%D in ("%ProgramFiles(x86)%\\MySQL\\MySQL Server *") do if exist "%%D\\bin\\mysql.exe" set "MYSQL_EXE=%%D\\bin\\mysql.exe"
-)
-if not defined MYSQL_EXE if exist "%ProgramFiles%\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe" set "MYSQL_EXE=%ProgramFiles%\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe"
+if not defined MYSQL_EXE call :find_mysql_pf
+if not defined MYSQL_EXE call :find_mysql_pf86
 if not defined MYSQL_EXE if exist "C:\\xampp\\mysql\\bin\\mysql.exe" set "MYSQL_EXE=C:\\xampp\\mysql\\bin\\mysql.exe"
-if not defined MYSQL_EXE if exist "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysql.exe" set "MYSQL_EXE=C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysql.exe"
+if not defined MYSQL_EXE if exist "C:\\wamp64\\bin\\mysql\\mysql8.0.31\\bin\\mysql.exe" set "MYSQL_EXE=C:\\wamp64\\bin\\mysql\\mysql8.0.31\\bin\\mysql.exe"
+if not defined MYSQL_EXE goto :mysql_missing_cleanup
 
-if not defined MYSQL_EXE goto :mysql_missing
+echo    MySQL encontrado: %MYSQL_EXE%
 
-echo    MySQL encontrado: !MYSQL_EXE!
-
-REM ── Preguntar contrasena del usuario root ───────────────────
+REM ── Preguntar contrasena (sin delayed expansion aqui) ───────
 echo.
 echo    Introduce la contrasena de MySQL (usuario 'root').
-echo    Si usas la que puso el script por defecto pulsa ENTER.
+echo    Si no la cambiaste deja por defecto pulsando ENTER.
 set "MYSQL_PWD=Admin1234!"
 set /p "MYSQL_PWD=    Contrasena [Admin1234!]: "
 
-REM ── Probar conexion ─────────────────────────────────────────
-"!MYSQL_EXE!" -u root -p!MYSQL_PWD! -e "SELECT 1;" >nul 2>&1
-if errorlevel 1 goto :mysql_manual
+REM ── Probar conexion con la contrasena recibida ─────────────
+"%MYSQL_EXE%" -u root -p%MYSQL_PWD% -e "SELECT 1;" 2>nul 1>nul
+if errorlevel 1 goto :mysql_manual_cleanup
 
-echo    Conexion exitosa. Creando base de datos...
-"!MYSQL_EXE!" -u root -p!MYSQL_PWD! -e "CREATE DATABASE IF NOT EXISTS ${dbName};" >nul 2>&1
-if exist "database\\schema.sql" "!MYSQL_EXE!" -u root -p!MYSQL_PWD! ${dbName} < database\\schema.sql >nul 2>&1
+echo    Conexion exitosa. Creando base de datos '${dbName}'...
+"%MYSQL_EXE%" -u root -p%MYSQL_PWD% -e "CREATE DATABASE IF NOT EXISTS ${dbName};" 2>nul 1>nul
+if exist "database\\schema.sql" "%MYSQL_EXE%" -u root -p%MYSQL_PWD% ${dbName} < database\\schema.sql 2>nul 1>nul
 echo    OK - Base de datos '${dbName}' configurada.
 
-REM ── Actualizar .env del backend con la contrasena real ──────
-if exist "backend\\.env" (
-  powershell -NoProfile -Command "(Get-Content 'backend\\.env') -replace 'Admin1234!', '!MYSQL_PWD!' | Set-Content 'backend\\.env'" >nul 2>&1
-  echo    OK - backend\\.env actualizado con tu contrasena.
-)
+REM ── Actualizar backend\\.env ────────────────────────────────
+set "MYSQL_PWD_NEW=%MYSQL_PWD%"
+if exist "backend\\.env" call :update_env
+
+endlocal
 goto :db_done
+
+:find_mysql_pf
+for /d %%D in ("%ProgramFiles%\\MySQL\\MySQL Server *") do if exist "%%D\\bin\\mysql.exe" set "MYSQL_EXE=%%D\\bin\\mysql.exe"
+goto :eof
+
+:find_mysql_pf86
+set "PF86=%ProgramFiles(x86)%"
+for /d %%D in ("%PF86%\\MySQL\\MySQL Server *") do if exist "%%D\\bin\\mysql.exe" set "MYSQL_EXE=%%D\\bin\\mysql.exe"
+goto :eof
+
+:update_env
+REM  %~1 = contrasena nueva. No usar delayed expansion aqui.
+powershell -NoProfile -Command "$p=$env:MYSQL_PWD_NEW; (Get-Content 'backend\\.env') -replace 'Admin1234[!]', $p | Set-Content 'backend\\.env'" >nul 2>&1
+echo    OK - backend\\.env sincronizado con tu contrasena.
+goto :eof
+
+:mysql_missing_cleanup
+endlocal
+goto :mysql_missing
+
+:mysql_manual_cleanup
+endlocal
+goto :mysql_manual
 
 :mysql_missing
 echo    [AVISO] No se encontro MySQL en ubicaciones comunes:
