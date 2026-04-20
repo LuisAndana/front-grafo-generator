@@ -794,14 +794,32 @@ def paso_3_backend_deps():
     venv = BACKEND / "venv"
     if not venv.is_dir():
         print("  Creando entorno virtual (solo la primera vez)...")
+        rc = subprocess.run([sys.executable, "-m", "venv", "--upgrade-deps", "venv"], cwd=str(BACKEND))
+        if rc.returncode != 0:
+            # Reintentar sin --upgrade-deps (Python < 3.9)
+            rc = subprocess.run([sys.executable, "-m", "venv", "venv"], cwd=str(BACKEND))
+            if rc.returncode != 0:
+                print("  [ERROR] Fallo al crear el venv.")
+                sys.exit(1)
+
+    # Usar python del venv con -m pip (mas robusto que llamar pip.exe directo)
+    py_exe = venv / ("Scripts" if IS_WIN else "bin") / ("python.exe" if IS_WIN else "python")
+    if not py_exe.is_file():
+        print(f"  [ERROR] No se encontro python en el venv: {py_exe}")
+        print("  Borrando venv corrupto y reintentando...")
+        import shutil
+        shutil.rmtree(str(venv), ignore_errors=True)
         rc = subprocess.run([sys.executable, "-m", "venv", "venv"], cwd=str(BACKEND))
         if rc.returncode != 0:
-            print("  [ERROR] Fallo al crear el venv.")
+            print("  [ERROR] No se pudo recrear el venv.")
+            sys.exit(1)
+        if not py_exe.is_file():
+            print("  [ERROR] El venv se creo pero no contiene python.exe.")
+            print("  Verifica tu instalacion de Python.")
             sys.exit(1)
 
-    pip_exe = venv / ("Scripts" if IS_WIN else "bin") / ("pip.exe" if IS_WIN else "pip")
     print(f"  Instalando dependencias Python (puede tardar ~1 min)...")
-    rc = subprocess.run([str(pip_exe), "install", "-r", str(req)], cwd=str(BACKEND))
+    rc = subprocess.run([str(py_exe), "-m", "pip", "install", "-r", str(req)], cwd=str(BACKEND))
     if rc.returncode != 0:
         print("  [ERROR] Fallo pip install. Revisa el error arriba.")
         sys.exit(1)
@@ -849,11 +867,11 @@ def _abrir_ventana(titulo, comando_str, cwd):
 def paso_5_arrancar():
     banner("PASO 5/5 - Arrancando servidores")
 
-    # Backend
+    # Backend — usar python -m uvicorn (mas robusto que llamar uvicorn.exe directo)
     if IS_WIN:
-        uvicorn_cmd = r"venv\\\\Scripts\\\\uvicorn.exe main:app --reload --port 8000"
+        uvicorn_cmd = r"venv\\\\Scripts\\\\python.exe -m uvicorn main:app --reload --port 8000"
     else:
-        uvicorn_cmd = "venv/bin/uvicorn main:app --reload --port 8000"
+        uvicorn_cmd = "venv/bin/python -m uvicorn main:app --reload --port 8000"
     print("  -> Abriendo ventana Backend (puerto 8000)...")
     _abrir_ventana(f"Backend | {PROJECT} | :8000", uvicorn_cmd, BACKEND)
 
