@@ -72,9 +72,9 @@
       </div>
 
       <div *ngIf="!isLoadingContexto && contextoResumen" class="contexto-chips">
-        <div class="ctx-chip" [class.ctx-chip--empty]="contextoResumen.requerimientos === 0">
-          <span class="ctx-chip-num">{{ contextoResumen.requerimientos }}</span>
-          <span class="ctx-chip-label">Requerimientos</span>
+        <div class="ctx-chip" [class.ctx-chip--empty]="contextoResumen.casosUso === 0">
+          <span class="ctx-chip-num">{{ contextoResumen.casosUso }}</span>
+          <span class="ctx-chip-label">Casos de Uso</span>
         </div>
         <div class="ctx-chip" [class.ctx-chip--empty]="contextoResumen.stakeholders === 0">
           <span class="ctx-chip-num">{{ contextoResumen.stakeholders }}</span>
@@ -139,8 +139,8 @@
           <div>
             <h3>Generar Código Funcional Completo</h3>
             <p>
-              Claude analizará <strong>todos los datos del proyecto</strong> —requerimientos funcionales,
-              stakeholders, entrevistas, procesos y necesidades— para generar una aplicación completa
+              Claude analizará <strong>todos los datos del proyecto</strong> —casos de uso,
+              stakeholders, requerimientos, entrevistas, procesos y necesidades— para generar una aplicación completa
               lista para usar.
             </p>
             <p *ngIf="fechaCodigoGenerado" class="gen-fecha">

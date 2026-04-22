@@ -26,11 +26,11 @@ interface DiagramaGenerado {
 }
 
 interface ContextoResumen {
-  requerimientos: number;
-  stakeholders:   number;
-  entrevistas:    number;
-  procesos:       number;
-  necesidades:    number;
+  casosUso:     number;
+  stakeholders: number;
+  entrevistas:  number;
+  procesos:     number;
+  necesidades:  number;
 }
 
 @Component({
@@ -217,8 +217,8 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
     this.isLoadingContexto = true;
 
     forkJoin({
-      rfs: this.http
-        .get<any[]>(`${this.BASE_URL}/requerimientos-funcionales/?proyecto_id=${this.proyectoId}`)
+      casosUso: this.http
+        .get<any[]>(`${this.BASE_URL}/api/casos-uso/?proyecto_id=${this.proyectoId}`)
         .pipe(catchError(() => of([]))),
       stakeholders: this.http
         .get<any[]>(`${this.BASE_URL}/stakeholders/?proyecto_id=${this.proyectoId}`)
@@ -227,13 +227,13 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
         .get<any>(`${this.BASE_URL}/elicitacion/resumen?proyecto_id=${this.proyectoId}`)
         .pipe(catchError(() => of({ total_entrevistas: 0, total_procesos: 0, total_necesidades: 0 }))),
     }).subscribe({
-      next: ({ rfs, stakeholders, resumen }) => {
+      next: ({ casosUso, stakeholders, resumen }) => {
         this.contextoResumen = {
-          requerimientos: Array.isArray(rfs) ? rfs.length : 0,
-          stakeholders:   Array.isArray(stakeholders) ? stakeholders.length : 0,
-          entrevistas:    resumen?.total_entrevistas  ?? 0,
-          procesos:       resumen?.total_procesos     ?? 0,
-          necesidades:    resumen?.total_necesidades  ?? 0,
+          casosUso:     Array.isArray(casosUso) ? casosUso.length : 0,
+          stakeholders: Array.isArray(stakeholders) ? stakeholders.length : 0,
+          entrevistas:  resumen?.total_entrevistas ?? 0,
+          procesos:     resumen?.total_procesos    ?? 0,
+          necesidades:  resumen?.total_necesidades ?? 0,
         };
         this.isLoadingContexto = false;
         this.cdr.detectChanges();
@@ -248,7 +248,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
   get totalContexto(): number {
     if (!this.contextoResumen) return 0;
     const c = this.contextoResumen;
-    return c.requerimientos + c.stakeholders + c.entrevistas + c.procesos + c.necesidades;
+    return c.casosUso + c.stakeholders + c.entrevistas + c.procesos + c.necesidades;
   }
 
   get totalDiagramasGuardados(): number {
