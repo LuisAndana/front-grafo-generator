@@ -191,7 +191,6 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
   }
 
   onCanvasDragOver(event: DragEvent): void {
-    console.log('🔄 Drag OVER canvas');
     event.preventDefault();
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'copy';
@@ -199,44 +198,24 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
   }
 
   onCanvasDragLeave(event: DragEvent): void {
-    console.log('👋 Drag LEAVE canvas');
     event.preventDefault();
   }
 
   onCanvasDrop(event: DragEvent): void {
-    console.log('💧 DROP event received');
     event.preventDefault();
     event.stopPropagation();
 
-    if (!event.dataTransfer) {
-      console.error('❌ No dataTransfer');
-      return;
-    }
-    if (!this.diagram) {
-      console.error('❌ No diagram loaded');
-      return;
-    }
+    if (!event.dataTransfer || !this.diagram) return;
 
     try {
       const data = event.dataTransfer.getData('application/json');
-      console.log('📥 dataTransfer data:', data);
-
-      if (!data) {
-        console.error('❌ No data in dataTransfer');
-        return;
-      }
+      if (!data) return;
 
       const dragData = JSON.parse(data);
-      console.log('✅ Parsed dragData:', dragData);
 
       if (dragData.type === 'tool') {
-        console.log('🛠️ Processing tool drop');
-        // Use same coordinate transformation as onCanvasClick
         const svg = this.elRef.nativeElement.querySelector('.canvas-svg') as SVGSVGElement;
-        if (!svg) {
-          console.error('❌ SVG element not found');
-          return;
-        }
+        if (!svg) return;
         const pt = svg.createSVGPoint();
         pt.x = event.clientX;
         pt.y = event.clientY;
@@ -245,9 +224,8 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
         const nx = (svgPt.x - x) / scale;
         const ny = (svgPt.y - y) / scale;
 
-        // Crear elemento nuevo
         const isClass = dragData.toolType === 'class' || dragData.toolType === 'interface' || dragData.toolType === 'enum';
-        const newElement = {
+        this.state.addElement({
           type: dragData.toolType,
           label: dragData.toolLabel,
           x: nx - 80,
@@ -257,14 +235,10 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
           color: '#3F51B5',
           attributes: isClass ? [] : undefined,
           methods: isClass ? [] : undefined
-        };
-        console.log('🆕 Creating element:', newElement);
-        this.state.addElement(newElement);
-      } else {
-        console.warn('⚠️ dragData.type is not "tool":', dragData.type);
+        });
       }
     } catch (e) {
-      console.error('❌ Error al procesar drop:', e);
+      console.error('Error al procesar drop:', e);
     }
   }
 }
