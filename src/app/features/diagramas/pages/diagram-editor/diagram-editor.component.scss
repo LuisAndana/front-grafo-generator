@@ -1,11 +1,12 @@
 // src/app/features/diagramas/pages/diagram-editor/diagram-editor.component.scss
 :host {
-  // Use absolute positioning so height is anchored to .app-main (position:relative),
-  // bypassing unreliable height:100% chain through flex containers.
-  position: absolute;
-  inset: 0;
+  // Use an explicit viewport-based height so no parent needs position:relative.
+  // --header-height is defined in styles.css as 64px.
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: calc(100vh - var(--header-height, 64px));
+  max-height: calc(100vh - var(--header-height, 64px));
   overflow: hidden;
 }
 
