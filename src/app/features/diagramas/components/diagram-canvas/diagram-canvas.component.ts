@@ -218,20 +218,18 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
         const y = (event.clientY - rect.top - this.viewTransform.y) / this.viewTransform.scale;
 
         // Crear elemento nuevo
+        const isClass = dragData.toolType === 'class' || dragData.toolType === 'interface' || dragData.toolType === 'enum';
         const newElement: DiagramElement = {
           id: `elem-${Date.now()}`,
           type: dragData.toolType,
-          name: dragData.toolLabel,
+          label: dragData.toolLabel,
           x: Math.max(0, x),
           y: Math.max(0, y),
-          width: dragData.toolType === 'class' ? 200 : 120,
-          height: dragData.toolType === 'class' ? 250 : 80,
-          color: '#3b82f6',
-          propiedades: {
-            atributos: [],
-            metodos: [],
-            estereotipo: null
-          }
+          width: dragData.toolType === 'actor' ? 64 : 160,
+          height: isClass ? 110 : (dragData.toolType === 'usecase' ? 60 : 80),
+          color: '#3F51B5',
+          attributes: isClass ? [] : undefined,
+          methods: isClass ? [] : undefined
         };
 
         this.state.addElement(newElement);
