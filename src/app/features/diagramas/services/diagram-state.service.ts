@@ -36,7 +36,7 @@ export class DiagramStateService {
     const proyecto = this.proyectoActivo.proyecto;
     const diagram: Diagram = {
       id: uuidv4(),
-      projectId: proyecto?.id?.toString() ?? 'unknown',
+      projectId: proyecto?.id_proyecto?.toString() ?? 'unknown',
       name,
       type,
       elements: [],
