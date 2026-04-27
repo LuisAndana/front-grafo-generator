@@ -1,7 +1,8 @@
 // src/app/features/diagramas/components/properties-panel/properties-panel.component.scss
 .panel {
-  width: 280px;
-  min-width: 280px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
   height: 100%;
   background: #ffffff;
   border-left: 1px solid #e0e0e0;
@@ -25,7 +26,7 @@
   p { font-size: 0.875rem; line-height: 1.5; }
 }
 
-.panel-content { padding: 16px; }
+.panel-content { padding: 12px; }
 
 .panel-header {
   display: flex;

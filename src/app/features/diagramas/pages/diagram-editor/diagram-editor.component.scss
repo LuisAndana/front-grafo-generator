@@ -9,7 +9,9 @@
 
 .editor-workspace {
   display: flex;
+  flex-direction: row;
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  gap: 0;
 }
