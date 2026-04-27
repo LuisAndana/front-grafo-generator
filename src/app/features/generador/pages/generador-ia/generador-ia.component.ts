@@ -1242,7 +1242,11 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
   }
 
   descargarSvg(tipo: TipoDiagrama): void {
-    const container = document.getElementById(`mermaid-${tipo}`);
+    const containerId = this.fullscreenTipo === tipo
+      ? `mermaid-fullscreen-${tipo}`
+      : `mermaid-${tipo}`;
+    const container = document.getElementById(containerId) ??
+                      document.getElementById(`mermaid-${tipo}`);
     if (!container) return;
     const svg  = container.innerHTML;
     const blob = new Blob([svg], { type: 'image/svg+xml' });
@@ -1252,5 +1256,84 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
     a.download = `${this.proyectoNombre || 'proyecto'}-${tipo}.svg`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  descargarJpg(tipo: TipoDiagrama): void {
+    const fsId  = `mermaid-fullscreen-${tipo}`;
+    const normId = `mermaid-${tipo}`;
+    const container = document.getElementById(this.fullscreenTipo === tipo ? fsId : normId)
+                   ?? document.getElementById(normId);
+    if (!container) return;
+    const svgEl = container.querySelector('svg');
+    if (!svgEl) return;
+
+    // Obtener dimensiones reales del SVG
+    const rect   = svgEl.getBoundingClientRect();
+    const w      = Math.round(rect.width)  || svgEl.viewBox?.baseVal?.width  || 800;
+    const h      = Math.round(rect.height) || svgEl.viewBox?.baseVal?.height || 600;
+    const scale  = 2;
+
+    // Clonar y fijar dimensiones explícitas para que Image() lo renderice bien
+    const clone = svgEl.cloneNode(true) as SVGElement;
+    clone.setAttribute('width',  String(w));
+    clone.setAttribute('height', String(h));
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+    // data: URI evita bloqueos de seguridad de blob URL en canvas
+    const serialized = new XMLSerializer().serializeToString(clone);
+    const dataUri    = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(serialized);
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas  = document.createElement('canvas');
+      canvas.width  = w * scale;
+      canvas.height = h * scale;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href    = url;
+        a.download = `${this.proyectoNombre || 'proyecto'}-${tipo}.jpg`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, 'image/jpeg', 0.95);
+    };
+    img.onerror = () => console.error('Error al cargar SVG para exportar JPG');
+    img.src = dataUri;
+  }
+
+  // ── Pantalla completa ───────────────────────────────────────────────────────
+
+  fullscreenTipo: TipoDiagrama | null = null;
+
+  abrirPantallaCompleta(tipo: TipoDiagrama): void {
+    this.fullscreenTipo = tipo;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => this.renderMermaidFullscreen(tipo), 80);
+  }
+
+  cerrarPantallaCompleta(): void {
+    this.fullscreenTipo = null;
+    document.body.style.overflow = '';
+  }
+
+  private async renderMermaidFullscreen(tipo: TipoDiagrama): Promise<void> {
+    const diagrama  = this.diagramas[tipo];
+    if (!diagrama?.codigo_mermaid) return;
+    const container = document.getElementById(`mermaid-fullscreen-${tipo}`);
+    if (!container) return;
+    try {
+      const uniqueId = `mermaid-fs-${tipo}-${Date.now()}`;
+      const { svg }  = await mermaid.render(uniqueId, diagrama.codigo_mermaid);
+      container.innerHTML = svg;
+    } catch (err) {
+      console.error('Error rendering fullscreen mermaid:', err);
+    }
   }
 }

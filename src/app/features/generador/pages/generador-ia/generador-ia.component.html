@@ -336,14 +336,25 @@
             <div class="diagrama-view-panel">
               <div class="diagrama-view-header">
                 <span class="view-label">Vista previa</span>
-                <button class="btn-action" (click)="descargarSvg(d.key)" title="Descargar SVG">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  SVG
-                </button>
+                <div class="diagrama-view-actions">
+                  <button class="btn-action" (click)="abrirPantallaCompleta(d.key)" title="Pantalla completa">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <polyline points="15 3 21 3 21 9"/>
+                      <polyline points="9 21 3 21 3 15"/>
+                      <line x1="21" y1="3" x2="14" y2="10"/>
+                      <line x1="3" y1="21" x2="10" y2="14"/>
+                    </svg>
+                    Ampliar
+                  </button>
+                  <button class="btn-action" (click)="descargarJpg(d.key)" title="Descargar JPG">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    JPG
+                  </button>
+                </div>
               </div>
               <div class="diagrama-canvas" [id]="'mermaid-' + d.key">
                 <!-- Mermaid renderiza aquí -->
@@ -394,4 +405,44 @@
     </div>
 
   </ng-container>
+</div>
+
+<!-- ══ MODAL PANTALLA COMPLETA ══════════════════════════════════════════════ -->
+<div *ngIf="fullscreenTipo" class="fs-overlay" (click)="cerrarPantallaCompleta()">
+  <div class="fs-modal" (click)="$event.stopPropagation()">
+
+    <div class="fs-header">
+      <span class="fs-title">{{ labelsDiagrama[fullscreenTipo!] }}</span>
+      <div class="fs-header-actions">
+        <button class="btn-action" (click)="descargarSvg(fullscreenTipo!)" title="Descargar SVG">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          SVG
+        </button>
+        <button class="btn-action" (click)="descargarJpg(fullscreenTipo!)" title="Descargar JPG">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          JPG
+        </button>
+        <button class="btn-action fs-close-btn" (click)="cerrarPantallaCompleta()" title="Cerrar">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Cerrar
+        </button>
+      </div>
+    </div>
+
+    <div class="fs-canvas" [id]="'mermaid-fullscreen-' + fullscreenTipo">
+      <!-- Mermaid re-renderiza aquí en pantalla completa -->
+    </div>
+
+  </div>
 </div>
