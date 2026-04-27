@@ -819,11 +819,37 @@ def paso_3_backend_deps():
             sys.exit(1)
 
     print(f"  Instalando dependencias Python (puede tardar ~1 min)...")
-    rc = subprocess.run([str(py_exe), "-m", "pip", "install", "-r", str(req)], cwd=str(BACKEND))
-    if rc.returncode != 0:
-        print("  [ERROR] Fallo pip install. Revisa el error arriba.")
-        sys.exit(1)
-    print("  OK - Backend listo.")
+    MAX_INTENTOS = 3
+    pip_ok = False
+    for intento in range(1, MAX_INTENTOS + 1):
+        rc = subprocess.run(
+            [str(py_exe), "-m", "pip", "install", "--quiet",
+             "--retries", "3", "--timeout", "60",
+             "-r", str(req)],
+            cwd=str(BACKEND)
+        )
+        if rc.returncode == 0:
+            pip_ok = True
+            break
+        if intento < MAX_INTENTOS:
+            print(f"  [AVISO] pip install fallo (intento {intento}/{MAX_INTENTOS}). "
+                  f"Reintentando en 10 s...")
+            print("  Tip: asegurate de tener conexion a internet activa.")
+            time.sleep(10)
+        else:
+            print()
+            print("  [ERROR] pip install fallo despues de 3 intentos.")
+            print("  Posibles causas:")
+            print("    - Sin conexion a internet o DNS lento (prueba de nuevo).")
+            print("    - Firewall bloqueando PyPI. Prueba con WiFi diferente.")
+            print()
+            print("  SOLUCION MANUAL:")
+            print(f"    1. cd {BACKEND}")
+            print(f"    2. {py_exe} -m pip install -r requirements.txt")
+            print("    3. Corre INICIAR.bat de nuevo.")
+            sys.exit(1)
+    if pip_ok:
+        print("  OK - Backend listo.")
 
 
 def paso_4_frontend_deps():
@@ -1252,5 +1278,82 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
     a.download = `${this.proyectoNombre || 'proyecto'}-${tipo}.svg`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  descargarJpg(tipo: TipoDiagrama): void {
+    const fsId   = `mermaid-fullscreen-${tipo}`;
+    const normId = `mermaid-${tipo}`;
+    const container = document.getElementById(this.fullscreenTipo === tipo ? fsId : normId)
+                   ?? document.getElementById(normId);
+    if (!container) return;
+    const svgEl = container.querySelector('svg');
+    if (!svgEl) return;
+
+    const rect  = svgEl.getBoundingClientRect();
+    const w     = Math.round(rect.width)  || svgEl.viewBox?.baseVal?.width  || 800;
+    const h     = Math.round(rect.height) || svgEl.viewBox?.baseVal?.height || 600;
+    const scale = 2;
+
+    const clone = svgEl.cloneNode(true) as SVGElement;
+    clone.setAttribute('width',  String(w));
+    clone.setAttribute('height', String(h));
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+    const serialized = new XMLSerializer().serializeToString(clone);
+    const dataUri    = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(serialized);
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas  = document.createElement('canvas');
+      canvas.width  = w * scale;
+      canvas.height = h * scale;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href    = url;
+        a.download = `${this.proyectoNombre || 'proyecto'}-${tipo}.jpg`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, 'image/jpeg', 0.95);
+    };
+    img.onerror = () => console.error('Error al cargar SVG para exportar JPG');
+    img.src = dataUri;
+  }
+
+  // ── Pantalla completa ───────────────────────────────────────────────────────
+
+  fullscreenTipo: TipoDiagrama | null = null;
+
+  abrirPantallaCompleta(tipo: TipoDiagrama): void {
+    this.fullscreenTipo = tipo;
+    document.body.style.overflow = 'hidden';
+    // Re-renderizar en el contenedor del modal tras el próximo ciclo de detección
+    setTimeout(() => this.renderMermaidFullscreen(tipo), 80);
+  }
+
+  cerrarPantallaCompleta(): void {
+    this.fullscreenTipo = null;
+    document.body.style.overflow = '';
+  }
+
+  private async renderMermaidFullscreen(tipo: TipoDiagrama): Promise<void> {
+    const diagrama  = this.diagramas[tipo];
+    if (!diagrama?.codigo_mermaid) return;
+    const container = document.getElementById(`mermaid-fullscreen-${tipo}`);
+    if (!container) return;
+    try {
+      const uniqueId = `mermaid-fs-${tipo}-${Date.now()}`;
+      const { svg }  = await mermaid.render(uniqueId, diagrama.codigo_mermaid);
+      container.innerHTML = svg;
+    } catch (err) {
+      console.error('Error rendering fullscreen mermaid:', err);
+    }
   }
 }

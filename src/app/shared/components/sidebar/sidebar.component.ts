@@ -44,6 +44,7 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     { label: 'Historial',      icon: 'historial',      route: '/historial'      },
     { label: 'Artefactos',     icon: 'artefactos',     route: '/artefactos'     },
     { label: 'Generador IA',   icon: 'generador',      route: '/generador'      },
+    { label: 'Diagramas',      icon: 'diagramas',      route: '/diagramas'      },
   ];
 
   private iconCache: Map<string, SafeHtml> = new Map();
@@ -206,6 +207,16 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
 
       generador: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>`,
+
+      diagramas: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <path d="M17.5 17.5m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0"/>
+        <line x1="10" y1="6.5" x2="14" y2="6.5"/>
+        <line x1="6.5" y1="10" x2="6.5" y2="14"/>
+        <line x1="10" y1="17.5" x2="15" y2="17.5"/>
       </svg>`,
     };
 

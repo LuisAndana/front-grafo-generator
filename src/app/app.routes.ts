@@ -132,6 +132,13 @@ export const routes: Routes = [
         .then(m => m.GeneradorModule)
   },
   {
+    path: 'diagramas',
+    canActivate: [authGuard, proyectoGuard],
+    loadChildren: () =>
+      import('./features/diagramas/diagramas.module')
+        .then(m => m.DiagramasModule)
+  },
+  {
     path: 'artefactos',
     canActivate: [authGuard, proyectoGuard],
     loadComponent: () =>
