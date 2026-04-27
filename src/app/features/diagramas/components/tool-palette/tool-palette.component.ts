@@ -43,14 +43,19 @@ export class ToolPaletteComponent implements OnInit, OnDestroy {
   }
 
   onToolDragStart(event: DragEvent, tool: Tool): void {
+    console.log('🎯 Drag START:', { tool, action: tool.action, elementType: tool.elementType });
     if (event.dataTransfer && tool.action === 'element' && tool.elementType) {
       event.dataTransfer.effectAllowed = 'copy';
-      event.dataTransfer.setData('application/json', JSON.stringify({
+      const data = {
         type: 'tool',
         toolId: tool.id,
         toolType: tool.elementType,
         toolLabel: tool.label
-      }));
+      };
+      console.log('📤 Setting dataTransfer:', data);
+      event.dataTransfer.setData('application/json', JSON.stringify(data));
+    } else {
+      console.log('⚠️ Drag START rejected - action or elementType missing');
     }
   }
 
