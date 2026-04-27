@@ -1,4 +1,10 @@
 // src/app/features/diagramas/components/properties-panel/properties-panel.component.scss
+:host {
+  display: flex;
+  flex-shrink: 0;
+  height: 100%;
+}
+
 .panel {
   width: 260px;
   min-width: 260px;
