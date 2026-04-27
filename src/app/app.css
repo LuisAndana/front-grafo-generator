@@ -57,6 +57,7 @@ app-sidebar {
   width: 100%;
   background: #f5f5f5;
   min-width: 0;
+  position: relative; /* anchor for absolute-positioned page content (e.g. diagram editor) */
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -88,6 +89,7 @@ app-sidebar {
     flex: 1;
     min-width: 0;
     height: 100%;
+    position: relative;
   }
 }
 
