@@ -212,10 +212,16 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
       const dragData = JSON.parse(data);
 
       if (dragData.type === 'tool') {
-        // Calcular posición en el canvas
-        const rect = this.elRef.nativeElement.querySelector('.canvas-svg').getBoundingClientRect();
-        const x = (event.clientX - rect.left - this.viewTransform.x) / this.viewTransform.scale;
-        const y = (event.clientY - rect.top - this.viewTransform.y) / this.viewTransform.scale;
+        // Use same coordinate transformation as onCanvasClick
+        const svg = this.elRef.nativeElement.querySelector('.canvas-svg') as SVGSVGElement;
+        if (!svg) return;
+        const pt = svg.createSVGPoint();
+        pt.x = event.clientX;
+        pt.y = event.clientY;
+        const svgPt = pt.matrixTransform(svg.getScreenCTM()!.inverse());
+        const { x, y, scale } = this.viewTransform;
+        const nx = (svgPt.x - x) / scale;
+        const ny = (svgPt.y - y) / scale;
 
         // Crear elemento nuevo
         const isClass = dragData.toolType === 'class' || dragData.toolType === 'interface' || dragData.toolType === 'enum';
@@ -223,8 +229,8 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
           id: `elem-${Date.now()}`,
           type: dragData.toolType,
           label: dragData.toolLabel,
-          x: Math.max(0, x),
-          y: Math.max(0, y),
+          x: nx - 80,
+          y: ny - 50,
           width: dragData.toolType === 'actor' ? 64 : 160,
           height: isClass ? 110 : (dragData.toolType === 'usecase' ? 60 : 80),
           color: '#3F51B5',
