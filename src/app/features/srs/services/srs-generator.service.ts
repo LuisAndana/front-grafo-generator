@@ -90,6 +90,7 @@ export interface ArtefactoInfo {
   categoria: string;
   descripcion?: string;
   nombre_archivo: string;
+  ruta_archivo?: string;   // ruta en servidor para extraer contenido en PDF
   tipo_mime: string;
 }
 

@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import {
   SrsGeneratorService,
   SRSDocument,
@@ -74,7 +75,8 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private http: HttpClient,
-    private proyectoActivoService: ProyectoActivoService
+    private proyectoActivoService: ProyectoActivoService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -214,70 +216,63 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
       categoria: a.categoria || '',
       descripcion: a.descripcion || '',
       nombre_archivo: a.nombre_archivo || '',
+      ruta_archivo: a.ruta_archivo || '',
       tipo_mime: a.tipo_mime || '',
     }));
   }
 
   // ══════════════════════════════════════════════════════════════════════
-  //  CARGA MANUAL DE DATOS (fallback si no se usa auto-generar)
+  //  CARGA PARALELA DE DATOS — forkJoin para máxima velocidad
   // ══════════════════════════════════════════════════════════════════════
 
   private cargarTodosLosDatos(): void {
     if (!this.proyectoId) return;
     this.isLoadingProject = true;
-    this.cargarProyecto();
-    this.cargarStakeholders();
-    this.cargarUsuarios();
-    this.cargarRequerimientosFuncionales();
-    this.cargarRequerimientosNoFuncionales();
-    this.cargarCasosDeUso();
-    this.cargarRestricciones();
-    this.cargarElicitacion();
-    this.cargarNegociaciones();
-    this.cargarValidacion();
-    this.cargarArtefactos();
+    const id = this.proyectoId;
 
-    setTimeout(() => {
-      this.isLoadingProject = false;
-    }, 2500);
-  }
+    // Todas las peticiones en paralelo
+    forkJoin({
+      proyecto:      this.http.get<any>(`${this.BASE_URL}/proyectos/${id}`).pipe(catchError(() => of(null))),
+      stakeholders:  this.http.get<any>(`${this.BASE_URL}/stakeholders/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      usuarios:      this.http.get<any>(`${this.BASE_URL}/tipo-usuario/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      rfs:           this.http.get<any>(`${this.BASE_URL}/api/requerimientos-funcionales/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      rnfs:          this.http.get<any>(`${this.BASE_URL}/rnf/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      casosUso:      this.http.get<any>(`${this.BASE_URL}/api/casos-uso/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      restricciones: this.http.get<any>(`${this.BASE_URL}/api/restricciones/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      entrevistas:   this.http.get<any>(`${this.BASE_URL}/elicitacion/entrevistas/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      procesos:      this.http.get<any>(`${this.BASE_URL}/elicitacion/procesos/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      necesidades:   this.http.get<any>(`${this.BASE_URL}/elicitacion/necesidades/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+      negociaciones: this.http.get<any>(`${this.BASE_URL}/api/negociacion/?proyecto_id=${id}`).pipe(catchError(() => of({data: []}))),
+      validacion:    this.http.get<any>(`${this.BASE_URL}/api/validacion/?proyecto_id=${id}`).pipe(catchError(() => of(null))),
+      artefactos:    this.http.get<any>(`${this.BASE_URL}/api/artefactos/?proyecto_id=${id}`).pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: (res) => {
+        // ── Proyecto ──
+        const p = res.proyecto?.data || res.proyecto;
+        if (p) {
+          this.proyectoNombre = p.nombre || '';
+          this.proyectoCodigo = p.codigo || '';
+          this.srsData.projectName = `${this.proyectoNombre} — SRS v1.0`;
+          if (!this.srsData.introduction) {
+            const parts: string[] = [`SRS del proyecto "${p.nombre}" (${p.codigo}).`];
+            if (p.descripcion_problema) parts.push(`Problema: ${p.descripcion_problema}`);
+            if (p.objetivo_general)     parts.push(`Objetivo: ${p.objetivo_general}`);
+            if (p.analista_responsable) parts.push(`Analista: ${p.analista_responsable}`);
+            this.srsData.introduction = parts.join('\n');
+          }
+        }
 
-  private cargarProyecto(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/proyectos/${this.proyectoId}`).subscribe(
-      (res) => {
-        const p = res?.data || res;
-        this.proyectoNombre = p.nombre || '';
-        this.proyectoCodigo = p.codigo || '';
-        this.srsData.projectName = `${this.proyectoNombre} - SRS v1.0`;
-        if (p.descripcion_problema) this.srsData.introduction = p.descripcion_problema;
-        else if (p.objetivo_general) this.srsData.introduction = p.objetivo_general;
-      },
-      () => {}
-    );
-  }
-
-  private cargarStakeholders(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/stakeholders/?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.stakeholders = list.map((s: any) => ({
+        // ── Stakeholders ──
+        const shkList = Array.isArray(res.stakeholders) ? res.stakeholders : res.stakeholders?.data || [];
+        this.srsData.stakeholders = shkList.map((s: any) => ({
           name: s.nombre || s.name || '',
           role: s.rol || s.role || '',
-          responsibility: `Tipo: ${s.tipo || 'N/A'}, Area: ${s.area || 'N/A'}, Influencia: ${s.nivel_influencia || 'N/A'}`,
+          responsibility: `Tipo: ${s.tipo || 'N/A'}, Área: ${s.area || 'N/A'}, Influencia: ${s.nivel_influencia || 'N/A'}`,
         }));
-      },
-      () => {}
-    );
-  }
 
-  private cargarUsuarios(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/tipo-usuario/?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.users = list.map((u: any) => ({
+        // ── Usuarios ──
+        const usrList = Array.isArray(res.usuarios) ? res.usuarios : res.usuarios?.data || [];
+        this.srsData.users = usrList.map((u: any) => ({
           backendId: u.id_tipo_usuario || u.id || undefined,
           userId: String(u.id_tipo_usuario || u.id || ''),
           userType: u.tipo || u.userType || '',
@@ -285,47 +280,26 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
         }));
         this.savingUsers = this.srsData.users.map(() => false);
         this.userMessages = this.srsData.users.map(() => '');
-      },
-      () => {}
-    );
-  }
 
-  private cargarRequerimientosFuncionales(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/api/requerimientos-funcionales/?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.functionalRequirements = list.map((r: any) => ({
+        // ── RF ──
+        const rfList = Array.isArray(res.rfs) ? res.rfs : res.rfs?.data || [];
+        this.srsData.functionalRequirements = rfList.map((r: any) => ({
           rfId: r.codigo || r.rfId || '',
           description: r.descripcion || r.description || '',
           priority: r.prioridad || r.priority || 'Media',
         }));
-      },
-      () => {}
-    );
-  }
 
-  private cargarRequerimientosNoFuncionales(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/rnf/?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.nonFunctionalRequirements = list.map((r: any) => ({
+        // ── RNF ──
+        const rnfList = Array.isArray(res.rnfs) ? res.rnfs : res.rnfs?.data || [];
+        this.srsData.nonFunctionalRequirements = rnfList.map((r: any) => ({
           rnfId: r.codigo || r.rnfId || '',
           category: r.tipo || r.category || '',
           description: r.descripcion || r.description || '',
         }));
-      },
-      () => {}
-    );
-  }
 
-  private cargarCasosDeUso(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/api/casos-uso/?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.useCases = list.map((c: any) => ({
+        // ── Casos de Uso ──
+        const cuList = Array.isArray(res.casosUso) ? res.casosUso : res.casosUso?.data || [];
+        this.srsData.useCases = cuList.map((c: any) => ({
           backendId: c.id_caso_uso || c.id || undefined,
           useCase: c.nombre || c.useCase || '',
           actors: Array.isArray(c.actores) ? c.actores : [],
@@ -334,17 +308,10 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
         }));
         this.savingUseCases = this.srsData.useCases.map(() => false);
         this.useCaseMessages = this.srsData.useCases.map(() => '');
-      },
-      () => {}
-    );
-  }
 
-  private cargarRestricciones(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/api/restricciones/?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.constraints = list.map((r: any) => ({
+        // ── Restricciones ──
+        const restList = Array.isArray(res.restricciones) ? res.restricciones : res.restricciones?.data || [];
+        this.srsData.constraints = restList.map((r: any) => ({
           backendId: r.id_restriccion || r.id || undefined,
           constraintId: r.codigo || r.constraintId || '',
           type: r.tipo || r.type || '',
@@ -352,76 +319,28 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
         }));
         this.savingConstraints = this.srsData.constraints.map(() => false);
         this.constraintMessages = this.srsData.constraints.map(() => '');
-      },
-      () => {}
-    );
-  }
 
-  private cargarElicitacion(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/api/elicitacion/resumen?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        // El resumen solo da conteos, necesitamos los datos completos
-      },
-      () => {}
-    );
-    // Entrevistas
-    this.http.get<any>(`${this.BASE_URL}/api/elicitacion/entrevistas?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.elicitacion.entrevistas = list.map((e: any) => ({
-          pregunta: e.pregunta || '',
-          respuesta: e.respuesta || '',
-          observaciones: e.observaciones || '',
-        }));
-      },
-      () => {}
-    );
-    // Procesos
-    this.http.get<any>(`${this.BASE_URL}/api/elicitacion/procesos?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.elicitacion.procesos = list.map((p: any) => ({
-          nombre_proceso: p.nombre_proceso || '',
-          descripcion: p.descripcion || '',
-          problemas_detectados: p.problemas_detectados || '',
-        }));
-      },
-      () => {}
-    );
-    // Necesidades
-    this.http.get<any>(`${this.BASE_URL}/api/elicitacion/necesidades?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.elicitacion.necesidades = list
-          .filter((n: any) => n.seleccionada)
-          .map((n: any) => ({ nombre: n.nombre || '' }));
-      },
-      () => {}
-    );
-  }
+        // ── Elicitación ──
+        const entList  = Array.isArray(res.entrevistas) ? res.entrevistas : res.entrevistas?.data || [];
+        const procList = Array.isArray(res.procesos)    ? res.procesos    : res.procesos?.data    || [];
+        const necList  = Array.isArray(res.necesidades) ? res.necesidades : res.necesidades?.data || [];
+        this.srsData.elicitacion = {
+          entrevistas: entList.map((e: any) => ({ pregunta: e.pregunta || '', respuesta: e.respuesta || '', observaciones: e.observaciones || '' })),
+          procesos:    procList.map((p: any) => ({ nombre_proceso: p.nombre_proceso || '', descripcion: p.descripcion || '', problemas_detectados: p.problemas_detectados || '' })),
+          necesidades: necList.filter((n: any) => n.seleccionada === 1 || n.seleccionada === true).map((n: any) => ({ nombre: n.nombre || '' })),
+        };
 
-  private cargarNegociaciones(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/api/negociaciones/?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.negociaciones = list.map((n: any) => ({
+        // ── Negociaciones ──
+        const negList = Array.isArray(res.negociaciones) ? res.negociaciones : res.negociaciones?.data || [];
+        this.srsData.negociaciones = negList.map((n: any) => ({
           nombre: n.nombre || '',
           descripcion: n.descripcion || '',
           prioridad: n.prioridad || 'Media',
           aceptado: !!n.aceptado,
         }));
-      },
-      () => {}
-    );
-  }
 
-  private cargarValidacion(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/api/validaciones/proyecto/${this.proyectoId}`).subscribe(
-      (res) => {
-        const v = res?.data || res;
+        // ── Validación ──
+        const v = res.validacion;
         if (v && v.id_validacion) {
           this.srsData.validacionInfo = {
             aprobado: v.aprobado,
@@ -434,26 +353,26 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
             checklist_prioridades: v.checklist_prioridades,
           };
         }
-      },
-      () => {}
-    );
-  }
 
-  private cargarArtefactos(): void {
-    if (!this.proyectoId) return;
-    this.http.get<any>(`${this.BASE_URL}/api/artefactos/?proyecto_id=${this.proyectoId}`).subscribe(
-      (res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        this.srsData.artefactosInfo = list.map((a: any) => ({
+        // ── Artefactos ──
+        const artList = Array.isArray(res.artefactos) ? res.artefactos : res.artefactos?.data || [];
+        this.srsData.artefactosInfo = artList.map((a: any) => ({
           nombre: a.nombre || '',
           categoria: a.categoria || '',
           descripcion: a.descripcion || '',
           nombre_archivo: a.nombre_archivo || '',
+          ruta_archivo: a.ruta_archivo || '',
           tipo_mime: a.tipo_mime || '',
         }));
+
+        this.isLoadingProject = false;
+        this.cdr.detectChanges();
       },
-      () => {}
-    );
+      error: () => {
+        this.isLoadingProject = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   // ══════════════════════════════════════════════════════════════════════
@@ -462,6 +381,7 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
 
   getTabCount(tabId: string): number {
     switch (tabId) {
+      case 'introduction': return this.srsData.introduction?.trim() ? 1 : 0;
       case 'stakeholders': return this.srsData.stakeholders.length;
       case 'elicitacion':
         return (this.srsData.elicitacion?.entrevistas?.length || 0) +
@@ -470,12 +390,35 @@ export class SrsGeneratorComponent implements OnInit, OnDestroy {
       case 'rf': return this.srsData.functionalRequirements.length;
       case 'rnf': return this.srsData.nonFunctionalRequirements.length;
       case 'users': return this.srsData.users.length;
-      case 'usecases': return this.srsData.useCases.length;
+      case 'usecases':
+        return this.srsData.useCases.length + this.getArtefactosParaTab('usecases').length;
       case 'constraints': return this.srsData.constraints.length;
       case 'negociacion': return this.srsData.negociaciones.length;
       case 'validacion': return this.srsData.validacionInfo ? 1 : 0;
       case 'artefactos': return this.srsData.artefactosInfo.length;
       default: return 0;
+    }
+  }
+
+  /**
+   * Devuelve artefactos relevantes para una pestaña determinada
+   * según palabras clave en nombre, categoría o nombre de archivo.
+   */
+  getArtefactosParaTab(tabId: string): ArtefactoInfo[] {
+    const arts = this.srsData.artefactosInfo;
+    const matches = (a: ArtefactoInfo, kws: string[]) => {
+      const txt = `${a.nombre} ${a.categoria} ${a.nombre_archivo} ${a.descripcion || ''}`.toLowerCase();
+      return kws.some(k => txt.includes(k));
+    };
+    switch (tabId) {
+      case 'usecases':
+        return arts.filter(a => matches(a, ['caso', 'use case', 'usecase', 'srs', 'diagrama', 'uml', 'flujo']));
+      case 'rf':
+        return arts.filter(a => matches(a, ['requerimiento', 'requisito', 'funcional', 'backlog']));
+      case 'rnf':
+        return arts.filter(a => matches(a, ['no funcional', 'performance', 'rendimiento', 'seguridad', 'usabilidad']));
+      default:
+        return [];
     }
   }
 

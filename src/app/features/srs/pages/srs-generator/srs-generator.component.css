@@ -15,6 +15,8 @@
 
 /* ── Project Info ── */
 .project-info {
+
+  
   background: #fff; padding: 20px 24px; border-radius: 10px;
   margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
@@ -220,6 +222,12 @@
 }
 .artifact-file { margin: 6px 0 0; color: #888; font-size: 0.8em; }
 .artifact-desc { margin: 4px 0 0; color: #555; font-size: 0.85em; }
+
+/* ── Artefact reference (cross-tab) ── */
+.artifact-ref {
+  border-left: 3px solid #0066cc;
+  background: #f0f7ff;
+}
 
 /* ── Section Empty ── */
 .section-empty {

@@ -26,11 +26,11 @@ interface DiagramaGenerado {
 }
 
 interface ContextoResumen {
-  requerimientos: number;
-  stakeholders:   number;
-  entrevistas:    number;
-  procesos:       number;
-  necesidades:    number;
+  casosUso:     number;
+  stakeholders: number;
+  entrevistas:  number;
+  procesos:     number;
+  necesidades:  number;
 }
 
 @Component({
@@ -217,8 +217,8 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
     this.isLoadingContexto = true;
 
     forkJoin({
-      rfs: this.http
-        .get<any[]>(`${this.BASE_URL}/requerimientos-funcionales/?proyecto_id=${this.proyectoId}`)
+      casosUso: this.http
+        .get<any[]>(`${this.BASE_URL}/api/casos-uso/?proyecto_id=${this.proyectoId}`)
         .pipe(catchError(() => of([]))),
       stakeholders: this.http
         .get<any[]>(`${this.BASE_URL}/stakeholders/?proyecto_id=${this.proyectoId}`)
@@ -227,13 +227,13 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
         .get<any>(`${this.BASE_URL}/elicitacion/resumen?proyecto_id=${this.proyectoId}`)
         .pipe(catchError(() => of({ total_entrevistas: 0, total_procesos: 0, total_necesidades: 0 }))),
     }).subscribe({
-      next: ({ rfs, stakeholders, resumen }) => {
+      next: ({ casosUso, stakeholders, resumen }) => {
         this.contextoResumen = {
-          requerimientos: Array.isArray(rfs) ? rfs.length : 0,
-          stakeholders:   Array.isArray(stakeholders) ? stakeholders.length : 0,
-          entrevistas:    resumen?.total_entrevistas  ?? 0,
-          procesos:       resumen?.total_procesos     ?? 0,
-          necesidades:    resumen?.total_necesidades  ?? 0,
+          casosUso:     Array.isArray(casosUso) ? casosUso.length : 0,
+          stakeholders: Array.isArray(stakeholders) ? stakeholders.length : 0,
+          entrevistas:  resumen?.total_entrevistas ?? 0,
+          procesos:     resumen?.total_procesos    ?? 0,
+          necesidades:  resumen?.total_necesidades ?? 0,
         };
         this.isLoadingContexto = false;
         this.cdr.detectChanges();
@@ -248,7 +248,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
   get totalContexto(): number {
     if (!this.contextoResumen) return 0;
     const c = this.contextoResumen;
-    return c.requerimientos + c.stakeholders + c.entrevistas + c.procesos + c.necesidades;
+    return c.casosUso + c.stakeholders + c.entrevistas + c.procesos + c.necesidades;
   }
 
   get totalDiagramasGuardados(): number {
@@ -819,37 +819,11 @@ def paso_3_backend_deps():
             sys.exit(1)
 
     print(f"  Instalando dependencias Python (puede tardar ~1 min)...")
-    MAX_INTENTOS = 3
-    pip_ok = False
-    for intento in range(1, MAX_INTENTOS + 1):
-        rc = subprocess.run(
-            [str(py_exe), "-m", "pip", "install", "--quiet",
-             "--retries", "3", "--timeout", "60",
-             "-r", str(req)],
-            cwd=str(BACKEND)
-        )
-        if rc.returncode == 0:
-            pip_ok = True
-            break
-        if intento < MAX_INTENTOS:
-            print(f"  [AVISO] pip install fallo (intento {intento}/{MAX_INTENTOS}). "
-                  f"Reintentando en 10 s...")
-            print("  Tip: asegurate de tener conexion a internet activa.")
-            time.sleep(10)
-        else:
-            print()
-            print("  [ERROR] pip install fallo despues de 3 intentos.")
-            print("  Posibles causas:")
-            print("    - Sin conexion a internet o DNS lento (prueba de nuevo).")
-            print("    - Firewall bloqueando PyPI. Prueba con WiFi diferente.")
-            print()
-            print("  SOLUCION MANUAL:")
-            print(f"    1. cd {BACKEND}")
-            print(f"    2. {py_exe} -m pip install -r requirements.txt")
-            print("    3. Corre INICIAR.bat de nuevo.")
-            sys.exit(1)
-    if pip_ok:
-        print("  OK - Backend listo.")
+    rc = subprocess.run([str(py_exe), "-m", "pip", "install", "-r", str(req)], cwd=str(BACKEND))
+    if rc.returncode != 0:
+        print("  [ERROR] Fallo pip install. Revisa el error arriba.")
+        sys.exit(1)
+    print("  OK - Backend listo.")
 
 
 def paso_4_frontend_deps():
@@ -1268,7 +1242,11 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
   }
 
   descargarSvg(tipo: TipoDiagrama): void {
-    const container = document.getElementById(`mermaid-${tipo}`);
+    const containerId = this.fullscreenTipo === tipo
+      ? `mermaid-fullscreen-${tipo}`
+      : `mermaid-${tipo}`;
+    const container = document.getElementById(containerId) ??
+                      document.getElementById(`mermaid-${tipo}`);
     if (!container) return;
     const svg  = container.innerHTML;
     const blob = new Blob([svg], { type: 'image/svg+xml' });
@@ -1281,7 +1259,7 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
   }
 
   descargarJpg(tipo: TipoDiagrama): void {
-    const fsId   = `mermaid-fullscreen-${tipo}`;
+    const fsId  = `mermaid-fullscreen-${tipo}`;
     const normId = `mermaid-${tipo}`;
     const container = document.getElementById(this.fullscreenTipo === tipo ? fsId : normId)
                    ?? document.getElementById(normId);
@@ -1289,16 +1267,19 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
     const svgEl = container.querySelector('svg');
     if (!svgEl) return;
 
-    const rect  = svgEl.getBoundingClientRect();
-    const w     = Math.round(rect.width)  || svgEl.viewBox?.baseVal?.width  || 800;
-    const h     = Math.round(rect.height) || svgEl.viewBox?.baseVal?.height || 600;
-    const scale = 2;
+    // Obtener dimensiones reales del SVG
+    const rect   = svgEl.getBoundingClientRect();
+    const w      = Math.round(rect.width)  || svgEl.viewBox?.baseVal?.width  || 800;
+    const h      = Math.round(rect.height) || svgEl.viewBox?.baseVal?.height || 600;
+    const scale  = 2;
 
+    // Clonar y fijar dimensiones explícitas para que Image() lo renderice bien
     const clone = svgEl.cloneNode(true) as SVGElement;
     clone.setAttribute('width',  String(w));
     clone.setAttribute('height', String(h));
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
+    // data: URI evita bloqueos de seguridad de blob URL en canvas
     const serialized = new XMLSerializer().serializeToString(clone);
     const dataUri    = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(serialized);
 
@@ -1334,7 +1315,6 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
   abrirPantallaCompleta(tipo: TipoDiagrama): void {
     this.fullscreenTipo = tipo;
     document.body.style.overflow = 'hidden';
-    // Re-renderizar en el contenedor del modal tras el próximo ciclo de detección
     setTimeout(() => this.renderMermaidFullscreen(tipo), 80);
   }
 

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "c:\\Users\\luis_\\Downloads\\zeolitas-app\\zeolitas\\frontend\\src\\app\\components\\main",
+      "c:\\Users\\luis_\\Downloads\\zeolitas-app\\zeolitas\\backend"
+    ]
+  }
+}

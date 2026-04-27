@@ -337,6 +337,30 @@
         </div>
       </div>
       <button (click)="addUseCase()" class="add-btn">+ Agregar Caso de Uso</button>
+
+      <!-- Artefactos relacionados con casos de uso / SRS -->
+      <div class="sub-section" *ngIf="getArtefactosParaTab('usecases').length > 0">
+        <h3 class="sub-title">
+          Documentos Adjuntos (Casos de Uso / SRS)
+          <span class="badge-count">{{ getArtefactosParaTab('usecases').length }}</span>
+        </h3>
+        <div class="artifacts-grid">
+          <div *ngFor="let a of getArtefactosParaTab('usecases')" class="artifact-card artifact-ref">
+            <div class="artifact-icon">
+              {{ a.tipo_mime?.includes('image') ? '🖼️' :
+                 a.tipo_mime?.includes('pdf') ? '📕' :
+                 a.tipo_mime?.includes('spreadsheet') || a.tipo_mime?.includes('excel') ? '📊' :
+                 a.tipo_mime?.includes('word') || a.tipo_mime?.includes('document') ? '📝' : '📎' }}
+            </div>
+            <div class="artifact-info">
+              <h4>{{ a.nombre }}</h4>
+              <span class="artifact-category">{{ a.categoria }}</span>
+              <p class="artifact-file">{{ a.nombre_archivo }}</p>
+              <p class="artifact-desc" *ngIf="a.descripcion">{{ a.descripcion }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ─── RESTRICCIONES ─── -->
