@@ -225,8 +225,7 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
 
         // Crear elemento nuevo
         const isClass = dragData.toolType === 'class' || dragData.toolType === 'interface' || dragData.toolType === 'enum';
-        const newElement: DiagramElement = {
-          id: `elem-${Date.now()}`,
+        this.state.addElement({
           type: dragData.toolType,
           label: dragData.toolLabel,
           x: nx - 80,
@@ -236,10 +235,7 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
           color: '#3F51B5',
           attributes: isClass ? [] : undefined,
           methods: isClass ? [] : undefined
-        };
-
-        this.state.addElement(newElement);
-        this.state.selectElement(newElement.id);
+        });
       }
     } catch (e) {
       console.error('Error al procesar drop:', e);
