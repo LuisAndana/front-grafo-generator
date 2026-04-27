@@ -1,11 +1,14 @@
 // src/app/features/diagramas/components/diagram-canvas/diagram-canvas.component.scss
-:host {
+// NOTE: ViewEncapsulation.None is used on this component, so :host does NOT apply.
+// Use the element tag selector directly instead.
+app-diagram-canvas {
   display: block;
   flex: 1 1 0%;
   min-width: 0;
   min-height: 0;
-  position: relative;
+  position: relative;  // CRITICAL: anchors .canvas-host's position:absolute within this element
   align-self: stretch;
+  overflow: hidden;
 }
 
 .canvas-host {
