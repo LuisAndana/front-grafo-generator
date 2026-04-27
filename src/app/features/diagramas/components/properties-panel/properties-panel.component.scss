@@ -1,14 +1,15 @@
 // src/app/features/diagramas/components/properties-panel/properties-panel.component.scss
 .panel {
-  width: 220px;
-  min-width: 220px;
-  max-width: 220px;
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
   height: 100%;
   background: #ffffff;
   border-left: 1px solid #e0e0e0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
 }
 
 .empty-state {
@@ -26,7 +27,7 @@
   p { font-size: 0.875rem; line-height: 1.5; }
 }
 
-.panel-content { padding: 12px; }
+.panel-content { padding: 10px; }
 
 .panel-header {
   display: flex;
