@@ -1,0 +1,66 @@
+// src/app/features/diagramas/components/tool-palette/tool-palette.component.scss
+.palette {
+  width: 72px;
+  min-width: 72px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  padding: 8px 0;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.tool-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 4px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.group-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #bdbdbd;
+  padding: 6px 0 4px;
+  user-select: none;
+}
+
+.tool-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0;
+  transition: background 0.15s ease, color 0.15s ease;
+  color: #757575;
+
+  &:hover {
+    background: #e8eaf6;
+    color: #3F51B5;
+  }
+
+  &.active {
+    background: #e8eaf6;
+    color: #3F51B5;
+    box-shadow: inset 0 0 0 2px #3F51B5;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}

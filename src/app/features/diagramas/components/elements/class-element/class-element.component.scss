@@ -1,0 +1,36 @@
+// class-element.component.scss
+.ce-stereotype {
+  font-family: Roboto, sans-serif;
+  font-size: 10px;
+  fill: #5C6BC0;
+  font-style: italic;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ce-name {
+  font-family: Roboto, sans-serif;
+  font-size: 13px;
+  fill: #212121;
+  pointer-events: none;
+  user-select: none;
+
+  &.bold { font-weight: 600; }
+}
+
+.ce-member {
+  font-family: 'Roboto Mono', monospace, Roboto, sans-serif;
+  font-size: 11px;
+  fill: #424242;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ce-empty {
+  font-family: Roboto, sans-serif;
+  font-size: 10px;
+  fill: #bdbdbd;
+  font-style: italic;
+  pointer-events: none;
+  user-select: none;
+}

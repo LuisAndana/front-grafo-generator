@@ -1,0 +1,243 @@
+<!-- src/app/features/diagramas/components/diagram-canvas/diagram-canvas.component.html -->
+<div
+  class="canvas-host"
+  tabindex="0"
+  [class.pan-mode]="isSpaceDown"
+  [class.connect-mode]="activeTool?.action === 'connect'"
+  (mousedown)="onMouseDown($event)"
+  (mousemove)="onMouseMove($event)"
+  (mouseup)="onMouseUp()"
+  (wheel)="onWheel($event)"
+  (click)="onCanvasClick($event)">
+
+  <svg class="canvas-svg" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- ── Defs: grid, shadows, arrow markers ── -->
+    <defs>
+      <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+        <circle cx="12" cy="12" r="1" fill="#d0d0d0"/>
+      </pattern>
+
+      <filter id="el-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.10)"/>
+      </filter>
+
+      <!-- Inheritance: open triangle -->
+      <marker id="marker-inheritance" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11 Z" fill="white" stroke="#424242" stroke-width="1.5"/>
+      </marker>
+
+      <!-- Association: open arrow -->
+      <marker id="marker-association" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#424242" stroke-width="1.5"/>
+      </marker>
+
+      <!-- Aggregation: open diamond -->
+      <marker id="marker-aggregation" viewBox="0 0 16 12" refX="15" refY="6"
+              markerWidth="10" markerHeight="8" orient="auto">
+        <path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="white" stroke="#424242" stroke-width="1.5"/>
+      </marker>
+
+      <!-- Composition: filled diamond -->
+      <marker id="marker-composition" viewBox="0 0 16 12" refX="15" refY="6"
+              markerWidth="10" markerHeight="8" orient="auto">
+        <path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#424242" stroke="#424242" stroke-width="1"/>
+      </marker>
+
+      <!-- Dependency: open arrow (dashed line) -->
+      <marker id="marker-dependency" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#424242" stroke-width="1.5"/>
+      </marker>
+
+      <!-- Realization: open triangle (dashed line) -->
+      <marker id="marker-realization" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11 Z" fill="white" stroke="#424242" stroke-width="1.5"/>
+      </marker>
+
+      <!-- Include / Extend: open arrow with label -->
+      <marker id="marker-include" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#5C6BC0" stroke-width="1.5"/>
+      </marker>
+
+      <marker id="marker-extend" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#E91E63" stroke-width="1.5"/>
+      </marker>
+
+      <!-- Sequence messages -->
+      <marker id="marker-sync-message" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11 Z" fill="#424242"/>
+      </marker>
+
+      <marker id="marker-async-message" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#424242" stroke-width="1.5"/>
+      </marker>
+
+      <marker id="marker-return-message" viewBox="0 0 12 12" refX="11" refY="6"
+              markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#9E9E9E" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <!-- ── Grid layer ── -->
+    <rect width="100%" height="100%" fill="url(#dot-grid)" class="grid-bg"/>
+
+    <!-- ── Main transform group ── -->
+    <g [attr.transform]="svgTransform">
+
+      <!-- Connection layer -->
+      @if (diagram) {
+        @for (conn of diagram.connections; track conn.id) {
+          <g class="connection-group">
+            <path
+              class="connection-path"
+              [class.dashed]="isDashed(conn.relationType)"
+              [attr.d]="connectionPath(conn)"
+              [attr.marker-end]="markerUrl(conn.relationType)"
+              [attr.stroke]="conn.color ?? '#424242'">
+            </path>
+            @if (conn.label) {
+              <text class="conn-label">{{ conn.label }}</text>
+            }
+          </g>
+        }
+      }
+
+      <!-- Element layer -->
+      @if (diagram) {
+        @for (element of diagram.elements; track element.id) {
+          <g
+            cdkDrag
+            [cdkDragFreeDragPosition]="{ x: element.x, y: element.y }"
+            (cdkDragEnded)="onDragEnded($event, element)"
+            class="element-group"
+            [class.is-selected]="element.id === selectedElementId"
+            (click)="onElementClick($event, element)"
+            (mouseenter)="hoveredElementId = element.id"
+            (mouseleave)="hoveredElementId = null">
+
+            <!-- Render by element type -->
+            @switch (element.type) {
+              @case ('class') {
+                <app-class-element [element]="element"></app-class-element>
+              }
+              @case ('interface') {
+                <app-class-element [element]="element" [stereotype]="'interface'"></app-class-element>
+              }
+              @case ('enum') {
+                <app-class-element [element]="element" [stereotype]="'enumeration'"></app-class-element>
+              }
+              @case ('actor') {
+                <!-- Stick-figure actor -->
+                <g class="actor-el">
+                  <circle [attr.cx]="element.x + element.width/2" [attr.cy]="element.y + 18" r="14"
+                          fill="white" stroke="#424242" stroke-width="1.5"/>
+                  <line [attr.x1]="element.x+element.width/2" [attr.y1]="element.y+32"
+                        [attr.x2]="element.x+element.width/2" [attr.y2]="element.y+58"
+                        stroke="#424242" stroke-width="1.5"/>
+                  <line [attr.x1]="element.x+element.width/2-18" [attr.y1]="element.y+42"
+                        [attr.x2]="element.x+element.width/2+18" [attr.y2]="element.y+42"
+                        stroke="#424242" stroke-width="1.5"/>
+                  <line [attr.x1]="element.x+element.width/2" [attr.y1]="element.y+58"
+                        [attr.x2]="element.x+element.width/2-14" [attr.y2]="element.y+76"
+                        stroke="#424242" stroke-width="1.5"/>
+                  <line [attr.x1]="element.x+element.width/2" [attr.y1]="element.y+58"
+                        [attr.x2]="element.x+element.width/2+14" [attr.y2]="element.y+76"
+                        stroke="#424242" stroke-width="1.5"/>
+                  <text [attr.x]="element.x+element.width/2" [attr.y]="element.y+element.height-2"
+                        text-anchor="middle" class="el-label">{{ element.label }}</text>
+                </g>
+              }
+              @case ('lifeline') {
+                <!-- Sequence lifeline -->
+                <g class="lifeline-el">
+                  <rect [attr.x]="element.x" [attr.y]="element.y" [attr.width]="element.width" height="36"
+                        fill="#E3F2FD" stroke="#1565C0" stroke-width="1.5" rx="4" filter="url(#el-shadow)"/>
+                  <text [attr.x]="element.x+element.width/2" [attr.y]="element.y+23"
+                        text-anchor="middle" class="el-label">{{ element.label }}</text>
+                  <line [attr.x1]="element.x+element.width/2" [attr.y1]="element.y+36"
+                        [attr.x2]="element.x+element.width/2" [attr.y2]="element.y+element.height"
+                        stroke="#1565C0" stroke-width="1.5" stroke-dasharray="6 4"/>
+                </g>
+              }
+              @case ('usecase') {
+                <!-- Use-case oval -->
+                <g class="usecase-el">
+                  <ellipse
+                    [attr.cx]="element.x+element.width/2"
+                    [attr.cy]="element.y+element.height/2"
+                    [attr.rx]="element.width/2" [attr.ry]="element.height/2"
+                    fill="white" stroke="#424242" stroke-width="1.5" filter="url(#el-shadow)"/>
+                  <text [attr.x]="element.x+element.width/2" [attr.y]="element.y+element.height/2+5"
+                        text-anchor="middle" class="el-label">{{ element.label }}</text>
+                </g>
+              }
+              @case ('package') {
+                <!-- UML package tab-box -->
+                <g class="package-el">
+                  <rect [attr.x]="element.x" [attr.y]="element.y" width="80" height="20"
+                        fill="#E8EAF6" stroke="#3F51B5" stroke-width="1.5" rx="2"/>
+                  <text [attr.x]="element.x+8" [attr.y]="element.y+14" class="el-label small">
+                    {{ element.label }}
+                  </text>
+                  <rect [attr.x]="element.x" [attr.y]="element.y+16" [attr.width]="element.width"
+                        [attr.height]="element.height" fill="white" stroke="#3F51B5" stroke-width="1.5" rx="2"
+                        filter="url(#el-shadow)"/>
+                </g>
+              }
+              @case ('system-boundary') {
+                <!-- System boundary rectangle -->
+                <g class="boundary-el">
+                  <rect [attr.x]="element.x" [attr.y]="element.y"
+                        [attr.width]="element.width" [attr.height]="element.height"
+                        fill="none" stroke="#757575" stroke-width="2" stroke-dasharray="8 4" rx="4"/>
+                  <text [attr.x]="element.x+8" [attr.y]="element.y+18" class="el-label small">
+                    {{ element.label }}
+                  </text>
+                </g>
+              }
+              @default {
+                <rect [attr.x]="element.x" [attr.y]="element.y"
+                      [attr.width]="element.width" [attr.height]="element.height"
+                      fill="white" stroke="#424242" stroke-width="1.5" rx="4" filter="url(#el-shadow)"/>
+                <text [attr.x]="element.x+element.width/2" [attr.y]="element.y+element.height/2+5"
+                      text-anchor="middle" class="el-label">{{ element.label }}</text>
+              }
+            }
+
+            <!-- Selection ring -->
+            @if (element.id === selectedElementId) {
+              <rect
+                [attr.x]="element.x - 5" [attr.y]="element.y - 5"
+                [attr.width]="element.width + 10" [attr.height]="element.height + 10"
+                fill="none" stroke="#3F51B5" stroke-width="2" stroke-dasharray="5 3" rx="6">
+              </rect>
+            }
+
+            <!-- Connection ports (shown on hover when in connect mode) -->
+            @if (hoveredElementId === element.id && activeTool?.action === 'connect') {
+              @for (port of ['n','e','s','w']; track port) {
+                <circle
+                  class="port-circle"
+                  [attr.cx]="portPos(element, $any(port)).cx"
+                  [attr.cy]="portPos(element, $any(port)).cy"
+                  r="6"
+                  fill="#3F51B5" stroke="white" stroke-width="2"
+                  (click)="onPortClick($event, element.id, $any(port))">
+                </circle>
+              }
+            }
+
+          </g>
+        }
+      }
+    </g>
+  </svg>
+</div>

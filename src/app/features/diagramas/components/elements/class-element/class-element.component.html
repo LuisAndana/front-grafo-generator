@@ -1,0 +1,99 @@
+<!-- class-element.component.html -->
+<g class="class-el" [attr.transform]="'translate(' + element.x + ',' + element.y + ')'">
+
+  <!-- Shadow rect (full height) -->
+  <rect
+    [attr.width]="element.width"
+    [attr.height]="totalH"
+    fill="white" stroke="#424242" stroke-width="1.5" rx="4"
+    filter="url(#el-shadow)">
+  </rect>
+
+  <!-- ── Header section ── -->
+  <rect
+    [attr.width]="element.width"
+    [attr.height]="headerH"
+    fill="#E8EAF6" stroke="#424242" stroke-width="1.5"
+    rx="4" style="clip-path: inset(0 0 -4px 0); border-radius: 4px 4px 0 0;">
+  </rect>
+
+  @if (effectiveStereotype) {
+    <text
+      [attr.x]="element.width / 2"
+      y="16"
+      text-anchor="middle"
+      class="ce-stereotype">
+      &laquo;{{ effectiveStereotype }}&raquo;
+    </text>
+    <text
+      [attr.x]="element.width / 2"
+      y="36"
+      text-anchor="middle"
+      class="ce-name bold">
+      {{ element.label }}
+    </text>
+  } @else {
+    <text
+      [attr.x]="element.width / 2"
+      [attr.y]="headerH / 2 + 5"
+      text-anchor="middle"
+      class="ce-name bold">
+      {{ element.label }}
+    </text>
+  }
+
+  <!-- divider below header -->
+  <line
+    x1="0" [attr.y1]="headerH"
+    [attr.x2]="element.width" [attr.y2]="headerH"
+    stroke="#424242" stroke-width="1">
+  </line>
+
+  <!-- ── Attributes section ── -->
+  @if (element.attributes && element.attributes.length > 0) {
+    @for (attr of element.attributes; track $index) {
+      <text
+        x="8"
+        [attr.y]="headerH + 14 + $index * 20"
+        class="ce-member">
+        {{ attr }}
+      </text>
+    }
+  } @else {
+    <text
+      [attr.x]="element.width / 2"
+      [attr.y]="headerH + attrsH / 2 + 5"
+      text-anchor="middle"
+      class="ce-empty">
+      (no attributes)
+    </text>
+  }
+
+  <!-- divider below attributes -->
+  <line
+    x1="0" [attr.y1]="headerH + attrsH"
+    [attr.x2]="element.width" [attr.y2]="headerH + attrsH"
+    stroke="#424242" stroke-width="1">
+  </line>
+
+  <!-- ── Methods section ── -->
+  @if (element.methods && element.methods.length > 0) {
+    @for (method of element.methods; track $index) {
+      <text
+        x="8"
+        [attr.y]="headerH + attrsH + 14 + $index * 20"
+        class="ce-member">
+        {{ method }}
+      </text>
+    }
+  } @else {
+    <text
+      [attr.x]="element.width / 2"
+      [attr.y]="headerH + attrsH + methodsH / 2 + 5"
+      text-anchor="middle"
+      class="ce-empty">
+      (no methods)
+    </text>
+  }
+
+</g>

@@ -1,0 +1,114 @@
+<!-- src/app/features/diagramas/components/properties-panel/properties-panel.component.html -->
+<div class="panel">
+  @if (!element) {
+    <div class="empty-state">
+      <mat-icon>touch_app</mat-icon>
+      <p>Selecciona un elemento para editar sus propiedades</p>
+    </div>
+  }
+
+  @if (element) {
+    <div class="panel-content">
+      <div class="panel-header">
+        <span class="element-type-badge">{{ element.type }}</span>
+        <button mat-icon-button color="warn" (click)="deleteElement()" matTooltip="Eliminar elemento">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+
+      <form [formGroup]="form" class="props-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="label">
+        </mat-form-field>
+
+        @if (element.type === 'class' || element.type === 'interface' || element.type === 'package') {
+          <mat-form-field appearance="outline">
+            <mat-label>Estereotipo</mat-label>
+            <input matInput formControlName="stereotype" placeholder="service, repository...">
+          </mat-form-field>
+        }
+
+        <div class="color-row">
+          <label class="color-label">Color</label>
+          <input type="color" formControlName="color" class="color-input">
+        </div>
+      </form>
+
+      @if (element.type === 'class' || element.type === 'interface') {
+        <mat-divider></mat-divider>
+
+        <div class="section">
+          <div class="section-header">
+            <span>Atributos</span>
+            <button mat-icon-button (click)="addAttribute()" matTooltip="Añadir atributo">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+
+          @for (attr of element.attributes; track attr.id) {
+            <div class="member-row">
+              <select [value]="attr.visibility"
+                      (change)="updateAttribute(attr.id, 'visibility', $any($event.target).value)"
+                      class="vis-select">
+                <option value="+">+</option>
+                <option value="-">-</option>
+                <option value="#">#</option>
+                <option value="~">~</option>
+              </select>
+              <input [value]="attr.name"
+                     (blur)="updateAttribute(attr.id, 'name', $any($event.target).value)"
+                     class="member-input" placeholder="nombre">
+              <span class="colon">:</span>
+              <input [value]="attr.type"
+                     (blur)="updateAttribute(attr.id, 'type', $any($event.target).value)"
+                     class="member-input type-input" placeholder="tipo">
+              <button mat-icon-button class="remove-btn" (click)="removeAttribute(attr.id)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
+
+          @if (!element.attributes?.length) {
+            <p class="empty-hint">Sin atributos</p>
+          }
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="section">
+          <div class="section-header">
+            <span>Métodos</span>
+            <button mat-icon-button (click)="addMethod()" matTooltip="Añadir método">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+
+          @for (method of element.methods; track method.id) {
+            <div class="member-row">
+              <select [value]="method.visibility"
+                      (change)="updateMethod(method.id, 'visibility', $any($event.target).value)"
+                      class="vis-select">
+                <option value="+">+</option>
+                <option value="-">-</option>
+                <option value="#">#</option>
+                <option value="~">~</option>
+              </select>
+              <input [value]="method.name"
+                     (blur)="updateMethod(method.id, 'name', $any($event.target).value)"
+                     class="member-input" placeholder="nombre">
+              <span class="colon">( )</span>
+              <button mat-icon-button class="remove-btn" (click)="removeMethod(method.id)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
+
+          @if (!element.methods?.length) {
+            <p class="empty-hint">Sin métodos</p>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

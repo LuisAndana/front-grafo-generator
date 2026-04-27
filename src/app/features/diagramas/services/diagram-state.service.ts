@@ -25,7 +25,7 @@ export class DiagramStateService {
   readonly connectionStart$ = this._connectionStart$.asObservable();
 
   readonly selectedElement$ = combineLatest([this._diagram$, this._selectedElementId$]).pipe(
-    map(([diagram, id]) => diagram?.elements.find(e => e.id === id) ?? null)
+    map(([diagram, id]) => diagram?.elements.find((e: DiagramElement) => e.id === id) ?? null)
   );
 
   readonly isConnectMode$ = this._activeTool$.pipe(
@@ -33,7 +33,7 @@ export class DiagramStateService {
   );
 
   createDiagram(type: DiagramType, name: string): void {
-    const proyecto = this.proyectoActivo.getProyectoActivo();
+    const proyecto = this.proyectoActivo.proyecto;
     const diagram: Diagram = {
       id: uuidv4(),
       projectId: proyecto?.id?.toString() ?? 'unknown',
@@ -71,7 +71,7 @@ export class DiagramStateService {
     if (!current) return;
     this._diagram$.next({
       ...current,
-      elements: current.elements.map(e => e.id === id ? { ...e, ...changes } : e),
+      elements: current.elements.map((e: DiagramElement) => e.id === id ? { ...e, ...changes } : e),
       updatedAt: new Date().toISOString()
     });
   }
@@ -81,8 +81,8 @@ export class DiagramStateService {
     if (!current) return;
     this._diagram$.next({
       ...current,
-      elements: current.elements.filter(e => e.id !== id),
-      connections: current.connections.filter(c => c.sourceId !== id && c.targetId !== id),
+      elements: current.elements.filter((e: DiagramElement) => e.id !== id),
+      connections: current.connections.filter((c: DiagramConnection) => c.sourceId !== id && c.targetId !== id),
       updatedAt: new Date().toISOString()
     });
     if (this._selectedElementId$.value === id) this._selectedElementId$.next(null);

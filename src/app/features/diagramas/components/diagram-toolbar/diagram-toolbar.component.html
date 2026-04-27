@@ -1,0 +1,39 @@
+<!-- src/app/features/diagramas/components/diagram-toolbar/diagram-toolbar.component.html -->
+<div class="toolbar">
+  <button mat-icon-button (click)="goToSelector()" matTooltip="Mis diagramas">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+
+  <span class="diagram-name">{{ diagram?.name ?? 'Sin diagrama' }}</span>
+
+  <mat-divider vertical class="v-divider"></mat-divider>
+
+  <div class="zoom-controls">
+    <button mat-icon-button (click)="zoomOut()" matTooltip="Alejar (-)" [disabled]="viewTransform.scale <= 0.25">
+      <mat-icon>remove</mat-icon>
+    </button>
+    <span class="zoom-label" (click)="resetZoom()" matTooltip="Restablecer zoom (100%)">
+      {{ zoomPercent }}%
+    </span>
+    <button mat-icon-button (click)="zoomIn()" matTooltip="Acercar (+)" [disabled]="viewTransform.scale >= 3">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <button mat-stroked-button (click)="save()">
+    <mat-icon>save</mat-icon>
+    Guardar
+  </button>
+
+  <button mat-stroked-button (click)="exportPng()">
+    <mat-icon>image</mat-icon>
+    PNG
+  </button>
+
+  <button mat-stroked-button (click)="exportPdf()">
+    <mat-icon>picture_as_pdf</mat-icon>
+    PDF
+  </button>
+</div>

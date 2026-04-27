@@ -1,0 +1,18 @@
+<!-- src/app/features/diagramas/components/tool-palette/tool-palette.component.html -->
+<div class="palette">
+  @for (group of toolGroups; track group.label) {
+    <div class="tool-group">
+      <span class="group-label">{{ group.label }}</span>
+      @for (tool of group.tools; track tool.id) {
+        <button
+          class="tool-btn"
+          [class.active]="isActive(tool)"
+          (click)="selectTool(tool)"
+          [matTooltip]="tool.tooltip"
+          matTooltipPosition="right">
+          <mat-icon>{{ tool.icon }}</mat-icon>
+        </button>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,29 @@
+<!-- src/app/features/diagramas/components/diagram-selector/diagram-selector.component.html -->
+<div class="selector-container">
+  <div class="selector-header">
+    <mat-icon class="header-icon">account_tree</mat-icon>
+    <h1>Diagramas UML</h1>
+    <p>Selecciona el tipo de diagrama que deseas crear</p>
+  </div>
+
+  <div class="cards-grid">
+    @for (card of cards; track card.type) {
+      <mat-card class="diagram-card" (click)="createDiagram(card.type)" [style.--card-color]="card.color">
+        <mat-card-header>
+          <div class="card-icon-wrapper" [style.background]="card.color + '20'">
+            <mat-icon [style.color]="card.color">{{ card.icon }}</mat-icon>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <h3>{{ card.title }}</h3>
+          <p>{{ card.description }}</p>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-flat-button [style.background]="card.color" style="color:#fff">
+            Crear diagrama
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+</div>
