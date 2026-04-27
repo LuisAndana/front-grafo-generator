@@ -1,8 +1,8 @@
 // src/app/features/diagramas/components/properties-panel/properties-panel.component.scss
 :host {
-  display: flex;
-  flex-shrink: 0;
-  height: 100%;
+  display: block;
+  flex: 0 0 260px;
+  align-self: stretch;
 }
 
 .panel {

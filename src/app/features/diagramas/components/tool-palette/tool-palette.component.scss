@@ -1,13 +1,14 @@
 // src/app/features/diagramas/components/tool-palette/tool-palette.component.scss
 :host {
-  display: flex;
-  flex-shrink: 0;
-  height: 100%;
+  display: block;
+  flex: 0 0 60px;
+  align-self: stretch;
 }
 
 .palette {
   width: 60px;
   min-width: 60px;
+  max-width: 60px;
   display: flex;
   flex-direction: column;
   background: #ffffff;
