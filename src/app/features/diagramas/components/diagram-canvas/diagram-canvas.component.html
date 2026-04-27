@@ -8,7 +8,10 @@
   (mousemove)="onMouseMove($event)"
   (mouseup)="onMouseUp()"
   (wheel)="onWheel($event)"
-  (click)="onCanvasClick($event)">
+  (click)="onCanvasClick($event)"
+  (dragover)="onCanvasDragOver($event)"
+  (drop)="onCanvasDrop($event)"
+  (dragleave)="onCanvasDragLeave($event)">
 
   <svg class="canvas-svg" xmlns="http://www.w3.org/2000/svg">
 

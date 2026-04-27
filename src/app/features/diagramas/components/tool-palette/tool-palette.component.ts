@@ -41,4 +41,22 @@ export class ToolPaletteComponent implements OnInit, OnDestroy {
   isActive(tool: Tool): boolean {
     return this.activeTool?.id === tool.id;
   }
+
+  onToolDragStart(event: DragEvent, tool: Tool): void {
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'tool',
+        toolId: tool.id,
+        toolType: tool.type,
+        toolLabel: tool.label
+      }));
+    }
+  }
+
+  onToolDragEnd(event: DragEvent): void {
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'none';
+    }
+  }
 }

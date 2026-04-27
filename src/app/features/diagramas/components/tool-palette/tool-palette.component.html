@@ -8,6 +8,9 @@
           class="tool-btn"
           [class.active]="isActive(tool)"
           (click)="selectTool(tool)"
+          (dragstart)="onToolDragStart($event, tool)"
+          (dragend)="onToolDragEnd($event)"
+          draggable="true"
           [matTooltip]="tool.tooltip"
           matTooltipPosition="right">
           <mat-icon>{{ tool.icon }}</mat-icon>

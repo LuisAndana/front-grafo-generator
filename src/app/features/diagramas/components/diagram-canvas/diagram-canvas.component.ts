@@ -189,4 +189,56 @@ export class DiagramCanvasComponent implements OnInit, OnDestroy {
   trackById(_: number, item: { id: string }): string {
     return item.id;
   }
+
+  onCanvasDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  }
+
+  onCanvasDragLeave(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  onCanvasDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!event.dataTransfer || !this.diagram) return;
+
+    try {
+      const data = event.dataTransfer.getData('application/json');
+      const dragData = JSON.parse(data);
+
+      if (dragData.type === 'tool') {
+        // Calcular posición en el canvas
+        const rect = this.elRef.nativeElement.querySelector('.canvas-svg').getBoundingClientRect();
+        const x = (event.clientX - rect.left - this.viewTransform.x) / this.viewTransform.scale;
+        const y = (event.clientY - rect.top - this.viewTransform.y) / this.viewTransform.scale;
+
+        // Crear elemento nuevo
+        const newElement: DiagramElement = {
+          id: `elem-${Date.now()}`,
+          type: dragData.toolType,
+          name: dragData.toolLabel,
+          x: Math.max(0, x),
+          y: Math.max(0, y),
+          width: dragData.toolType === 'class' ? 200 : 120,
+          height: dragData.toolType === 'class' ? 250 : 80,
+          color: '#3b82f6',
+          propiedades: {
+            atributos: [],
+            metodos: [],
+            estereotipo: null
+          }
+        };
+
+        this.state.addElement(newElement);
+        this.state.selectElement(newElement.id);
+      }
+    } catch (e) {
+      console.error('Error al procesar drop:', e);
+    }
+  }
 }
