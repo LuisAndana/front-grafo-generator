@@ -1,5 +1,5 @@
 // src/app/features/diagramas/pages/diagram-editor/diagram-editor.component.ts
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DiagramStateService } from '../../services/diagram-state.service';
 
@@ -18,5 +18,17 @@ export class DiagramEditorComponent implements OnInit {
       if (!d) this.router.navigate(['/diagramas/selector']);
     });
     sub.unsubscribe();
+  }
+
+  /**
+   * Atajo de teclado Ctrl+S para guardar el diagrama
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    // Ctrl+S o Cmd+S para guardar
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      event.preventDefault();
+      this.state.saveDiagram();
+    }
   }
 }

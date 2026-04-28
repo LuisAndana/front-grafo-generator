@@ -19,6 +19,8 @@ export class PropertiesPanelComponent implements OnInit, OnDestroy {
 
   element: DiagramElement | null = null;
   form!: FormGroup;
+  isSaving = false;
+  saveSuccess = false;
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -100,5 +102,27 @@ export class PropertiesPanelComponent implements OnInit, OnDestroy {
   deleteElement(): void {
     if (!this.element) return;
     this.state.removeElement(this.element.id);
+  }
+
+  /**
+   * Guardar todos los cambios del diagrama
+   */
+  saveDiagram(): void {
+    this.isSaving = true;
+    this.saveSuccess = false;
+
+    // Simular un pequeño delay para mostrar que está guardando
+    setTimeout(() => {
+      const result = this.state.saveDiagram();
+      this.isSaving = false;
+
+      if (result) {
+        this.saveSuccess = true;
+        // Mostrar el mensaje de éxito por 3 segundos
+        setTimeout(() => {
+          this.saveSuccess = false;
+        }, 3000);
+      }
+    }, 300);
   }
 }

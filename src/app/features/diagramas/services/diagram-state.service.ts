@@ -120,4 +120,89 @@ export class DiagramStateService {
   getCurrentDiagram(): Diagram | null {
     return this._diagram$.value;
   }
+
+  /**
+   * Guardar el diagrama actual en localStorage
+   * @returns true si se guardó correctamente, false si hay error
+   */
+  saveDiagram(): boolean {
+    try {
+      const diagram = this._diagram$.value;
+      if (!diagram) {
+        console.warn('No diagram to save');
+        return false;
+      }
+
+      // Guardar en localStorage con clave única por proyecto y tipo de diagrama
+      const storageKey = `diagram_${diagram.projectId}_${diagram.type}_${diagram.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(diagram));
+
+      // También guardar un índice de diagramas guardados
+      const indexKey = `diagrams_${diagram.projectId}`;
+      const savedDiagrams = JSON.parse(localStorage.getItem(indexKey) || '[]');
+      if (!savedDiagrams.find((d: any) => d.id === diagram.id)) {
+        savedDiagrams.push({
+          id: diagram.id,
+          name: diagram.name,
+          type: diagram.type,
+          savedAt: new Date().toISOString()
+        });
+        localStorage.setItem(indexKey, JSON.stringify(savedDiagrams));
+      }
+
+      // Actualizar el timestamp de guardado
+      this._diagram$.next({
+        ...diagram,
+        savedAt: new Date().toISOString()
+      });
+
+      console.log(`✓ Diagrama "${diagram.name}" guardado exitosamente`);
+      return true;
+    } catch (error) {
+      console.error('Error al guardar el diagrama:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Cargar un diagrama desde localStorage
+   */
+  loadDiagramFromStorage(projectId: string, diagramId: string): Diagram | null {
+    try {
+      const storageKey = `diagram_${projectId}_*_${diagramId}`;
+      // Buscar la clave exacta (puede tener el tipo en el medio)
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(`diagram_${projectId}_`) && key.endsWith(`_${diagramId}`)) {
+          const data = localStorage.getItem(key);
+          if (data) {
+            return JSON.parse(data);
+          }
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error al cargar el diagrama desde storage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Obtener el estado de guardado del diagrama actual
+   */
+  isDiagramSaved(): boolean {
+    const diagram = this._diagram$.value;
+    if (!diagram) return true;
+
+    const storageKey = `diagram_${diagram.projectId}_${diagram.type}_${diagram.id}`;
+    const saved = localStorage.getItem(storageKey);
+    if (!saved) return false;
+
+    try {
+      const savedDiagram = JSON.parse(saved);
+      return JSON.stringify(diagram) === JSON.stringify(savedDiagram);
+    } catch {
+      return false;
+    }
+  }
 }

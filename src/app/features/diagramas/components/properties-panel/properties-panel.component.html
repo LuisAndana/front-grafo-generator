@@ -1,5 +1,21 @@
 <!-- src/app/features/diagramas/components/properties-panel/properties-panel.component.html -->
 <div class="panel">
+  <!-- Save Button Bar -->
+  <div class="save-bar">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="saveDiagram()"
+      [disabled]="isSaving"
+      class="save-btn"
+      matTooltip="Guardar todos los cambios (Ctrl+S)">
+      <mat-icon *ngIf="!isSaving && !saveSuccess">save</mat-icon>
+      <mat-icon *ngIf="isSaving" class="loading-spinner">hourglass_empty</mat-icon>
+      <mat-icon *ngIf="saveSuccess" class="success-icon">check_circle</mat-icon>
+      <span>{{ isSaving ? 'Guardando...' : saveSuccess ? '¡Guardado!' : 'Guardar Cambios' }}</span>
+    </button>
+  </div>
+
   @if (!element) {
     <div class="empty-state">
       <mat-icon>touch_app</mat-icon>
