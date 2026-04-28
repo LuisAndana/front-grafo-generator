@@ -118,7 +118,6 @@
         @for (element of diagram.elements; track element.id) {
           <g
             cdkDrag
-            [cdkDragFreeDragPosition]="{ x: element.x, y: element.y }"
             (cdkDragEnded)="onDragEnded($event, element)"
             class="element-group"
             [class.is-selected]="element.id === selectedElementId"
