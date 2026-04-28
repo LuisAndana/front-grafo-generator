@@ -1,23 +1,32 @@
 // src/app/features/diagramas/components/diagram-canvas/diagram-canvas.component.scss
-// NOTE: ViewEncapsulation.None is used on this component, so :host does NOT apply.
-// Use the element tag selector directly instead.
+// IMPORTANT: ViewEncapsulation.None is used on this component.
+// The :host selector in component styles does NOT apply with ViewEncapsulation.None.
+// Must use the element tag selector directly to style the component element.
+
 app-diagram-canvas {
+  // Flex child that grows to fill available space
   display: block;
-  flex: 1 1 0%;
-  min-width: 0;
-  min-height: 0;
-  position: relative;  // CRITICAL: anchors .canvas-host's position:absolute within this element
+  flex: 1 1 0%;       // Grow to fill flex container
+  min-width: 0;       // Allow shrinking below content size
+  min-height: 0;      // Allow shrinking below content size
+  position: relative; // CRITICAL: Anchoring point for .canvas-host position:absolute
   align-self: stretch;
   overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
 .canvas-host {
+  // Absolute positioning within app-diagram-canvas bounds
   position: absolute;
-  inset: 0;
+  inset: 0;           // Equivalent to: top: 0; right: 0; bottom: 0; left: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   background: #f5f5f5;
   outline: none;
   cursor: default;
+  display: flex;
 
   &.pan-mode { cursor: grab; }
   &.pan-mode:active { cursor: grabbing; }
@@ -25,9 +34,11 @@ app-diagram-canvas {
 }
 
 .canvas-svg {
+  // SVG that fills the canvas-host container
   width: 100%;
   height: 100%;
   display: block;
+  flex: 1;
 }
 
 .grid-bg {

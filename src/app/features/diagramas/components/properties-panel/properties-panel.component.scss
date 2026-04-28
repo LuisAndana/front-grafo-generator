@@ -1,18 +1,27 @@
 // src/app/features/diagramas/components/properties-panel/properties-panel.component.scss
 :host {
+  // Flex child with fixed width, positioned at the right
+  // Must be last in flex-direction: row for right positioning
   display: block;
-  flex: 0 0 260px;
+  flex: 0 0 260px;    // No grow, no shrink, 260px width
+  min-width: 260px;
+  max-width: 260px;
+  width: 260px;
+  height: 100%;
   align-self: stretch;
+  overflow: hidden;
 }
 
 .panel {
-  width: 260px;
+  // Container fills the component, always positioned on the right in flex row
+  width: 100%;
+  height: 100%;
   min-width: 260px;
   max-width: 260px;
-  height: 100%;
   background: #ffffff;
   border-left: 1px solid #e0e0e0;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
