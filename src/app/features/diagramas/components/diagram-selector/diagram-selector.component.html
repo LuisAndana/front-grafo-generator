@@ -26,4 +26,42 @@
       </mat-card>
     }
   </div>
+
+  <!-- Saved diagrams section -->
+  @if (savedDiagrams.length > 0) {
+    <div class="saved-section">
+      <div class="saved-section-header">
+        <mat-icon>history</mat-icon>
+        <h2>Diagramas guardados</h2>
+        <span class="saved-count">{{ savedDiagrams.length }}</span>
+      </div>
+
+      <div class="saved-list">
+        @for (entry of savedDiagrams; track entry.id) {
+          <div class="saved-item" (click)="openDiagram(entry)">
+            <div class="saved-item-icon"
+                 [style.background]="typeConfig[entry.type].color + '15'"
+                 [style.color]="typeConfig[entry.type].color">
+              <mat-icon>{{ typeConfig[entry.type].icon }}</mat-icon>
+            </div>
+            <div class="saved-item-info">
+              <span class="saved-item-name">{{ entry.name }}</span>
+              <span class="saved-item-meta">
+                Editado {{ formatDate(entry.updatedAt) }}
+              </span>
+            </div>
+            <div class="saved-item-actions">
+              <button mat-icon-button
+                      (click)="deleteDiagram(entry, $event)"
+                      matTooltip="Eliminar diagrama"
+                      class="delete-btn">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+              <mat-icon class="open-arrow">chevron_right</mat-icon>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
 </div>
