@@ -2,7 +2,8 @@
 :host {
   // Flex child with fixed width, positioned at the right
   // Must be last in flex-direction: row for right positioning
-  display: block;
+  display: flex;
+  flex-direction: column;
   flex: 0 0 260px;    // No grow, no shrink, 260px width
   min-width: 260px;
   max-width: 260px;

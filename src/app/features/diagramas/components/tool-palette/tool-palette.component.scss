@@ -1,7 +1,8 @@
 // src/app/features/diagramas/components/tool-palette/tool-palette.component.scss
 :host {
   // Flex child with fixed width, stretches to fill parent height
-  display: block;
+  display: flex;
+  flex-direction: column;
   flex: 0 0 60px;     // No grow, no shrink, 60px width
   min-width: 60px;
   max-width: 60px;
