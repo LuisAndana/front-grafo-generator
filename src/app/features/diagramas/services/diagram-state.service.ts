@@ -52,7 +52,11 @@ export class DiagramStateService {
   }
 
   loadDiagram(diagram: Diagram): void {
-    this._diagram$.next({ ...diagram });
+    const elementIds = new Set(diagram.elements.map(e => e.id));
+    const validConnections = diagram.connections.filter(
+      c => elementIds.has(c.sourceId) && elementIds.has(c.targetId)
+    );
+    this._diagram$.next({ ...diagram, connections: validConnections });
     this._selectedElementId$.next(null);
   }
 
