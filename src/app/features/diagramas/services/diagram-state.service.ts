@@ -155,10 +155,10 @@ export class DiagramStateService {
       // 3. Guardar en el backend para proporcionar contexto a la IA
       this.guardarDiagramaEnBackend(diagram);
 
-      // 4. Actualizar el timestamp de guardado
+      // 4. Actualizar el timestamp de último cambio
       this._diagram$.next({
         ...diagram,
-        savedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       });
 
       console.log(`✓ Diagrama "${diagram.name}" guardado exitosamente`);
@@ -222,7 +222,7 @@ export class DiagramStateService {
     const tipos_elementos = [...new Set(diagram.elements.map((e: DiagramElement) => e.type))];
 
     // Extraer tipos únicos de relaciones
-    const tipos_relaciones = [...new Set(diagram.connections.map((c: DiagramConnection) => c.type || 'default'))];
+    const tipos_relaciones = [...new Set(diagram.connections.map((c: DiagramConnection) => c.relationType || 'default'))];
 
     return {
       elementos,
@@ -263,7 +263,7 @@ export class DiagramStateService {
     diagram.connections.forEach((conn: DiagramConnection) => {
       const source = diagram.elements.find(e => e.id === conn.sourceId)?.label || conn.sourceId;
       const target = diagram.elements.find(e => e.id === conn.targetId)?.label || conn.targetId;
-      const relacion = conn.type || '--';
+      const relacion = conn.relationType || '--';
       codigo += `${source} ${relacion} ${target}\n`;
     });
 

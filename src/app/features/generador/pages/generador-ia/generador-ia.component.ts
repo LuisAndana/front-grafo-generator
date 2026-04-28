@@ -9,7 +9,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ProyectoActivoService } from '../../../../core/services/proyecto-activo.service';
-import { DiagramaPersistenciaService, ContextoDiagramasResponse } from '../../services/diagrama-persistencia.service';
+import { DiagramaPersistenciaService, ContextoDiagramasResponse } from '../../../diagramas/services/diagrama-persistencia.service';
 import mermaid from 'mermaid';
 
 type SeccionActiva = 'codigo' | 'diagramas';
@@ -266,7 +266,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
 
     this.persistenciaDiagramas.obtenerContextoDiagramas(this.proyectoId)
       .subscribe({
-        next: (contexto) => {
+        next: (contexto: ContextoDiagramasResponse) => {
           this.contextoDiagramas = {
             total_diagramas: contexto.total_diagramas,
             tipos_guardados: contexto.tipos_guardados,
@@ -275,7 +275,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
           };
           console.log('✓ Contexto de diagramas cargado:', this.contextoDiagramas);
         },
-        error: (err) => {
+        error: (err: any) => {
           console.warn('No se pudo cargar contexto de diagramas (no es crítico):', err);
           this.contextoDiagramas = null;
         }
