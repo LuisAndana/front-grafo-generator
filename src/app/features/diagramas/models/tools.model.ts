@@ -57,6 +57,7 @@ export const TOOL_GROUPS: Record<DiagramType, ToolGroup[]> = {
       tools: [
         { id: 'actor', label: 'Actor', icon: 'person', tooltip: 'Añadir actor', action: 'element', elementType: 'actor' },
         { id: 'lifeline', label: 'Línea vida', icon: 'view_week', tooltip: 'Añadir objeto/línea de vida', action: 'element', elementType: 'lifeline' },
+        { id: 'activation', label: 'Activación', icon: 'rectangle', tooltip: 'Activación en línea de vida', action: 'element', elementType: 'activation' },
       ]
     },
     {
@@ -77,6 +78,7 @@ export const TOOL_GROUPS: Record<DiagramType, ToolGroup[]> = {
       label: 'Elementos',
       tools: [
         { id: 'package', label: 'Paquete', icon: 'folder', tooltip: 'Añadir paquete', action: 'element', elementType: 'package' },
+        { id: 'subpackage', label: 'Subpaquete', icon: 'folder_open', tooltip: 'Añadir subpaquete', action: 'element', elementType: 'subpackage' },
         { id: 'class', label: 'Clase', icon: 'table_chart', tooltip: 'Añadir clase', action: 'element', elementType: 'class' },
       ]
     },
@@ -84,6 +86,8 @@ export const TOOL_GROUPS: Record<DiagramType, ToolGroup[]> = {
       label: 'Relaciones',
       tools: [
         { id: 'dependency', label: 'Dependencia', icon: 'arrow_right_alt', tooltip: 'Dependencia (- - ▷)', action: 'connect', relationType: 'dependency' },
+        { id: 'import', label: 'Importación', icon: 'input', tooltip: 'Importación de elementos', action: 'connect', relationType: 'import' },
+        { id: 'access', label: 'Acceso', icon: 'check_circle', tooltip: 'Acceso a elementos', action: 'connect', relationType: 'access' },
       ]
     }
   ],
@@ -106,6 +110,7 @@ export const TOOL_GROUPS: Record<DiagramType, ToolGroup[]> = {
         { id: 'association', label: 'Asociación', icon: 'horizontal_rule', tooltip: 'Asociación', action: 'connect', relationType: 'association' },
         { id: 'include', label: 'Include', icon: 'subdirectory_arrow_right', tooltip: '«include»', action: 'connect', relationType: 'include' },
         { id: 'extend', label: 'Extend', icon: 'call_split', tooltip: '«extend»', action: 'connect', relationType: 'extend' },
+        { id: 'generalization', label: 'Generalización', icon: 'call_merge', tooltip: 'Generalización (herencia)', action: 'connect', relationType: 'generalization' },
       ]
     }
   ]

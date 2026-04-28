@@ -3,13 +3,14 @@ export type DiagramType = 'class' | 'sequence' | 'package' | 'usecase';
 
 export type RelationType =
   | 'inheritance' | 'association' | 'aggregation' | 'composition'
-  | 'dependency' | 'realization' | 'include' | 'extend'
-  | 'sync-message' | 'async-message' | 'return-message';
+  | 'dependency' | 'realization' | 'include' | 'extend' | 'generalization'
+  | 'sync-message' | 'async-message' | 'return-message'
+  | 'import' | 'access';
 
 export type ElementType =
   | 'class' | 'interface' | 'enum'
   | 'actor' | 'lifeline' | 'activation'
-  | 'package'
+  | 'package' | 'subpackage'
   | 'usecase' | 'system-boundary';
 
 export interface ClassAttribute {
