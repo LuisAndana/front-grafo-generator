@@ -1,6 +1,6 @@
 import {
   Component, OnInit, OnDestroy, AfterViewChecked,
-  ElementRef, ViewChild, ChangeDetectorRef
+  ElementRef, ViewChild, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ProyectoActivoService } from '../../../../core/services/proyecto-activo.service';
+import { DiagramaPersistenciaService, ContextoDiagramasResponse } from '../../services/diagrama-persistencia.service';
 import mermaid from 'mermaid';
 
 type SeccionActiva = 'codigo' | 'diagramas';
@@ -31,6 +32,13 @@ interface ContextoResumen {
   entrevistas:  number;
   procesos:     number;
   necesidades:  number;
+}
+
+interface ContextoDiagramas {
+  total_diagramas?: number;
+  tipos_guardados?: string[];
+  elementos_totales?: number;
+  relaciones_totales?: number;
 }
 
 @Component({
@@ -93,6 +101,9 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
     casos_uso: 'Diagrama de Casos de Uso'
   };
 
+  private readonly persistenciaDiagramas = inject(DiagramaPersistenciaService);
+  private contextoDiagramas: ContextoDiagramas | null = null;
+
   constructor(
     private http: HttpClient,
     private sanitizer: DomSanitizer,
@@ -114,6 +125,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
     if (this.proyectoId) {
       this.cargarDesdeStorage();
       this.cargarContexto();
+      this.cargarContextoDiagramas();
     }
   }
 
@@ -243,6 +255,31 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
         this.cdr.detectChanges();
       }
     });
+  }
+
+  /**
+   * Cargar contexto de diagramas UML guardados
+   * Este contexto se añade automáticamente cuando se genera código
+   */
+  private cargarContextoDiagramas(): void {
+    if (!this.proyectoId) return;
+
+    this.persistenciaDiagramas.obtenerContextoDiagramas(this.proyectoId)
+      .subscribe({
+        next: (contexto) => {
+          this.contextoDiagramas = {
+            total_diagramas: contexto.total_diagramas,
+            tipos_guardados: contexto.tipos_guardados,
+            elementos_totales: contexto.elementos_totales,
+            relaciones_totales: contexto.relaciones_totales
+          };
+          console.log('✓ Contexto de diagramas cargado:', this.contextoDiagramas);
+        },
+        error: (err) => {
+          console.warn('No se pudo cargar contexto de diagramas (no es crítico):', err);
+          this.contextoDiagramas = null;
+        }
+      });
   }
 
   get totalContexto(): number {
@@ -1115,7 +1152,20 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
     this.isGenerandoCodigo = true;
     this.errorMsg = '';
 
-    this.http.post<any>(`${this.BASE_URL}/api/generador/codigo/${this.proyectoId}`, {})
+    // Preparar payload con contexto de diagramas (si están disponibles)
+    const payload: any = {};
+
+    // Añadir contexto de diagramas como información adicional para mejorar la IA
+    if (this.contextoDiagramas && this.contextoDiagramas.total_diagramas && this.contextoDiagramas.total_diagramas > 0) {
+      payload.contexto_diagramas = {
+        total_diagramas: this.contextoDiagramas.total_diagramas,
+        tipos: this.contextoDiagramas.tipos_guardados || [],
+        elementos_totales: this.contextoDiagramas.elementos_totales || 0,
+        relaciones_totales: this.contextoDiagramas.relaciones_totales || 0
+      };
+    }
+
+    this.http.post<any>(`${this.BASE_URL}/api/generador/codigo/${this.proyectoId}`, payload)
       .subscribe({
         next: (res) => {
           const data = res?.data ?? res;
@@ -1126,7 +1176,10 @@ Para cambiar la contraseña, edita \`backend/.env\` antes de iniciar.
           };
           this.isGenerandoCodigo = false;
           this.guardarCodigoEnStorage();
-          this.successMsg = '✓ Código generado y guardado localmente';
+          const msg = this.contextoDiagramas?.total_diagramas
+            ? '✓ Código generado con contexto de diagramas UML'
+            : '✓ Código generado y guardado localmente';
+          this.successMsg = msg;
           setTimeout(() => { this.successMsg = ''; }, 4000);
         },
         error: (err) => {

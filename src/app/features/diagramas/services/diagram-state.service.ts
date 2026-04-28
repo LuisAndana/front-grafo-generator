@@ -7,10 +7,12 @@ import {
 } from '../models/diagram.model';
 import { Tool } from '../models/tools.model';
 import { ProyectoActivoService } from '../../../core/services/proyecto-activo.service';
+import { DiagramaPersistenciaService, MetadatosDiagrama } from './diagrama-persistencia.service';
 
 @Injectable({ providedIn: 'root' })
 export class DiagramStateService {
   private readonly proyectoActivo = inject(ProyectoActivoService);
+  private readonly persistencia = inject(DiagramaPersistenciaService);
 
   private readonly _diagram$ = new BehaviorSubject<Diagram | null>(null);
   private readonly _selectedElementId$ = new BehaviorSubject<string | null>(null);
@@ -122,7 +124,7 @@ export class DiagramStateService {
   }
 
   /**
-   * Guardar el diagrama actual en localStorage
+   * Guardar el diagrama actual en localStorage Y en el backend
    * @returns true si se guardó correctamente, false si hay error
    */
   saveDiagram(): boolean {
@@ -133,11 +135,11 @@ export class DiagramStateService {
         return false;
       }
 
-      // Guardar en localStorage con clave única por proyecto y tipo de diagrama
+      // 1. Guardar en localStorage con clave única por proyecto y tipo de diagrama
       const storageKey = `diagram_${diagram.projectId}_${diagram.type}_${diagram.id}`;
       localStorage.setItem(storageKey, JSON.stringify(diagram));
 
-      // También guardar un índice de diagramas guardados
+      // 2. También guardar un índice de diagramas guardados
       const indexKey = `diagrams_${diagram.projectId}`;
       const savedDiagrams = JSON.parse(localStorage.getItem(indexKey) || '[]');
       if (!savedDiagrams.find((d: any) => d.id === diagram.id)) {
@@ -150,7 +152,10 @@ export class DiagramStateService {
         localStorage.setItem(indexKey, JSON.stringify(savedDiagrams));
       }
 
-      // Actualizar el timestamp de guardado
+      // 3. Guardar en el backend para proporcionar contexto a la IA
+      this.guardarDiagramaEnBackend(diagram);
+
+      // 4. Actualizar el timestamp de guardado
       this._diagram$.next({
         ...diagram,
         savedAt: new Date().toISOString()
@@ -162,6 +167,120 @@ export class DiagramStateService {
       console.error('Error al guardar el diagrama:', error);
       return false;
     }
+  }
+
+  /**
+   * Guardar diagrama en el backend para proporcionarlo como contexto a la IA
+   * Este es un proceso asíncrono que no bloquea la UI
+   */
+  private guardarDiagramaEnBackend(diagram: Diagram): void {
+    try {
+      const proyecto = this.proyectoActivo.proyecto;
+      if (!proyecto?.id_proyecto) {
+        console.warn('No active project available');
+        return;
+      }
+
+      // Extraer metadatos del diagrama
+      const metadatos = this.extraerMetadatos(diagram);
+
+      // Generar código Mermaid (representación textual del diagrama)
+      const codigoMermaid = this.generarCodigoMermaid(diagram);
+
+      // Preparar datos para enviar al backend
+      const datosGuardar = {
+        tipo: diagram.type,
+        nombre: diagram.name,
+        metadatos,
+        codigo_mermaid: codigoMermaid
+      };
+
+      // Enviar al backend de forma asíncrona (no bloquea)
+      this.persistencia.guardarDiagrama(proyecto.id_proyecto, datosGuardar)
+        .subscribe({
+          next: (response) => {
+            console.log(`✓ Diagrama guardado en BD: ${response.tipo} (ID: ${response.id})`);
+          },
+          error: (error) => {
+            // No es un error crítico - el diagrama se guardó en localStorage
+            console.warn('Diagrama guardado en localStorage pero falló en BD:', error);
+          }
+        });
+    } catch (error) {
+      console.warn('Error al preparar guardado en BD:', error);
+    }
+  }
+
+  /**
+   * Extrae metadatos del diagrama para contexto de IA
+   */
+  private extraerMetadatos(diagram: Diagram): MetadatosDiagrama {
+    const elementos = diagram.elements.length;
+    const relaciones = diagram.connections.length;
+
+    // Extraer tipos únicos de elementos
+    const tipos_elementos = [...new Set(diagram.elements.map((e: DiagramElement) => e.type))];
+
+    // Extraer tipos únicos de relaciones
+    const tipos_relaciones = [...new Set(diagram.connections.map((c: DiagramConnection) => c.type || 'default'))];
+
+    return {
+      elementos,
+      relaciones,
+      tipos_elementos,
+      tipos_relaciones,
+      extra: {
+        atributos_totales: diagram.elements.filter((e: DiagramElement) => e.attributes?.length)
+          .reduce((sum, e: DiagramElement) => sum + (e.attributes?.length || 0), 0),
+        metodos_totales: diagram.elements.filter((e: DiagramElement) => e.methods?.length)
+          .reduce((sum, e: DiagramElement) => sum + (e.methods?.length || 0), 0)
+      }
+    };
+  }
+
+  /**
+   * Genera código Mermaid a partir del diagrama
+   * Permite regenerar el diagrama desde el backend si es necesario
+   */
+  private generarCodigoMermaid(diagram: Diagram): string {
+    // Mapeo simplificado de tipo de diagrama a sintaxis Mermaid
+    const tipoMermaid = this.mapearTipoAMermaid(diagram.type);
+    let codigo = `${tipoMermaid}\n`;
+
+    // Añadir elementos
+    diagram.elements.forEach((el: DiagramElement) => {
+      if (diagram.type === 'class') {
+        const attrs = el.attributes?.map(a => `  ${a.visibility}${a.name}:${a.type}`).join('\n') || '';
+        const methods = el.methods?.map(m => `  ${m.visibility}${m.name}()`).join('\n') || '';
+        const contenido = [attrs, methods].filter(Boolean).join('\n');
+        codigo += `class ${el.label} {\n${contenido}\n}\n`;
+      } else {
+        codigo += `${el.type} : ${el.label}\n`;
+      }
+    });
+
+    // Añadir conexiones
+    diagram.connections.forEach((conn: DiagramConnection) => {
+      const source = diagram.elements.find(e => e.id === conn.sourceId)?.label || conn.sourceId;
+      const target = diagram.elements.find(e => e.id === conn.targetId)?.label || conn.targetId;
+      const relacion = conn.type || '--';
+      codigo += `${source} ${relacion} ${target}\n`;
+    });
+
+    return codigo;
+  }
+
+  /**
+   * Mapea tipos de diagrama de la app a sintaxis Mermaid
+   */
+  private mapearTipoAMermaid(tipo: DiagramType): string {
+    const mapa: Record<string, string> = {
+      'class': 'classDiagram',
+      'sequence': 'sequenceDiagram',
+      'usecase': 'graph LR',
+      'package': 'graph TB'
+    };
+    return mapa[tipo] || 'graph LR';
   }
 
   /**
