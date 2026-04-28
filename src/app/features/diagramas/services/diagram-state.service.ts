@@ -189,17 +189,19 @@ export class DiagramStateService {
 
       // Preparar datos para enviar al backend
       const datosGuardar = {
+        id_proyecto: proyecto.id_proyecto,
         tipo: diagram.type,
         nombre: diagram.name,
+        descripcion: `Diagrama ${diagram.type} - ${diagram.name}`,
         metadatos,
         codigo_mermaid: codigoMermaid
       };
 
       // Enviar al backend de forma asíncrona (no bloquea)
-      this.persistencia.guardarDiagrama(proyecto.id_proyecto, datosGuardar)
+      this.persistencia.guardarDiagrama(datosGuardar)
         .subscribe({
           next: (response) => {
-            console.log(`✓ Diagrama guardado en BD: ${response.tipo} (ID: ${response.id})`);
+            console.log(`✓ Diagrama guardado en BD: ${response.tipo} (ID: ${response.id_diagrama})`);
           },
           error: (error) => {
             // No es un error crítico - el diagrama se guardó en localStorage

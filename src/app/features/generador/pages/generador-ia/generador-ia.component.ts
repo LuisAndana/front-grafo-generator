@@ -264,7 +264,7 @@ export class GeneradorIaComponent implements OnInit, OnDestroy, AfterViewChecked
   private cargarContextoDiagramas(): void {
     if (!this.proyectoId) return;
 
-    this.persistenciaDiagramas.obtenerContextoDiagramas(this.proyectoId)
+    this.persistenciaDiagramas.obtenerDiagramasProyecto(this.proyectoId)
       .subscribe({
         next: (contexto: ContextoDiagramasResponse) => {
           this.contextoDiagramas = {

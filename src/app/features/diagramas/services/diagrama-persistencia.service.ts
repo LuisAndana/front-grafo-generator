@@ -16,20 +16,23 @@ export interface MetadatosDiagrama {
 }
 
 export interface DiagramaGuardadoCreate {
+  id_proyecto: number;
   tipo: string;
   nombre?: string;
-  metadatos: MetadatosDiagrama;
+  metadatos?: MetadatosDiagrama;
+  descripcion?: string;
   codigo_mermaid?: string;
 }
 
 export interface DiagramaGuardadoResponse {
-  id: number;
-  proyecto_id: number;
+  id_diagrama: number;
+  id_proyecto: number;
   tipo: string;
   nombre?: string;
-  metadatos: Record<string, any>;
-  creado_en: string;
-  actualizado_en: string;
+  descripcion?: string;
+  metadatos?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ContextoDiagramasResponse {
@@ -49,16 +52,12 @@ export class DiagramaPersistenciaService {
 
   /**
    * Guarda o actualiza un diagrama en el backend
-   * @param proyectoId ID del proyecto
-   * @param diagrama Datos del diagrama a guardar
+   * @param diagrama Datos del diagrama a guardar (incluye id_proyecto)
    * @returns Observable con la respuesta del servidor
    */
-  guardarDiagrama(
-    proyectoId: number,
-    diagrama: DiagramaGuardadoCreate
-  ): Observable<DiagramaGuardadoResponse> {
+  guardarDiagrama(diagrama: DiagramaGuardadoCreate): Observable<DiagramaGuardadoResponse> {
     return this.http.post<DiagramaGuardadoResponse>(
-      `${this.apiUrl}/${proyectoId}`,
+      `${this.apiUrl}/`,
       diagrama
     ).pipe(
       catchError(error => {
@@ -69,17 +68,16 @@ export class DiagramaPersistenciaService {
   }
 
   /**
-   * Obtiene el contexto agregado de todos los diagramas de un proyecto
-   * Útil para proporcionar contexto a la IA
+   * Obtiene diagramas de un proyecto (contexto para IA)
    * @param proyectoId ID del proyecto
-   * @returns Observable con el resumen de diagramas
+   * @returns Observable con la lista de diagramas
    */
-  obtenerContextoDiagramas(proyectoId: number): Observable<ContextoDiagramasResponse> {
+  obtenerDiagramasProyecto(proyectoId: number): Observable<ContextoDiagramasResponse> {
     return this.http.get<ContextoDiagramasResponse>(
-      `${this.apiUrl}/contexto/${proyectoId}`
+      `${this.apiUrl}/proyecto/${proyectoId}`
     ).pipe(
       catchError(error => {
-        console.error('Error al obtener contexto de diagramas:', error);
+        console.error('Error al obtener diagramas del proyecto:', error);
         // Retorna un contexto vacío en caso de error
         return of({
           total_diagramas: 0,
